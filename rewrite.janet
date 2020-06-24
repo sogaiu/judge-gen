@@ -1,6 +1,6 @@
 (import ./pegs :prefix "")
 
-(defn rewrite-tagged
+(defn- rewrite-tagged
   [tagged-item last-form]
   (let [[tag value] tagged-item]
     (match [tag value]
@@ -20,15 +20,15 @@
 
  )
 
-(def verify-as-string
+(def- verify-as-string
   (slurp "./_verify.janet"))
 
-(defn rewrite-with-verify
-  [cmt-blk]
+(defn- rewrite-block-with-verify
+  [blk]
   (var rewritten-forms @[])
   # parse the comment block and rewrite some parts
-  (each cmt-or-frm (peg/match inner-forms cmt-blk)
-    (if (= 0 (length rewritten-forms))
+  (each cmt-or-frm (peg/match inner-forms blk)
+    (if (empty? rewritten-forms)
       (array/push rewritten-forms cmt-or-frm)
       (let [last-form (array/pop rewritten-forms)]
         (if (= (type cmt-or-frm) :tuple)
@@ -48,6 +48,14 @@
                     (rewrite-tagged (first maybe-long-bytes) last-form)]
                 (assert rewritten (string "match failed for long-string"))
                 (array/push rewritten-forms rewritten))))))))
+  rewritten-forms)
+
+(defn rewrite-with-verify
+  [cmt-blks]
+  (var rewritten-forms @[])
+  # parse comment blocks and rewrite some parts
+  (each blk cmt-blks
+    (array/concat rewritten-forms (rewrite-block-with-verify blk)))
   # assemble pieces
   (var forms
        (array/concat @[]

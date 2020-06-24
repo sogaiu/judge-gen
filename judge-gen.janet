@@ -57,8 +57,6 @@
 #
 # * consider various "rewriting" targets, e.g. testament
 #
-# * mode to extract / convert all comment blocks instead of just one?
-#
 # * mode to run comment block tests from "all" files?
 #
 # * conversion of these types of "tests" to external files to
@@ -121,15 +119,19 @@
            (break)))
   ith)
 
-(defn- find-comment-block
-  [segments ith]
-  (var comment-block nil)
-  (loop [i :range [ith (length segments)]]
+(defn- find-comment-blocks
+  [segments from number]
+  (var comment-blocks @[])
+  (var remaining number)
+  (loop [i :range [from (length segments)]]
+    (when (and (not= number 0)
+               (= remaining 0))
+      (break))
     (def {:value code-str} (get segments i))
     (when (peg/match comment-block-maybe code-str)
-      (set comment-block code-str)
-      (break)))
-  comment-block)
+      (-- remaining)
+      (array/push comment-blocks code-str)))
+  comment-blocks)
 
 (def- params
   ["Rewrite comment blocks as tests."
@@ -140,9 +142,13 @@
    #          :kind :option
    # emacs, vim, vscode
    "line" {:default "1"
-           :help "Line number, 1-based."
+           :help "Line number to start search near, 1-based."
            :kind :option
            :short "l"}
+   "number" {:default "1"
+             :help "Number of comment blocks to select, 0 for all remaining."
+             :kind :option
+             :short "n"}
    "verbose" {:help "Verbose output."
               :kind :flag
               :short "v"}
@@ -165,12 +171,14 @@
   [& args]
   (let [res (argparse/argparse ;params)
         #column (scan-number (res "column"))
+        input (res :default)
         line (scan-number (res "line"))
-        input (res :default)]
+        number (scan-number (res "number"))]
     (setdyn :verbose (res "verbose"))
     (assert input "Input should be filepath or -")
     #(assert (<= 1 column) "Column should be 1 or greater.")
     (assert (<= 1 line) "Line should be 1 or greater.")
+    (assert (<= 0 number) "Number should be 0 or greater.")
     (when (dyn :verbose) (eprint "line number (cursor at): " line))
     # read in the code, determining the byte offset of line with cursor
     (var [buf position]
@@ -181,14 +189,15 @@
     (var segments (parse-to-segments buf))
     (assert segments (string "Failed to parse input:" input))
     # find which segment the cursor (position) is in
-    (var ith (find-segment segments position))
-    (assert ith (string "Failed to find segment for position: " position))
+    (var from (find-segment segments position))
+    (assert from (string "Failed to find segment for position: " position))
     # find an appropriate comment block
-    (var comment-block (find-comment-block segments ith))
-    (when (dyn :verbose) (eprint "comment block found was: " comment-block))
+    (var comment-blocks (find-comment-blocks segments from number))
+    (when (dyn :verbose)
+      (eprint "first comment block found was: " (first comment-blocks)))
     # output rewritten content if appropriate
-    (if comment-block
-      (print (rewrite-with-verify comment-block))
+    (if (not (empty? comment-blocks))
+      (print (rewrite-with-verify comment-blocks))
       (print nil))))
 
 (comment
