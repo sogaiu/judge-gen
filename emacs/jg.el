@@ -95,8 +95,60 @@
              (jg-proc (make-process :name "jg"
                                     :buffer nil
                                     :command (list (jg-path)
-                                                   ;;"-p"
-                                                   ;;(number-to-string (point))
+                                                   "-l"
+                                                   (number-to-string
+                                                    (line-number-at-pos))
+                                                   )
+                                    :connection-type 'pipe
+                                    :filter 'jg-filter
+                                    :sentinel 'jg-sentinel)))
+        ;; XXX
+        (message "jg-str: %S" jg-str)
+        ;; XXX: both 'binary and 'utf-8 seem to cause problems...
+        ;;(set-process-coding-system jg-proc 'binary)
+        (when jg-proc
+          ;; XXX: is this sufficient?
+          (jg-reset-temp-output)
+          (process-send-string jg-proc jg-str)
+          (process-send-eof jg-proc)))
+    (error
+     (message "Error: %s %s" (car err) (cdr err)))))
+
+;;;###autoload
+(defun jg-verify-all ()
+  "Evalute a suitable set of expressions."
+  (interactive)
+  (condition-case err
+      (let* ((jg-str (jg-get-buffer-text))
+             (jg-proc (make-process :name "jg"
+                                    :buffer nil
+                                    :command (list (jg-path)
+                                                   "-n" "0")
+                                    :connection-type 'pipe
+                                    :filter 'jg-filter
+                                    :sentinel 'jg-sentinel)))
+        ;; XXX
+        (message "jg-str: %S" jg-str)
+        ;; XXX: both 'binary and 'utf-8 seem to cause problems...
+        ;;(set-process-coding-system jg-proc 'binary)
+        (when jg-proc
+          ;; XXX: is this sufficient?
+          (jg-reset-temp-output)
+          (process-send-string jg-proc jg-str)
+          (process-send-eof jg-proc)))
+    (error
+     (message "Error: %s %s" (car err) (cdr err)))))
+
+;;;###autoload
+(defun jg-verify-all-remaining ()
+  "Evalute a suitable set of expressions."
+  (interactive)
+  (condition-case err
+      (let* ((jg-str (jg-get-buffer-text))
+             (jg-proc (make-process :name "jg"
+                                    :buffer nil
+                                    :command (list (jg-path)
+                                                   "-n" "0"
                                                    "-l"
                                                    (number-to-string
                                                     (line-number-at-pos))
@@ -136,8 +188,6 @@
    (setq jg-proc
          (make-process :name "jg"
                        :command (list (jg-path)
-                                      ;;"-p"
-                                      ;;(number-to-string (point))
                                       "-l"
                                       (number-to-string
                                        (line-number-at-pos))
