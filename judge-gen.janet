@@ -50,8 +50,8 @@
 # * newlines after comment blocks are currently considered part of the
 #   identified comment block, this affects the searching for target
 #   comment blocks.  to avoid including a comment block as a target,
-#   make sure to place the cursor beyond the whitespace that comes
-#   after a comment block
+#   place the cursor beyond the last non-whitespace character that
+#   counts as part of the comment block (should be a closing paren)
 #
 # * likely only works with utf-8
 
@@ -114,15 +114,26 @@
 (defn- find-segment
   [segments position]
   (var ith nil)
+  (var val nil)
+  (var shifted 0)
   (eachp [i segment] segments
          (def {:end end
-               :start start} segment)
+               :start start
+               :value value} segment)
          (when (dyn :verbose)
            (eprint "start: " start)
            (eprint "end: " end))
          (when (<= start position (dec end))
            (set ith i)
+           (set val value)
+           (set shifted (- position start))
            (break)))
+  # adjust if position is within trailing whitespace
+  (when ith
+    # attempt to capture any non-whitespace
+    (when (empty? (peg/match '(any (choice :s (capture :S)))
+                              val shifted))
+      (++ ith)))
   ith)
 
 (defn- find-comment-blocks
