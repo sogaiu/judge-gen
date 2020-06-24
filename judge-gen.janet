@@ -47,6 +47,12 @@
 #
 # * doesn't handle code that is not "well-formed"
 #
+# * newlines after comment blocks are currently considered part of the
+#   identified comment block, this affects the searching for target
+#   comment blocks.  to avoid including a comment block as a target,
+#   make sure to place the cursor beyond the whitespace that comes
+#   after a comment block
+#
 # * likely only works with utf-8
 
 # POSSIBILITIES:
