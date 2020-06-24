@@ -4,7 +4,7 @@
   # store the content from f
   (var buf @"")
   # determine what the byte offset is for line-no
-  (var line-no-byte-offset 0)
+  (var line-no-byte-offset -1)
   (var bytes-read 0)
   (var current-line-no 0)
   # XXX: error-handling?
