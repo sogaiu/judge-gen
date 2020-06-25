@@ -80,6 +80,8 @@
 #
 # * don't have start-tests and end-tests print directly, but rather
 #   return info or output via indirection?
+#
+# * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 
 (import argparse)
 (import ./input :prefix "")
