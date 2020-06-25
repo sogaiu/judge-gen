@@ -6,6 +6,10 @@
 # * provide a canonical location for illustrative examples to help
 #   potential users begin to form appropriate mental models
 
+# SIDE-EFFECTS:
+#
+# * testing of private things may be easier
+
 # MECHANISMS:
 #
 # * using `comment` blocks, record expressions / forms to be tested
