@@ -172,6 +172,10 @@
              :help "Number of comment blocks to select, 0 for all remaining."
              :kind :option
              :short "n"}
+   "prepend" {:default false
+              :help "Prepend original source code."
+              :kind :flag
+              :short "p"}
    "verbose" {:help "Verbose output."
               :kind :flag
               :short "v"}
@@ -185,7 +189,25 @@
  # => ["jg" "judge-gen.janet"]
 
  (argparse/argparse ;params)
- # => @{"line" "1" :order @[:default] :default "judge-gen.janet"}
+`
+@{"line" "1"
+  :order @[:default]
+  "prepend" false
+  "number" "1"
+  :default "judge-gen.janet"}
+`
+
+ (setdyn :args ["jg" "judge-gen.janet" "-p"])
+ # => ["jg" "judge-gen.janet" "-p"]
+
+ (argparse/argparse ;params)
+`
+@{"line" "1"
+  :order @[:default "prepend"]
+  "prepend" true
+  "number" "1"
+  :default "judge-gen.janet"}
+`
 
  )
 
@@ -196,7 +218,8 @@
         #column (scan-number (res "column"))
         input (res :default)
         line (scan-number (res "line"))
-        number (scan-number (res "number"))]
+        number (scan-number (res "number"))
+        prepend (res "prepend")]
     (setdyn :verbose (res "verbose"))
     (assert input "Input should be filepath or -")
     #(assert (<= 1 column) "Column should be 1 or greater.")
@@ -219,9 +242,12 @@
     (when (dyn :verbose)
       (eprint "first comment block found was: " (first comment-blocks)))
     # output rewritten content if appropriate
-    (if (not (empty? comment-blocks))
-      (print (rewrite-with-verify comment-blocks))
-      (print nil))))
+    (if (empty? comment-blocks)
+      (print nil)
+      (do
+        (when prepend
+          (print buf))
+        (print (rewrite-with-verify comment-blocks))))))
 
 (comment
 
