@@ -76,7 +76,7 @@
 
   )`)
 
- (rewrite-with-verify sample)
+ (rewrite-with-verify [sample])
 
   (def sample-comment-form `
 (comment
@@ -97,6 +97,6 @@
 `)
 
  # XXX: expected value is large...store in external file?
- (rewrite-with-verify sample-comment-form)
+ (rewrite-with-verify [sample-comment-form])
 
  )
