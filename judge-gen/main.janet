@@ -107,7 +107,7 @@
 (import ../judge-gen/pegs :prefix "")
 (import ../judge-gen/rewrite :prefix "")
 
-(defn- slurp-input
+(defn slurp-input
   [input line]
   (var f nil)
   (if (= input "-")
@@ -120,7 +120,7 @@
         (break [nil nil]))))
   (read-input f line))
 
-(defn- parse-to-segments
+(defn parse-to-segments
   [buf]
   (var segments @[])
   (var from 0)
@@ -136,7 +136,7 @@
     (set from (segment :end)))
   segments)
 
-(defn- find-segment
+(defn find-segment
   [segments position]
   (var ith nil)
   (var val nil)
@@ -161,7 +161,7 @@
       (++ ith)))
   ith)
 
-(defn- find-comment-blocks
+(defn find-comment-blocks
   [segments from number]
   (var comment-blocks @[])
   (var remaining number)
@@ -175,7 +175,7 @@
       (array/push comment-blocks code-str)))
   comment-blocks)
 
-(def- params
+(def params
   ["Rewrite comment blocks as tests."
    # vim, vscode
    # emacs uses 0 for beginning of line

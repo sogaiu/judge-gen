@@ -1,6 +1,6 @@
 (import ../judge-gen/pegs :prefix "")
 
-(defn- rewrite-tagged
+(defn rewrite-tagged
   [tagged-item last-form]
   (let [[tag value] tagged-item]
     (match [tag value]
@@ -20,11 +20,11 @@
 
  )
 
-(def- verify-as-string
+(def verify-as-string
   # XXX: plain relative paths didn't work
   (slurp (string (os/cwd) "/judge-gen/_verify.janet")))
 
-(defn- rewrite-block-with-verify
+(defn rewrite-block-with-verify
   [blk]
   (var rewritten-forms @[])
   # parse the comment block and rewrite some parts
