@@ -1,6 +1,7 @@
 # influenced by janet's tools/helper.janet
 
 (var _verify/start-time 0)
+(var _verify/end-time 0)
 (var _verify/test-results @[])
 
 (defmacro _verify/is
@@ -42,19 +43,27 @@
 (defn _verify/start-tests
   []
   (set _verify/start-time (os/clock))
-  (set _verify/test-results @[])
-  (print "\n\nRunning tests...\n  "))
+  (set _verify/test-results @[]))
 
 (defn _verify/end-tests
   []
-  (def delta
-    (- (os/clock) _verify/start-time))
+  (set _verify/end-time (os/clock)))
+
+(defn _verify/summarize
+  []
   (var passed 0)
   (each result _verify/test-results
-    (def {:name test-name
-          :passed test-passed} result)
+    (def {:form-value form-value
+          :name test-name
+          :passed test-passed
+          :test-form test-form} result)
     (if test-passed
       (++ passed)
-      (print "failed: " test-name)))
-  (printf "\n\nTests finished in %.3f seconds" delta)
+      (do
+        (print "failed: " test-name)
+        (printf "  form: %j" test-form)
+        (printf " value: %j" form-value)
+        (print "--------"))))
+  (printf "\n\nTests finished in %.3f seconds"
+          (- _verify/end-time _verify/start-time))
   (print passed " of " (length _verify/test-results) " tests passed.\n"))

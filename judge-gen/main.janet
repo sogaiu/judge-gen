@@ -61,6 +61,14 @@
 
 # POSSIBILITIES:
 #
+# * for failures, output form, expected, and actual values
+#
+# * operate on multiple files and/or directories?
+#
+# * produce code with comment blocks unwrapped inline -- test context is
+#   is more likely to be correct than just appending tests after original
+#   code
+#
 # * could have option to send code to janet -k
 #
 # * could try to only parse not too far beyond current cursor location
@@ -74,6 +82,17 @@
 
 # ISSUES:
 #
+# * exporting files to test directory has at least one complication --
+#   if any such file calls `import` on something that was relative to the
+#   original location, how should that be handled?  also, if the test files
+#   are named the same, the following may cause a problem: support there are
+#   two source files a.janet and b.janet both containing comment block tests.
+#   further support that a.janet imports b.janet using relative paths.
+#   exporting a.janet and b.janet to the test directory now leads to the
+#   exported a.janet "referring" to the exported b.janet.  this may be
+#   undesirable for at least one reason -- the tests in b will be run when
+#   the tests for a are run.
+#
 # * how to handle rather large return values -- load from external file?
 #
 # * how / whether to try to test output (such as from `print`)
@@ -84,9 +103,9 @@
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 
 (import argparse)
-(import ./input :prefix "")
-(import ./pegs :prefix "")
-(import ./rewrite :prefix "")
+(import ../judge-gen/input :prefix "")
+(import ../judge-gen/pegs :prefix "")
+(import ../judge-gen/rewrite :prefix "")
 
 (defn- slurp-input
   [input line]
@@ -172,6 +191,7 @@
              :help "Number of comment blocks to select, 0 for all remaining."
              :kind :option
              :short "n"}
+   # XXX: "include" -> prepend or unwrap comment blocks in place
    "prepend" {:default false
               :help "Prepend original source code."
               :kind :flag

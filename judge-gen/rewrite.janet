@@ -1,4 +1,4 @@
-(import ./pegs :prefix "")
+(import ../judge-gen/pegs :prefix "")
 
 (defn- rewrite-tagged
   [tagged-item last-form]
@@ -21,7 +21,8 @@
  )
 
 (def- verify-as-string
-  (slurp "./_verify.janet"))
+  # XXX: plain relative paths didn't work
+  (slurp (string (os/cwd) "/judge-gen/_verify.janet")))
 
 (defn- rewrite-block-with-verify
   [blk]
@@ -62,7 +63,8 @@
                      @["\n\n"
                        "(_verify/start-tests)\n\n"]
                      rewritten-forms
-                     @["\n(_verify/end-tests)\n"]))
+                     @["\n(_verify/end-tests)\n"
+                       "\n(_verify/summarize)\n"]))
   (string verify-as-string
           (string/join forms "")))
 
