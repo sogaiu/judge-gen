@@ -82,6 +82,12 @@ Prepend a source file to tests found within it (intention is that the
 result should then be executable for testing):
 
 ```
+jg --prepend --number 0 <source-file> > file-with-tests.janet
+```
+
+or:
+
+```
 jg -p -n 0 <source-file> > file-with-tests.janet
 ```
 
@@ -102,7 +108,29 @@ Start looking for tests near line `90`, ignoring comment blocks that
 occur before that line:
 
 ```
+jg --line 90 <source-file>
+```
+
+or:
+
+```
 jg -l 90 <source-file>
+```
+
+To get some brief help:
+
+```
+$ jg -h
+usage: jg [option] ...
+
+Rewrite comment blocks as tests.
+
+ Optional:
+ -h, --help                                  Show this help message.
+ -l, --line VALUE=1                          Line number to start search near, 1-based.
+ -n, --number VALUE=1                        Number of comment blocks to select, 0 for all remaining.
+ -p, --prepend                               Prepend original source code.
+ -v, --verbose                               Verbose output.
 ```
 
 There is also preliminary support for use from Emacs (see the `emacs`
