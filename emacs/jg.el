@@ -32,6 +32,12 @@
 
 ;; `jg-verify': run an appropriate set of expressions as tests
 
+;;;; Todo
+
+;; Factor out common bits of jg-verify*
+;;
+;; Provide a menu
+
 ;;; Code:
 
 ;;;; Requirements
