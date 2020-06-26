@@ -1,4 +1,4 @@
-(import ../judge-gen/pegs :prefix "")
+(import ./pegs :refresh true)
 
 (defn rewrite-tagged
   [tagged-item last-form]
@@ -20,15 +20,85 @@
 
  )
 
-(def verify-as-string
-  # XXX: plain relative paths didn't work
-  (slurp (string (os/cwd) "/judge-gen/_verify.janet")))
+# XXX: tried putting the following into a file, but kept having
+#      difficulty getting it to work out
+(def verify-as-string ``
+# influenced by janet's tools/helper.janet
+
+(var _verify/start-time 0)
+(var _verify/end-time 0)
+(var _verify/test-results @[])
+
+(defmacro _verify/is
+  [t-form e-form &opt name]
+  (default name
+    (string "test-" (inc (length _verify/test-results))))
+  (with-syms [$ts $tr
+              $es $er]
+    ~(do
+       (def [,$ts ,$tr] (protect ,t-form))
+       (def [,$es ,$er] (protect ,e-form))
+       (array/push _verify/test-results
+                   {:type :is
+                    :passed (if (and ,$ts ,$es)
+                                (deep= ,$tr ,$er)
+                                nil)
+                    :expected-form ',e-form
+                    :expected-value ,$er
+                    :test-form ',t-form
+                    :test-value ,$tr
+                    :name ,name})
+       ,name)))
+
+(defmacro _verify/is-error
+  [form &opt name]
+  (default name
+    (string "test-" (inc (length _verify/test-results))))
+  (with-syms [$s $r]
+    ~(do
+       (def [,$s ,$r] (protect ,form))
+       (array/push _verify/test-results
+                   {:type :is-error
+                    :passed (if ,$s false true)
+                    :form-value ,$r
+                    :test-form ',form
+                    :name ,name})
+       ,name)))
+
+(defn _verify/start-tests
+  []
+  (set _verify/start-time (os/clock))
+  (set _verify/test-results @[]))
+
+(defn _verify/end-tests
+  []
+  (set _verify/end-time (os/clock)))
+
+(defn _verify/summarize
+  []
+  (var passed 0)
+  (each result _verify/test-results
+    (def {:form-value form-value
+          :name test-name
+          :passed test-passed
+          :test-form test-form} result)
+    (if test-passed
+      (++ passed)
+      (do
+        (print "failed: " test-name)
+        (printf "  form: %j" test-form)
+        (printf " value: %j" form-value)
+        (print "--------"))))
+  (printf "\n\nTests finished in %.3f seconds"
+          (- _verify/end-time _verify/start-time))
+  (print passed " of " (length _verify/test-results) " tests passed.\n"))
+``)
 
 (defn rewrite-block-with-verify
   [blk]
   (var rewritten-forms @[])
   # parse the comment block and rewrite some parts
-  (each cmt-or-frm (peg/match inner-forms blk)
+  (each cmt-or-frm (peg/match pegs/inner-forms blk)
     (if (empty? rewritten-forms)
       (array/push rewritten-forms cmt-or-frm)
       (let [last-form (array/pop rewritten-forms)]
@@ -39,7 +109,7 @@
             (assert rewritten (string "match failed for: " cmt-or-frm))
             (array/push rewritten-forms rewritten))
           # long-bytes require special handling
-          (let [maybe-long-bytes (peg/match long-bytes cmt-or-frm)]
+          (let [maybe-long-bytes (peg/match pegs/long-bytes cmt-or-frm)]
             (if-not maybe-long-bytes
               (do
                 (array/push rewritten-forms last-form)

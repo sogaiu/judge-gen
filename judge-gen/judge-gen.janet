@@ -101,11 +101,13 @@
 #   return info or output via indirection?
 #
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
+#
+# * :refresh true is used for the project .janet files, is this a concern?
 
 (import argparse)
-(import ../judge-gen/input :prefix "")
-(import ../judge-gen/pegs :prefix "")
-(import ../judge-gen/rewrite :prefix "")
+(import ./input :refresh true)
+(import ./pegs :refresh true)
+(import ./rewrite :refresh true)
 
 (defn slurp-input
   [input line]
@@ -118,13 +120,13 @@
       (do
         (eprint "path not found: " input)
         (break [nil nil]))))
-  (read-input f line))
+  (input/read-input f line))
 
 (defn parse-to-segments
   [buf]
   (var segments @[])
   (var from 0)
-  (loop [parsed :iterate (peg/match jg-pos buf from)]
+  (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
     (when (dyn :verbose)
       (eprintf "parsed: %j" parsed))
     (when (not parsed)
@@ -170,7 +172,7 @@
                (= remaining 0))
       (break))
     (def {:value code-str} (get segments i))
-    (when (peg/match comment-block-maybe code-str)
+    (when (peg/match pegs/comment-block-maybe code-str)
       (-- remaining)
       (array/push comment-blocks code-str)))
   comment-blocks)
@@ -205,8 +207,15 @@
 
 (comment
 
- (setdyn :args ["jg" "judge-gen.janet"])
- # => ["jg" "judge-gen.janet"]
+(def file-path
+  (string (if (or (not (dyn :current-file))
+                  (string/find "/" (dyn :current-file)))
+            "./"
+            "../")
+          "judge-gen/main.janet"))
+
+ (setdyn :args ["jg" file-path])
+ # => ["jg" file-path]
 
  (argparse/argparse ;params)
 `
@@ -214,11 +223,11 @@
   :order @[:default]
   "prepend" false
   "number" "1"
-  :default "judge-gen.janet"}
+  :default file-path}
 `
 
- (setdyn :args ["jg" "judge-gen.janet" "-p"])
- # => ["jg" "judge-gen.janet" "-p"]
+ (setdyn :args ["jg" file-path "-p"])
+ # => ["jg" file-path "-p"]
 
  (argparse/argparse ;params)
 `
@@ -226,8 +235,57 @@
   :order @[:default "prepend"]
   "prepend" true
   "number" "1"
-  :default "judge-gen.janet"}
+  :default file-path}
 `
+
+ )
+
+(defn handle-one
+  [opts]
+  (def {:input input
+        :line line
+        :number number
+        :prepend prepend} opts)
+  # read in the code, determining the byte offset of line with cursor
+  (var [buf position]
+       (slurp-input input line))
+  (assert buf (string "Failed to read input for:" input))
+  (when (dyn :verbose) (eprint "byte position for line: " position))
+  # slice the code up into segments
+  (var segments (parse-to-segments buf))
+  (assert segments (string "Failed to parse input:" input))
+  # find which segment the cursor (position) is in
+  (var from (find-segment segments position))
+  (assert from (string "Failed to find segment for position: " position))
+  # find an appropriate comment block
+  (var comment-blocks (find-comment-blocks segments from number))
+  (when (dyn :verbose)
+    (eprint "first comment block found was: " (first comment-blocks)))
+  # output rewritten content if appropriate
+  (if (empty? comment-blocks)
+    (print nil)
+    (do
+      (when prepend
+        (print buf))
+      (print (rewrite/rewrite-with-verify comment-blocks)))))
+
+(comment
+
+ # XXX: isn't there a better way?
+ (def file-path
+   (string (if (or (not (dyn :current-file))
+                   (string/find "/" (dyn :current-file)))
+             "./"
+             "./judge-gen")
+           "judge-gen.janet"))
+
+ (setdyn :args ["jg" file-path])
+ # => ["jg" file-path]
+
+ (handle-one {:input file-path
+              :line 1
+              :number 0
+              :prepend false})
 
  )
 
@@ -246,34 +304,7 @@
     (assert (<= 1 line) "Line should be 1 or greater.")
     (assert (<= 0 number) "Number should be 0 or greater.")
     (when (dyn :verbose) (eprint "line number (cursor at): " line))
-    # read in the code, determining the byte offset of line with cursor
-    (var [buf position]
-         (slurp-input input line))
-    (assert buf (string "Failed to read input for:" input))
-    (when (dyn :verbose) (eprint "byte position for line: " position))
-    # slice the code up into segments
-    (var segments (parse-to-segments buf))
-    (assert segments (string "Failed to parse input:" input))
-    # find which segment the cursor (position) is in
-    (var from (find-segment segments position))
-    (assert from (string "Failed to find segment for position: " position))
-    # find an appropriate comment block
-    (var comment-blocks (find-comment-blocks segments from number))
-    (when (dyn :verbose)
-      (eprint "first comment block found was: " (first comment-blocks)))
-    # output rewritten content if appropriate
-    (if (empty? comment-blocks)
-      (print nil)
-      (do
-        (when prepend
-          (print buf))
-        (print (rewrite-with-verify comment-blocks))))))
-
-(comment
-
- (setdyn :args ["jg" "judge-gen.janet"])
- # => ["jg" "judge-gen.janet"]
-
- (main)
-
- )
+    (handle-one {:input input
+                 :line line
+                 :number number
+                 :prepend prepend})))
