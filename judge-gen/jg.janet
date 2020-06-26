@@ -212,7 +212,7 @@
                   (string/find "/" (dyn :current-file)))
             "./"
             "../")
-          "judge-gen/main.janet"))
+          "judge-gen/jg.janet"))
 
  (setdyn :args ["jg" file-path])
  # => ["jg" file-path]
@@ -277,7 +277,7 @@
                    (string/find "/" (dyn :current-file)))
              "./"
              "./judge-gen")
-           "judge-gen.janet"))
+           "jg.janet"))
 
  (setdyn :args ["jg" file-path])
  # => ["jg" file-path]

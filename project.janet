@@ -9,4 +9,4 @@
 
 (declare-executable
   :name "jg"
-  :entry "judge-gen/judge-gen.janet")
+  :entry "judge-gen/jg.janet")
