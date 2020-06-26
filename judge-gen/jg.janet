@@ -61,7 +61,10 @@
 
 # POSSIBILITIES:
 #
-# * for failures, output form, expected, and actual values
+# * `jpm test` integration -- an unsuccessful initial attempt was made.
+#   various factors contributed to it not working out.  may try again.
+#   one issue may be related to `jpm test` not currently changing its
+#   current working directory before executing tests.
 #
 # * operate on multiple files and/or directories?
 #
@@ -96,9 +99,6 @@
 # * how to handle rather large return values -- load from external file?
 #
 # * how / whether to try to test output (such as from `print`)
-#
-# * don't have start-tests and end-tests print directly, but rather
-#   return info or output via indirection?
 #
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
