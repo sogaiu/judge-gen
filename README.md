@@ -85,7 +85,8 @@ result should then be executable for testing):
 jg -p -n 0 <source-file> > file-with-tests.janet
 ```
 
-Just produce tests (result meant to be used via a REPL):
+Just produce tests (result meant to be used via a REPL where
+expressions in the source file have already been evaluated):
 
 ```
 jg -n 0 <source-file>
