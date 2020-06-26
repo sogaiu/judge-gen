@@ -10,3 +10,12 @@
 (declare-executable
   :name "jg"
   :entry "judge-gen/jg.janet")
+
+(phony "netrepl" []
+       (os/execute
+        ["janet" "-e"
+``
+         (os/cd "judge-gen")
+         (import spork/netrepl)
+         (netrepl/server)
+``      ] :p))
