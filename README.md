@@ -9,7 +9,7 @@
   > formatted tests initially"
 
 * Provide a canonical location for illustrative examples to help
-  potential users begin to form appropriate mental models.
+  potential users form appropriate mental models.
 
   > Think: "place a few useful examples of calling a function in a
   > comment block immediately after a function's definition"
