@@ -1,5 +1,3 @@
-# XXX: lots of platform-specific path manipulation here...
-
 # XXX: things from jpm
 (def- is-win (= (os/which) :windows))
 (def- is-mac (= (os/which) :macos))
@@ -35,8 +33,8 @@
          (netrepl/server)
 ``      )] :p))
 
-# XXX: jg needs to be in PATH
 (phony "judge" ["build"]
+       # XXX: jg needs to be in PATH -- check and fail if it doesn't exist
        (defn print-dashes
          []
          (print (string/repeat "-" 60)))
