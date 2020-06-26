@@ -36,6 +36,12 @@
 
 # ISSUES:
 #
+# * the function name `main` is special in janet.  having a function with this
+#   name in a .janet file means that if the file is executed, `main` will be
+#   called -- placing a call to `main` in the file will lead to a second call.
+#   one consequence of this is that rewriting a .janet file that contains a
+#   `main` function in it can lead to an undesirable call of `main`.
+#
 # * exporting files to test directory has at least one complication --
 #   if any such file calls `import` on something that was relative to the
 #   original location, how should that be handled?  also, if the test files
@@ -144,6 +150,10 @@
              :help "Number of comment blocks to select, 0 for all remaining."
              :kind :option
              :short "n"}
+   "output" {:default ""
+             :help "Path to store output to."
+             :kind :option
+             :short "o"}
    # XXX: "include" -> prepend or unwrap comment blocks in place
    "prepend" {:default false
               :help "Prepend original source code."
@@ -158,31 +168,26 @@
 
 (comment
 
-(def file-path
-  (string (if (or (not (dyn :current-file))
-                  (string/find "/" (dyn :current-file)))
-            "./"
-            "../")
-          "judge-gen/jg.janet"))
+ (def file-path "./jg.janet")
 
- (setdyn :args ["jg" file-path])
- # => ["jg" file-path]
-
- (argparse/argparse ;params)
+ (do
+   (setdyn :args ["jg" file-path])
+   (argparse/argparse ;params))
 `
 @{"line" "1"
+  "output" ""
   :order @[:default]
   "prepend" false
   "number" "1"
   :default file-path}
 `
 
- (setdyn :args ["jg" file-path "-p"])
- # => ["jg" file-path "-p"]
-
- (argparse/argparse ;params)
+ (do
+   (setdyn :args ["jg" file-path "-p"])
+   (argparse/argparse ;params))
 `
 @{"line" "1"
+  "output" ""
   :order @[:default "prepend"]
   "prepend" true
   "number" "1"
@@ -196,6 +201,7 @@
   (def {:input input
         :line line
         :number number
+        :output output
         :prepend prepend} opts)
   # read in the code, determining the byte offset of line with cursor
   (var [buf position]
@@ -213,30 +219,28 @@
   (when (dyn :verbose)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content if appropriate
-  (if (empty? comment-blocks)
-    (print nil)
-    (do
-      (when prepend
-        (print buf))
-      (print (rewrite/rewrite-with-verify comment-blocks)))))
+  # XXX: factor out?
+  (def out @"")
+  (when (not (empty? comment-blocks))
+    (when prepend
+      (buffer/blit out buf -1))
+    (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1))
+  (if (not= "" output)
+    (spit output out)
+    (print out)))
 
 (comment
 
  # XXX: isn't there a better way?
- (def file-path
-   (string (if (or (not (dyn :current-file))
-                   (string/find "/" (dyn :current-file)))
-             "./"
-             "./judge-gen")
-           "jg.janet"))
+ (def file-path "./jg.janet")
 
  (setdyn :args ["jg" file-path])
- # => ["jg" file-path]
 
- (handle-one {:input file-path
-              :line 1
-              :number 0
-              :prepend false})
+ #(handle-one {:input file-path
+ #             :line 1
+ #             :number 0
+ #             :output ""
+ #             :prepend false})
 
  )
 
@@ -248,6 +252,8 @@
         input (res :default)
         line (scan-number (res "line"))
         number (scan-number (res "number"))
+        # XXX: overwrites...dangerous?
+        output (res "output")
         prepend (res "prepend")]
     (setdyn :verbose (res "verbose"))
     (assert input "Input should be filepath or -")
@@ -258,4 +264,5 @@
     (handle-one {:input input
                  :line line
                  :number number
+                 :output output
                  :prepend prepend})))
