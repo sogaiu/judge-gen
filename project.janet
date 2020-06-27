@@ -4,18 +4,6 @@
 (def- is-mac (= (os/which) :macos))
 (def- sep (if is-win "\\" "/"))
 
-(defn rm
-  "Remove a directory and all sub directories."
-  [path]
-  (case (os/lstat path :mode)
-    :directory (do
-      (each subpath (os/dir path)
-        (rm (string path sep subpath)))
-      (os/rmdir path))
-    nil nil # do nothing if file does not exist
-    # Default, try to remove
-    (os/rm path)))
-
 # XXX: end -- things from jpm
 
 (def proj-root
