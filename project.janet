@@ -48,12 +48,7 @@
         (print (string "Cleaning out: " judge-root))
         (rm judge-root)
         #
-        # XXX: work on platform independent version at some point?
-        #      windows doesn't have cp
-        (when (not (os/stat judge-root))
-          (print (string "Copying source tree to: " judge-root))
-          (os/execute
-           ["cp" "-p" "-R" (path/join src-root "") judge-root] :p))
+        (copy (path/join src-root "") judge-root)
         # XXX: make a recursive traversal version
         (each path (os/dir src-root)
           (def fpath (path/join src-root path))
