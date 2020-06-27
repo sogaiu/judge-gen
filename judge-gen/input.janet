@@ -41,3 +41,16 @@
  (file/close f)
 
  )
+
+(defn slurp-input
+  [input line]
+  (var f nil)
+  (if (= input "-")
+    (set f stdin)
+    (if (os/stat input)
+      # XXX: handle failure?
+      (set f (file/open input :rb))
+      (do
+        (eprint "path not found: " input)
+        (break [nil nil]))))
+  (read-input f line))

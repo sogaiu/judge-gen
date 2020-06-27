@@ -40,7 +40,8 @@
 #   name in a .janet file means that if the file is executed, `main` will be
 #   called -- placing a call to `main` in the file will lead to a second call.
 #   one consequence of this is that rewriting a .janet file that contains a
-#   `main` function in it can lead to an undesirable call of `main`.
+#   `main` function in it can lead to an undesirable call of `main` if that
+#   file is executed.
 #
 # * exporting files to test directory has at least one complication --
 #   if any such file calls `import` on something that was relative to the
@@ -61,141 +62,12 @@
 #
 # * :refresh true is used for the project .janet files, is this a concern?
 
-(import argparse)
+(import ./args :refresh true)
 (import ./input :refresh true)
-(import ./pegs :refresh true)
 (import ./rewrite :refresh true)
+(import ./segments :refresh true)
 
-(defn slurp-input
-  [input line]
-  (var f nil)
-  (if (= input "-")
-    (set f stdin)
-    (if (os/stat input)
-      # XXX: handle failure?
-      (set f (file/open input :rb))
-      (do
-        (eprint "path not found: " input)
-        (break [nil nil]))))
-  (input/read-input f line))
-
-(defn parse-to-segments
-  [buf]
-  (var segments @[])
-  (var from 0)
-  (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
-    (when (dyn :verbose)
-      (eprintf "parsed: %j" parsed))
-    (when (not parsed)
-      (break))
-    (def segment (first parsed))
-    (assert segment
-            (string "Unexpectedly did not find segment in: " parsed))
-    (array/push segments segment)
-    (set from (segment :end)))
-  segments)
-
-(defn find-segment
-  [segments position]
-  (var ith nil)
-  (var val nil)
-  (var shifted 0)
-  (eachp [i segment] segments
-         (def {:end end
-               :start start
-               :value value} segment)
-         (when (dyn :verbose)
-           (eprint "start: " start)
-           (eprint "end: " end))
-         (when (<= start position (dec end))
-           (set ith i)
-           (set val value)
-           (set shifted (- position start))
-           (break)))
-  # adjust if position is within trailing whitespace
-  (when ith
-    # attempt to capture any non-whitespace
-    (when (empty? (peg/match '(any (choice :s (capture :S)))
-                              val shifted))
-      (++ ith)))
-  ith)
-
-(defn find-comment-blocks
-  [segments from number]
-  (var comment-blocks @[])
-  (var remaining number)
-  (loop [i :range [from (length segments)]]
-    (when (and (not= number 0)
-               (= remaining 0))
-      (break))
-    (def {:value code-str} (get segments i))
-    (when (peg/match pegs/comment-block-maybe code-str)
-      (-- remaining)
-      (array/push comment-blocks code-str)))
-  comment-blocks)
-
-(def params
-  ["Rewrite comment blocks as tests."
-   # vim, vscode
-   # emacs uses 0 for beginning of line
-   #"column" {:default "1"
-   #          :help "Column number, 1-based."
-   #          :kind :option
-   # emacs, vim, vscode
-   "line" {:default "1"
-           :help "Line number to start search near, 1-based."
-           :kind :option
-           :short "l"}
-   "number" {:default "1"
-             :help "Number of comment blocks to select, 0 for all remaining."
-             :kind :option
-             :short "n"}
-   "output" {:default ""
-             :help "Path to store output to."
-             :kind :option
-             :short "o"}
-   # XXX: "include" -> prepend or unwrap comment blocks in place
-   "prepend" {:default false
-              :help "Prepend original source code."
-              :kind :flag
-              :short "p"}
-   "verbose" {:help "Verbose output."
-              :kind :flag
-              :short "v"}
-   :default {:default "-"
-             :help "Source path or - for STDIN."
-             :kind :option}])
-
-(comment
-
- (def file-path "./jg.janet")
-
- (do
-   (setdyn :args ["jg" file-path])
-   (argparse/argparse ;params))
-`
-@{"line" "1"
-  "output" ""
-  :order @[:default]
-  "prepend" false
-  "number" "1"
-  :default file-path}
-`
-
- (do
-   (setdyn :args ["jg" file-path "-p"])
-   (argparse/argparse ;params))
-`
-@{"line" "1"
-  "output" ""
-  :order @[:default "prepend"]
-  "prepend" true
-  "number" "1"
-  :default file-path}
-`
-
- )
-
+# XXX: consider `(break false)` instead of just `assert`?
 (defn handle-one
   [opts]
   (def {:input input
@@ -205,21 +77,23 @@
         :prepend prepend} opts)
   # read in the code, determining the byte offset of line with cursor
   (var [buf position]
-       (slurp-input input line))
+       (input/slurp-input input line))
   (assert buf (string "Failed to read input for:" input))
   (when (dyn :verbose) (eprint "byte position for line: " position))
   # slice the code up into segments
-  (var segments (parse-to-segments buf))
+  (var segments (segments/parse-buffer buf))
   (assert segments (string "Failed to parse input:" input))
+  # top-level main defn is undesirable
+  (when (segments/find-main-defn segments)
+    (break false))
   # find which segment the cursor (position) is in
-  (var from (find-segment segments position))
+  (var from (segments/find-segment segments position))
   (assert from (string "Failed to find segment for position: " position))
   # find an appropriate comment block
-  (var comment-blocks (find-comment-blocks segments from number))
+  (var comment-blocks (segments/find-comment-blocks segments from number))
   (when (dyn :verbose)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content if appropriate
-  # XXX: factor out?
   (def out @"")
   (when (not (empty? comment-blocks))
     (when prepend
@@ -227,42 +101,24 @@
     (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1))
   (if (not= "" output)
     (spit output out)
-    (print out)))
+    (print out))
+  true)
 
 (comment
 
- # XXX: isn't there a better way?
  (def file-path "./jg.janet")
 
  (setdyn :args ["jg" file-path])
 
- #(handle-one {:input file-path
- #             :line 1
- #             :number 0
- #             :output ""
- #             :prepend false})
+ (handle-one {:input file-path
+              :line 1
+              :number 0
+              :output ""
+              :prepend false})
 
  )
 
-# XXX: how to indicate error when invoked by external program such as editor?
 (defn main
   [& args]
-  (let [res (argparse/argparse ;params)
-        #column (scan-number (res "column"))
-        input (res :default)
-        line (scan-number (res "line"))
-        number (scan-number (res "number"))
-        # XXX: overwrites...dangerous?
-        output (res "output")
-        prepend (res "prepend")]
-    (setdyn :verbose (res "verbose"))
-    (assert input "Input should be filepath or -")
-    #(assert (<= 1 column) "Column should be 1 or greater.")
-    (assert (<= 1 line) "Line should be 1 or greater.")
-    (assert (<= 0 number) "Number should be 0 or greater.")
-    (when (dyn :verbose) (eprint "line number (cursor at): " line))
-    (handle-one {:input input
-                 :line line
-                 :number number
-                 :output output
-                 :prepend prepend})))
+  (when (not (handle-one (args/parse)))
+    (os/exit 1)))
