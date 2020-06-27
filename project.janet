@@ -1,3 +1,6 @@
+# XXX: consider whether the "judge" directory should live under /tmp
+#      might be safer than removing something within the project directory
+
 (post-deps
   (import path))
 
