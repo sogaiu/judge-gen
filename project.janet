@@ -1,7 +1,22 @@
-# XXX: things from jpm
+# XXX: begin -- things from jpm
+
 (def- is-win (= (os/which) :windows))
 (def- is-mac (= (os/which) :macos))
 (def- sep (if is-win "\\" "/"))
+
+(defn rm
+  "Remove a directory and all sub directories."
+  [path]
+  (case (os/lstat path :mode)
+    :directory (do
+      (each subpath (os/dir path)
+        (rm (string path sep subpath)))
+      (os/rmdir path))
+    nil nil # do nothing if file does not exist
+    # Default, try to remove
+    (os/rm path)))
+
+# XXX: end -- things from jpm
 
 (def proj-root
   (os/cwd))
@@ -11,6 +26,9 @@
 
 (def judge-root
   (string proj-root sep "judge"))
+
+(def judge-file-prefix
+  "judge-")
 
 (declare-project
   :name "judge-gen"
@@ -34,20 +52,20 @@
 ``      )] :p))
 
 (phony "judge" ["build"]
-       # XXX: jg needs to be in PATH -- check and fail if it doesn't exist
-       (defn print-dashes
-         []
-         (print (string/repeat "-" 60)))
+       # XXX: platform-specific
+       (when (not= 0 (os/shell "which jg"))
+         (eprint "jg not found in PATH")
+         (break))
+       # doesn't work well if there is already a "judge" directory
+       (print (string "Cleaning out: " judge-root))
+       (rm judge-root)
+       #
        # XXX: work on platform independent version at some point?
-       #      macos' cp doesn't support the necessary options and
        #      windows doesn't have cp
-       # XXX: doesn't work well if there is already a "judge" directory
        (when (not (os/stat judge-root))
-         (print (string "Creating symlink mirror of source at: "
-                        judge-root))
+         (print (string "Copying source tree to: " judge-root))
          (os/execute
-          ["cp" "--archive" "--symbolic-link"
-           (string src-root sep) judge-root] :p))
+          ["cp" "-p" "-R" (string src-root sep) judge-root] :p))
        # XXX: make a recursive traversal version
        (each path (os/dir src-root)
          (def fpath (string src-root sep path))
@@ -55,18 +73,22 @@
            :file (os/execute ["jg"
                               "--prepend"
                               "--number" "0"
-                              "--output" (string judge-root sep "judge-" path)
+                              "--output" (string judge-root sep
+                                                 judge-file-prefix path)
                               fpath] :p)
+           # XXX: implement this part
            :directory (print "Sorry, no recursion yet.")))
        (print "Judging...")
        # XXX: adapted from jpm's "test" phony target
+       (defn print-dashes [] (print (string/repeat "-" 60)))
        (defn dodir
          [dir]
          (each sub (sort (os/dir dir))
            (def ndir (string dir sep sub))
-           (case (os/lstat ndir :mode)
+           (case (os/stat ndir :mode)
              :directory (dodir ndir)
-             :file (when (string/has-suffix? ".janet" ndir)
+             :file (when (and (string/has-prefix? judge-file-prefix sub)
+                              (string/has-suffix? ".janet" ndir))
                      (print-dashes)
                      (print "Running " ndir " ...")
                      (def result
@@ -74,10 +96,7 @@
                                     "-e" (string "(os/cd "
                                                  "\"" judge-root "\""
                                                  ")")
-                                    ndir] :p)))
-             # XXX: kind of a hack and limiting, but possibly worth it
-             #      could decide whether test according to naming convention...
-             :link (print "Skipping non-test " ndir))))
+                                    ndir] :p))))))
        (dodir judge-root)
        (print-dashes)
        (print "All judgements made."))
