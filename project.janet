@@ -7,7 +7,7 @@
   :repo "git+https://github.com/sogaiu/judge-gen.git"
   :dependencies [
     "https://github.com/janet-lang/argparse"
-    "https://github.com/janet-lang/path.git"
+    "https://github.com/janet-lang/path.git" # only in this file
     "https://github.com/sogaiu/janet-peg-grammar"
   ])
 
@@ -19,9 +19,13 @@
  (def src-root
    (path/join proj-root "judge-gen"))
 
+ # XXX: if you need to have a subdirectory of your project root have the
+ #      name "judge", change the following to a name you don't need to use
  (def judge-root
    (path/join proj-root "judge"))
 
+ # XXX: if you need to use "judge-" at the beginning of a source file name,
+ #      change the value below to something you don't need to use
  (def judge-file-prefix
    "judge-")
 
