@@ -1,6 +1,11 @@
 # XXX: consider whether the "judge" directory should live under /tmp
 #      might be safer than removing something within the project directory
 
+# XXX: transition body of code for the judge phony target to some place
+#      such that it can be used as a dependency say in the form of a
+#      function.  this should greatly reduce the amount of work required
+#      when modifying a project.janet to be able to use judge-gen
+
 (post-deps
   (import path))
 
