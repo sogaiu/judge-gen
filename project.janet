@@ -1,10 +1,16 @@
 # XXX: consider whether the "judge" directory should live under /tmp
-#      might be safer than removing something within the project directory
+#      might be safer than removing something within the project
+#      directory.  however, this could be a problem if the source
+#      assumes it is living within the project directory
+#      (e.g. referencing via relative paths, some kind of data files
+#      that are stored within the project directory)
 
-# XXX: transition body of code for the judge phony target to some place
-#      such that it can be used as a dependency say in the form of a
-#      function.  this should greatly reduce the amount of work required
-#      when modifying a project.janet to be able to use judge-gen
+# XXX: transition body of code for the judge phony target to some
+#      place such that it can be used as a dependency say in the form
+#      of a function.  note that use of post-deps would likely be
+#      necessary.  this should greatly reduce the amount of work
+#      required when modifying a project.janet to be able to use
+#      judge-gen.
 
 (post-deps
   (import path))
@@ -50,7 +56,7 @@
  (phony "judge" ["build"]
         (prin "looking for jg... ")
         (flush)
-        # XXX: platform-specific
+        # XXX: likely won't work on windows
         (when (not= 0 (os/shell "which jg"))
           (eprint "not found in PATH")
           (break))
@@ -61,19 +67,19 @@
         (copy (path/join src-root "") judge-root)
         # create judge files
         (defn make-judges
-          [dir rels]
+          [dir subdirs]
           (each path (os/dir dir)
             (def fpath (path/join dir path))
             (case (os/stat fpath :mode)
               :directory (do
-                           (make-judges fpath (array/push rels path))
-                           (array/pop rels))
+                           (make-judges fpath (array/push subdirs path))
+                           (array/pop subdirs))
               :file (os/execute
                      ["jg"
                       "--prepend"
                       "--number" "0"
                       "--output" (path/join judge-root
-                                            ;rels
+                                            ;subdirs
                                             (string
                                              judge-file-prefix path))
                                  fpath] :p))))
