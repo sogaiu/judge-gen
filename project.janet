@@ -85,6 +85,12 @@
         # judge
         (print "judging...")
         (defn print-dashes [] (print (string/repeat "-" 60)))
+        # XXX: from jpm
+        (defn pslurp
+          [cmd]
+          (string/trim (with [f (file/popen cmd)]
+                             (:read f :all))))
+        (def results @{})
         (defn judge
           [dir]
           (each path (os/dir dir)
@@ -93,15 +99,19 @@
               :directory (judge fpath)
               :file (when (and (string/has-prefix? judge-file-prefix path)
                                (string/has-suffix? ".janet" fpath))
-                      (print-dashes)
                       (print path)
-                      (os/execute [(dyn :executable "janet")
-                                   "-e" (string "(os/cd "
-                                                "\"" judge-root "\""
-                                                ")")
-                                   fpath] :p)))))
+                      (def command (string/join
+                                    [(dyn :executable "janet") "-e"
+                                     (string "'(os/cd \"" judge-root "\")'")
+                                     fpath]
+                                    " "))
+                      (put results fpath (pslurp command))))))
         (judge judge-root)
         (print-dashes)
+        (eachp [fpath details] results
+               (print (path/basename fpath))
+               (print details)
+               (print-dashes))
         (print "all judgements made."))
 
 )
