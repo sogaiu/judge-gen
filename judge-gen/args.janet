@@ -8,6 +8,9 @@
    #          :help "Column number, 1-based."
    #          :kind :option
    # emacs, vim, vscode
+   "debug" {:help "Debug output."
+            :kind :flag
+            :short "d"}
    "line" {:default "1"
            :help "Line number to start search near, 1-based."
            :kind :option
@@ -25,7 +28,8 @@
               :help "Prepend original source code."
               :kind :flag
               :short "p"}
-   "verbose" {:help "Verbose output."
+   "version" {:default false
+              :help "Version output."
               :kind :flag
               :short "v"}
    :default {:default "-"
@@ -40,7 +44,8 @@
    (setdyn :args ["jg" file-path])
    (argparse/argparse ;params))
 `
-@{"line" "1"
+@{"version" false
+  "line" "1"
   "output" ""
   :order @[:default]
   "prepend" false
@@ -52,7 +57,8 @@
    (setdyn :args ["jg" file-path "-p"])
    (argparse/argparse ;params))
 `
-@{"line" "1"
+@{"version" false
+  "line" "1"
   "output" ""
   :order @[:default "prepend"]
   "prepend" true
@@ -71,16 +77,18 @@
         number (scan-number (res "number"))
         # XXX: overwrites...dangerous?
         output (res "output")
-        prepend (res "prepend")]
-    (setdyn :verbose (res "verbose"))
+        prepend (res "prepend")
+        version (res "version")]
+    (setdyn :debug (res "debug"))
     (assert input "Input should be filepath or -")
     #(assert (<= 1 column) "Column should be 1 or greater.")
     (assert (<= 1 line) "Line should be 1 or greater.")
     (assert (<= 0 number) "Number should be 0 or greater.")
-    (when (dyn :verbose)
+    (when (dyn :debug)
       (eprint "line number (cursor at): " line))
     {:input input
      :line line
      :number number
      :output output
-     :prepend prepend}))
+     :prepend prepend
+     :version version}))

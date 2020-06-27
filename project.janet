@@ -54,11 +54,9 @@
                                "(netrepl/server)")] :p))
 
  (phony "judge" ["build"]
-        (prin "looking for jg... ")
-        (flush)
-        # XXX: likely won't work on windows
-        (when (not= 0 (os/shell "which jg"))
-          (eprint "not found in PATH")
+        # check if jg is accessible
+        (when (not= 0 (os/shell "jg --version"))
+          (eprint "failed to find jg in PATH")
           (break))
         # remove old judge directory
         (print (string "cleaning out: " judge-root))

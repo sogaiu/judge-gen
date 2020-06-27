@@ -74,12 +74,16 @@
         :line line
         :number number
         :output output
-        :prepend prepend} opts)
+        :prepend prepend
+        :version version} opts)
+  # XXX: review
+  (when version
+    (break true))
   # read in the code, determining the byte offset of line with cursor
   (var [buf position]
        (input/slurp-input input line))
   (assert buf (string "Failed to read input for:" input))
-  (when (dyn :verbose) (eprint "byte position for line: " position))
+  (when (dyn :debug) (eprint "byte position for line: " position))
   # slice the code up into segments
   (var segments (segments/parse-buffer buf))
   (assert segments (string "Failed to parse input:" input))
@@ -91,7 +95,7 @@
   (assert from (string "Failed to find segment for position: " position))
   # find an appropriate comment block
   (var comment-blocks (segments/find-comment-blocks segments from number))
-  (when (dyn :verbose)
+  (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content if appropriate
   (def out @"")

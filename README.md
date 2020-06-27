@@ -126,11 +126,13 @@ usage: jg [option] ...
 Rewrite comment blocks as tests.
 
  Optional:
+ -d, --debug                                 Debug output.
  -h, --help                                  Show this help message.
  -l, --line VALUE=1                          Line number to start search near, 1-based.
  -n, --number VALUE=1                        Number of comment blocks to select, 0 for all remaining.
+ -o, --output VALUE=                         Path to store output to.
  -p, --prepend                               Prepend original source code.
- -v, --verbose                               Verbose output.
+ -v, --version                               Version output.
 ```
 
 There is also preliminary support for use from Emacs (see the `emacs`

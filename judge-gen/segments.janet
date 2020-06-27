@@ -5,7 +5,7 @@
   (var segments @[])
   (var from 0)
   (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
-    (when (dyn :verbose)
+    (when (dyn :debug)
       (eprintf "parsed: %j" parsed))
     (when (not parsed)
       (break))
@@ -63,7 +63,7 @@
          (def {:end end
                :start start
                :value value} segment)
-         (when (dyn :verbose)
+         (when (dyn :debug)
            (eprint "start: " start)
            (eprint "end: " end))
          (when (<= start position (dec end))
