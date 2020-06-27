@@ -43,49 +43,56 @@
                                "(netrepl/server)")] :p))
 
  (phony "judge" ["build"]
+        (prin "looking for jg... ")
+        (flush)
         # XXX: platform-specific
         (when (not= 0 (os/shell "which jg"))
-          (eprint "jg not found in PATH")
+          (eprint "not found in PATH")
           (break))
-        # doesn't work well if there is already a "judge" directory
-        (print (string "Cleaning out: " judge-root))
+        # remove old judge directory
+        (print (string "cleaning out: " judge-root))
         (rm judge-root)
-        #
+        # copy source files
         (copy (path/join src-root "") judge-root)
-        # XXX: make a recursive traversal version
-        (each path (os/dir src-root)
-          (def fpath (path/join src-root path))
-          (case (os/stat fpath :mode)
-            :file (os/execute ["jg"
-                               "--prepend"
-                               "--number" "0"
-                               "--output" (path/join judge-root
-                                                     (string
-                                                      judge-file-prefix path))
-                               fpath] :p)
-            # XXX: implement this part
-            :directory (print "Sorry, no recursion yet.")))
-        (print "Judging...")
-        # XXX: adapted from jpm's "test" phony target
+        # create judge files
+        (defn make-judges
+          [dir rels]
+          (each path (os/dir dir)
+            (def fpath (path/join dir path))
+            (case (os/stat fpath :mode)
+              :directory (do
+                           (make-judges fpath (array/push rels path))
+                           (array/pop rels))
+              :file (os/execute
+                     ["jg"
+                      "--prepend"
+                      "--number" "0"
+                      "--output" (path/join judge-root
+                                            ;rels
+                                            (string
+                                             judge-file-prefix path))
+                                 fpath] :p))))
+        (make-judges src-root @[])
+        # judge
+        (print "judging...")
         (defn print-dashes [] (print (string/repeat "-" 60)))
-        (defn dodir
+        (defn judge
           [dir]
-          (each sub (sort (os/dir dir))
-            (def ndir (path/join dir sub))
-            (case (os/stat ndir :mode)
-              :directory (dodir ndir)
-              :file (when (and (string/has-prefix? judge-file-prefix sub)
-                               (string/has-suffix? ".janet" ndir))
+          (each path (os/dir dir)
+            (def fpath (path/join dir path))
+            (case (os/stat fpath :mode)
+              :directory (judge fpath)
+              :file (when (and (string/has-prefix? judge-file-prefix path)
+                               (string/has-suffix? ".janet" fpath))
                       (print-dashes)
-                      (print "Running " ndir " ...")
-                      (def result
-                        (os/execute [(dyn :executable "janet")
-                                     "-e" (string "(os/cd "
-                                                  "\"" judge-root "\""
-                                                  ")")
-                                     ndir] :p))))))
-        (dodir judge-root)
+                      (print path)
+                      (os/execute [(dyn :executable "janet")
+                                   "-e" (string "(os/cd "
+                                                "\"" judge-root "\""
+                                                ")")
+                                   fpath] :p)))))
+        (judge judge-root)
         (print-dashes)
-        (print "All judgements made."))
+        (print "all judgements made."))
 
 )
