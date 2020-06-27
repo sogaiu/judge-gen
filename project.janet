@@ -32,10 +32,8 @@
  (phony "netrepl" []
         (os/execute
          ["janet" "-e" (string "(os/cd \"" src-root "\")"
-                               ``
-                               (import spork/netrepl)
-                               (netrepl/server)
-                               ``      )] :p))
+                               "(import spork/netrepl)"
+                               "(netrepl/server)")] :p))
 
  (phony "judge" ["build"]
         # XXX: platform-specific
