@@ -53,6 +53,13 @@
                                "(import spork/netrepl)"
                                "(netrepl/server)")] :p))
 
+ # XXX: the following can be used to arrange for the overriding of the
+ #      "test" phony target -- thanks to rduplain and bakpakin
+ #
+ #(put (dyn :rules) "test" nil)
+ #(phony "test" ["build"]
+ # etc.
+
  (phony "judge" ["build"]
         # check if jg is accessible
         (when (not= 0 (os/shell "jg --version"))
