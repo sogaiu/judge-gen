@@ -12,8 +12,8 @@
 
 # POSSIBILITIES:
 #
-# * output test results as "data" so multiple sets can be gathered and
-#   summarized more easily
+# * consider reporting number of tests and failures via _verify's
+#   dump/results so that info can be displayed as soon as possible
 #
 # * arrange for installation of jg in janet's binpath?
 #

@@ -61,6 +61,13 @@
  # etc.
 
  (phony "judge" ["build"]
+        (defn dashes
+          [&opt n]
+          (default n 60)
+          (string/repeat "-" n))
+        (defn print-dashes
+          [&opt n]
+          (print (dashes n)))
         # check if jg is accessible
         (when (not= 0 (os/shell "jg --version"))
           (eprint "failed to find jg in PATH")
@@ -70,6 +77,7 @@
         (rm judge-root)
         # copy source files
         (copy (path/join src-root "") judge-root)
+        (print-dashes)
         # create judge files
         (defn make-judges
           [dir subdirs]
@@ -91,7 +99,6 @@
         (make-judges src-root @[])
         # judge
         (print "judging...")
-        (defn print-dashes [] (print (string/repeat "-" 60)))
         # XXX: from jpm
         (defn pslurp
           [cmd]
@@ -115,10 +122,62 @@
                       (put results fpath (pslurp command))))))
         (judge judge-root)
         (print-dashes)
+        # summarize results
+        # XXX: mixing of pr* and file/write...ok?
+        (defn print-blue
+          [msg]
+          (file/write stdout (string "\e[34m" msg "\e[0m")))
+        (defn print-green
+          [msg]
+          (file/write stdout (string "\e[32m" msg "\e[0m")))
+        (defn print-red
+          [msg]
+          (file/write stdout (string "\e[31m" msg "\e[0m")))
+        (var total-tests 0)
+        (var total-passed 0)
+        (def failures @{})
         (eachp [fpath details] results
-               (print (path/basename fpath))
-               (print details)
-               (print-dashes))
+               (def name (path/basename fpath))
+               (def p (parser/new))
+               # XXX: error-handling...
+               (parser/consume p details)
+               (var passed 0)
+               (def test-results (parser/produce p))
+               (var num-tests (length test-results))
+               (var fails @[])
+               (each test-result test-results
+                 (++ total-tests)
+                 (def {:passed test-passed} test-result)
+                 (if test-passed
+                   (do
+                     (++ passed)
+                     (++ total-passed))
+                   (array/push fails test-result)))
+               (when (not (empty? fails))
+                 (put failures fpath fails)))
+        (eachp [fpath failed-tests] failures
+               (print fpath)
+               (each fail failed-tests
+                 (def {:test-value test-value
+                       :name test-name
+                       :passed test-passed
+                       :test-form test-form} fail)
+                 (print-red "failed")
+                 (print ": " test-name)
+                 (print-red "form")
+                 (printf ": %M" test-form)
+                 (print-red "value")
+                 (print ":")
+                 (printf "%M" test-value)))
+        (if (not= total-passed total-tests)
+          (do
+            (print-dashes)
+            (print-red total-passed))
+          (print-green total-passed))
+        (prin " of ")
+        (print-green total-tests)
+        (print " passed")
+        (print-dashes)
         (print "all judgements made."))
 
 )

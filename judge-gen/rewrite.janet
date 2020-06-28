@@ -94,6 +94,11 @@
   (printf "\n\nTests finished in %.3f seconds"
           (- _verify/end-time _verify/start-time))
   (print passed " of " (length _verify/test-results) " tests passed.\n"))
+
+(defn _verify/dump-results
+  []
+  (printf "%j" _verify/test-results))
+
 ``)
 
 (defn rewrite-block-with-verify
@@ -136,7 +141,7 @@
                        "(_verify/start-tests)\n\n"]
                      rewritten-forms
                      @["\n(_verify/end-tests)\n"
-                       "\n(_verify/summarize)\n"]))
+                       "\n(_verify/dump-results)\n"]))
   (string verify-as-string
           (string/join forms "")))
 
