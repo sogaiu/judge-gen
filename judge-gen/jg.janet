@@ -12,8 +12,16 @@
 
 # POSSIBILITIES:
 #
-# * consider reporting number of tests and failures via _verify's
-#   dump/results so that info can be displayed as soon as possible
+# * consider different reporting modes.  concrete examples:
+#
+#   * for earliest / quickest feedback, have _verify output info as soon
+#     as it is available
+#
+#   * for slower feedback, have _verify just pass back all test
+#     results at the end when they are all ready
+#
+#   different receivers might be set up for handling test results, but
+#   this may be getting too elaborate at this stage :)
 #
 # * arrange for installation of jg in janet's binpath?
 #
