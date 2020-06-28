@@ -12,6 +12,9 @@
 
 # POSSIBILITIES:
 #
+# * output test results as "data" so multiple sets can be gathered and
+#   summarized more easily
+#
 # * arrange for installation of jg in janet's binpath?
 #
 # * `jpm test` integration -- an unsuccessful initial attempt was made.
@@ -19,8 +22,6 @@
 #   one issue may be related to `jpm test` not currently changing its
 #   current working directory before executing tests.  currently,
 #   `jpm run judge` is being used as an alternative.
-#
-# * operate on multiple files and/or directories?
 #
 # * produce code with comment blocks unwrapped inline -- test context is
 #   is more likely to be correct than just appending tests after original
@@ -34,6 +35,8 @@
 #
 # * mode to run comment block tests from "all" files?
 #
+# * operate on multiple files and/or directories?
+#
 # * conversion of these types of "tests" to external files to
 #   "transition" when things have solidifed enough
 
@@ -45,17 +48,6 @@
 #   one consequence of this is that rewriting a .janet file that contains a
 #   `main` function in it can lead to an undesirable call of `main` if that
 #   file is executed.
-#
-# * exporting files to test directory has at least one complication --
-#   if any such file calls `import` on something that was relative to the
-#   original location, how should that be handled?  also, if the test files
-#   are named the same, the following may cause a problem: support there are
-#   two source files a.janet and b.janet both containing comment block tests.
-#   further support that a.janet imports b.janet using relative paths.
-#   exporting a.janet and b.janet to the test directory now leads to the
-#   exported a.janet "referring" to the exported b.janet.  this may be
-#   undesirable for at least one reason -- the tests in b will be run when
-#   the tests for a are run.
 #
 # * how to handle rather large return values -- load from external file?
 #
