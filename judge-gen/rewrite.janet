@@ -22,6 +22,8 @@
 
 # XXX: tried putting the following into a file, but kept having
 #      difficulty getting it to work out
+# XXX: an advantage of it being in a separate file is that testing
+#      the contained code might be easier...
 (def verify-as-string ``
 # influenced by janet's tools/helper.janet
 
