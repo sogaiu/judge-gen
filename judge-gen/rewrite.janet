@@ -60,8 +60,8 @@
        (array/push _verify/test-results
                    {:type :is-error
                     :passed (if ,$s false true)
-                    :form-value ,$r
                     :test-form ',form
+                    :test-value ,$r
                     :name ,name})
        ,name)))
 
@@ -78,7 +78,7 @@
   []
   (var passed 0)
   (each result _verify/test-results
-    (def {:form-value form-value
+    (def {:test-value test-value
           :name test-name
           :passed test-passed
           :test-form test-form} result)
@@ -87,7 +87,7 @@
       (do
         (print "failed: " test-name)
         (printf "  form: %j" test-form)
-        (printf " value: %j" form-value)
+        (printf " value: %j" test-value)
         (print "--------"))))
   (printf "\n\nTests finished in %.3f seconds"
           (- _verify/end-time _verify/start-time))
