@@ -99,11 +99,12 @@
   (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content if appropriate
+  (when (empty? comment-blocks)
+    (break false))
   (def out @"")
-  (when (not (empty? comment-blocks))
-    (when prepend
-      (buffer/blit out buf -1))
-    (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1))
+  (when prepend
+    (buffer/blit out buf -1))
+  (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1)
   (if (not= "" output)
     (spit output out)
     (print out))
