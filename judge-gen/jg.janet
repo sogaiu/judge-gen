@@ -23,8 +23,6 @@
 #   different receivers might be set up for handling test results, but
 #   this may be getting too elaborate at this stage :)
 #
-# * arrange for installation of jg in janet's binpath?
-#
 # * `jpm test` integration -- an unsuccessful initial attempt was made.
 #   various factors contributed to it not working out.  may try again.
 #   one issue may be related to `jpm test` not currently changing its

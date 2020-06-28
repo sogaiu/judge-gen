@@ -76,6 +76,9 @@ Result should be a `jg(.exe)` binary in the `build` subdirectory.
 Make the binary available on `PATH` somehow, e.g. make a symlink to
 the created binary from some directory that is already on `PATH`.
 
+Alternatively, `jpm install` should place `jg(.exe)` in janet's
+`binpath`.
+
 ## Usage
 
 Prepend a source file to tests found within it (intention is that the

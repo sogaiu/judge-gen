@@ -24,7 +24,8 @@
 
  (declare-executable
   :name "jg"
-  :entry (path/join src-root "jg.janet"))
+  :entry (path/join src-root "jg.janet")
+  :install true)
 
  (phony "netrepl" []
         (os/execute
