@@ -129,7 +129,8 @@
   rewritten-forms)
 
 (defn rewrite-with-verify
-  [cmt-blks]
+  [cmt-blks &opt format]
+  (default format "jdn")
   (var rewritten-forms @[])
   # parse comment blocks and rewrite some parts
   (each blk cmt-blks
@@ -141,7 +142,16 @@
                        "(_verify/start-tests)\n\n"]
                      rewritten-forms
                      @["\n(_verify/end-tests)\n"
-                       "\n(_verify/dump-results)\n"]))
+                     (cond
+                       (= format "jdn")
+                       "\n(_verify/dump-results)\n"
+                       #
+                       (= format "text")
+                       "\n(_verify/summarize)\n"
+                       # XXX: is this appropriate?
+                       (do
+                         (eprint "warning: unrecognized format: " format)
+                         "\n(_verify/dump-results)\n"))]))
   (string verify-as-string
           (string/join forms "")))
 
@@ -155,7 +165,7 @@
 
   )`)
 
- (rewrite-with-verify [sample])
+ (rewrite-with-verify [sample] "text")
 
   (def sample-comment-form `
 (comment
@@ -176,6 +186,6 @@
 `)
 
  # XXX: expected value is large...store in external file?
- (rewrite-with-verify [sample-comment-form])
+ (rewrite-with-verify [sample-comment-form] "jdn")
 
  )

@@ -101,6 +101,7 @@
              (jg-proc (make-process :name "jg"
                                     :buffer nil
                                     :command (list (jg-path)
+                                                   "-f" "text"
                                                    "-l"
                                                    (number-to-string
                                                     (line-number-at-pos))
@@ -129,6 +130,7 @@
              (jg-proc (make-process :name "jg"
                                     :buffer nil
                                     :command (list (jg-path)
+                                                   "-f" "text"
                                                    "-n" "0")
                                     :connection-type 'pipe
                                     :filter 'jg-filter
@@ -154,6 +156,7 @@
              (jg-proc (make-process :name "jg"
                                     :buffer nil
                                     :command (list (jg-path)
+                                                   "-f" "text"
                                                    "-n" "0"
                                                    "-l"
                                                    (number-to-string
@@ -197,6 +200,7 @@
                                       "-l"
                                       (number-to-string
                                        (line-number-at-pos))
+                                      "-f" "text"
                                       )
                        :connection-type 'pipe
                        :filter 'jg-filter

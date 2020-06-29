@@ -11,6 +11,10 @@
    "debug" {:help "Debug output."
             :kind :flag
             :short "d"}
+   "format" {:default "jdn"
+             :help "Output format, jdn or text"
+             :kind :option
+             :short "f"}
    "line" {:default "1"
            :help "Line number to start search near, 1-based."
            :kind :option
@@ -48,6 +52,7 @@
   "line" "1"
   "output" ""
   :order @[:default]
+  "format" "jdn"
   "prepend" false
   "number" "1"
   :default file-path}
@@ -61,6 +66,7 @@
   "line" "1"
   "output" ""
   :order @[:default "prepend"]
+  "format" "jdn"
   "prepend" true
   "number" "1"
   :default file-path}
@@ -73,6 +79,7 @@
   (let [res (argparse/argparse ;params)
         #column (scan-number (res "column"))
         input (res :default)
+        format (res "format")
         line (scan-number (res "line"))
         number (scan-number (res "number"))
         # XXX: overwrites...dangerous?
@@ -80,13 +87,17 @@
         prepend (res "prepend")
         version (res "version")]
     (setdyn :debug (res "debug"))
+    (assert (or (= format "jdn")
+                (= format "text"))
+            "Format should be jdn or text.")
     (assert input "Input should be filepath or -")
     #(assert (<= 1 column) "Column should be 1 or greater.")
     (assert (<= 1 line) "Line should be 1 or greater.")
     (assert (<= 0 number) "Number should be 0 or greater.")
     (when (dyn :debug)
       (eprint "line number (cursor at): " line))
-    {:input input
+    {:format format
+     :input input
      :line line
      :number number
      :output output

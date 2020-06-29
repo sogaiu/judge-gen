@@ -54,7 +54,8 @@
 # XXX: consider `(break false)` instead of just `assert`?
 (defn handle-one
   [opts]
-  (def {:input input
+  (def {:format format
+        :input input
         :line line
         :number number
         :output output
@@ -87,7 +88,7 @@
   (def out @"")
   (when prepend
     (buffer/blit out buf -1))
-  (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1)
+  (buffer/blit out (rewrite/rewrite-with-verify comment-blocks format) -1)
   (if (not= "" output)
     (spit output out)
     (print out))
