@@ -49,6 +49,11 @@
 #
 # * :refresh true is used for the project .janet files, is this a concern?
 
+# QUESTIONS:
+#
+# * is this output from rewrite really jdn?  will it always be serializable /
+#   deserializable?
+
 (import ./args :refresh true)
 (import ./input :refresh true)
 (import ./rewrite :refresh true)
