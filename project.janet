@@ -1,5 +1,5 @@
 (post-deps
- (import jg-chambers/phony-judge)
+ (import jg-verdict/phony-judge)
  (import path))
 
 (declare-project
@@ -8,10 +8,12 @@
   :repo "git+https://github.com/sogaiu/judge-gen.git"
   :dependencies [
     "https://github.com/janet-lang/argparse"
+    # just for project.janet
+    "https://github.com/sogaiu/jg-verdict.git"
+    # XXX: it may be that this needs to be listed after jg-verdict
     "https://github.com/sogaiu/janet-peg-grammar"
-    # below here, just for project.janet
+    # just for project.janet
     "https://github.com/janet-lang/path.git"
-    "https://github.com/sogaiu/jg-chambers.git"
   ])
 
 (post-deps
