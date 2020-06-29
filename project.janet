@@ -8,10 +8,10 @@
   :repo "git+https://github.com/sogaiu/judge-gen.git"
   :dependencies [
     "https://github.com/janet-lang/argparse"
-    # just for project.janet
-    "https://github.com/sogaiu/jg-verdict.git"
     # XXX: it may be that this needs to be listed after jg-verdict
     "https://github.com/sogaiu/janet-peg-grammar"
+    # just for project.janet
+    "https://github.com/sogaiu/jg-verdict.git"
     # just for project.janet
     "https://github.com/janet-lang/path.git"
   ])
