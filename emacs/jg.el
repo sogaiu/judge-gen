@@ -28,13 +28,18 @@
 ;;;; Usage
 
 ;; With a repl connection established to a janet process and point
-;; somewhere in Janet code, execute:
+;; somewhere in Janet code, execute one of:
 
-;; `jg-verify': run an appropriate set of expressions as tests
+;; `jg-verify-one'
 
-;;;; Todo
+;; `jg-verify-all'
 
-;; Provide a menu
+;; `jg-verify-all-remaining'
+
+;; These should lead to jg executing "tests" in one comment block, all
+;; comment blocks, or all remaining comment blocks, respectively.
+;; Which comment blocks are selected is influenced by where point is
+;; (except for `jg-verify-all`).
 
 ;;; Code:
 
@@ -135,6 +140,27 @@
   (jg-verify (list "-f" "text"
                    "-n" "0"
                    "-l" (number-to-string (line-number-at-pos)))))
+
+(defvar jg-interaction-mode-map
+  (let ((map (make-sparse-keymap)))
+    (easy-menu-define jg-interaction-mode-map map
+      "Judge Gen Interaction Mode Menu"
+      '("Jg"
+        ["Verify one comment block" jg-verify-one t]
+        ["Verify all remaining comment blocks" jg-verify-all-remaining t]
+        ["Verify all comment blocks" jg-verify-all t]))
+    map)
+  "Jg interaction mode map.")
+
+;;;###autoload
+(define-minor-mode jg-interaction-mode
+  "Minor mode for jg interaction from a janet buffer.
+
+The following keys are available in `jg-interaction-mode`:
+
+\\{jg-interaction-mode}"
+
+  nil " jg" jg-interaction-mode-map)
 
 ;;;; Footer
 
