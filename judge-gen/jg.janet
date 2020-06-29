@@ -38,13 +38,6 @@
 
 # ISSUES:
 #
-# * the function name `main` is special in janet.  having a function with this
-#   name in a .janet file means that if the file is executed, `main` will be
-#   called -- placing a call to `main` in the file will lead to a second call.
-#   one consequence of this is that rewriting a .janet file that contains a
-#   `main` function in it can lead to an undesirable call of `main` if that
-#   file is executed.
-#
 # * how to handle rather large return values -- load from external file?
 #
 # * how / whether to try to test output (such as from `print`)
