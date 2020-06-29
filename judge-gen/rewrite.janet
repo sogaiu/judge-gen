@@ -41,15 +41,15 @@
        (def [,$ts ,$tr] (protect ,t-form))
        (def [,$es ,$er] (protect ,e-form))
        (array/push _verify/test-results
-                   {:type :is
+                   {:expected-form ',e-form
+                    :expected-value ,$er
+                    :name ,name
                     :passed (if (and ,$ts ,$es)
                                 (deep= ,$tr ,$er)
                                 nil)
-                    :expected-form ',e-form
-                    :expected-value ,$er
                     :test-form ',t-form
                     :test-value ,$tr
-                    :name ,name})
+                    :type :is})
        ,name)))
 
 (defmacro _verify/is-error
@@ -60,11 +60,11 @@
     ~(do
        (def [,$s ,$r] (protect ,form))
        (array/push _verify/test-results
-                   {:type :is-error
+                   {:name ,name
                     :passed (if ,$s false true)
                     :test-form ',form
                     :test-value ,$r
-                    :name ,name})
+                    :type :is-error})
        ,name)))
 
 (defn _verify/start-tests
@@ -80,10 +80,10 @@
   []
   (var passed 0)
   (each result _verify/test-results
-    (def {:test-value test-value
-          :name test-name
+    (def {:name test-name
           :passed test-passed
-          :test-form test-form} result)
+          :test-form test-form
+          :test-value test-value} result)
     (if test-passed
       (++ passed)
       (do
