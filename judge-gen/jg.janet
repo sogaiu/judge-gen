@@ -23,12 +23,6 @@
 #   different receivers might be set up for handling test results, but
 #   this may be getting too elaborate at this stage :)
 #
-# * `jpm test` integration -- an unsuccessful initial attempt was made.
-#   various factors contributed to it not working out.  may try again.
-#   one issue may be related to `jpm test` not currently changing its
-#   current working directory before executing tests.  currently,
-#   `jpm run judge` is being used as an alternative.
-#
 # * produce code with comment blocks unwrapped inline -- test context is
 #   is more likely to be correct than just appending tests after original
 #   code
@@ -38,10 +32,6 @@
 # * could try to only parse not too far beyond current cursor location
 #
 # * consider various "rewriting" targets, e.g. testament
-#
-# * mode to run comment block tests from "all" files?
-#
-# * operate on multiple files and/or directories?
 #
 # * conversion of these types of "tests" to external files to
 #   "transition" when things have solidifed enough
