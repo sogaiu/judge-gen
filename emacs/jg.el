@@ -34,8 +34,6 @@
 
 ;;;; Todo
 
-;; Factor out common bits of jg-verify*
-;;
 ;; Provide a menu
 
 ;;; Code:
@@ -92,20 +90,13 @@
 (defun jg-get-buffer-text ()
   (buffer-substring-no-properties 1 (1+ (buffer-size))))
 
-;;;###autoload
-(defun jg-verify ()
-  "Evalute a suitable set of expressions."
-  (interactive)
+(defun jg-verify (args)
+  "Evalute a suitable set of expressions using ARGS for jg."
   (condition-case err
       (let* ((jg-str (jg-get-buffer-text))
              (jg-proc (make-process :name "jg"
                                     :buffer nil
-                                    :command (list (jg-path)
-                                                   "-f" "text"
-                                                   "-l"
-                                                   (number-to-string
-                                                    (line-number-at-pos))
-                                                   )
+                                    :command (append (list (jg-path)) args)
                                     :connection-type 'pipe
                                     :filter 'jg-filter
                                     :sentinel 'jg-sentinel)))
@@ -120,62 +111,30 @@
           (process-send-eof jg-proc)))
     (error
      (message "Error: %s %s" (car err) (cdr err)))))
+
+
+
+;;;###autoload
+(defun jg-verify-one ()
+  "Evalute a suitable set of expressions for one comment block."
+  (interactive)
+  (jg-verify (list "-f" "text"
+                   "-l" (number-to-string (line-number-at-pos)))))
 
 ;;;###autoload
 (defun jg-verify-all ()
-  "Evalute a suitable set of expressions."
+  "Evalute a suitable set of expressions for all comment blocks."
   (interactive)
-  (condition-case err
-      (let* ((jg-str (jg-get-buffer-text))
-             (jg-proc (make-process :name "jg"
-                                    :buffer nil
-                                    :command (list (jg-path)
-                                                   "-f" "text"
-                                                   "-n" "0")
-                                    :connection-type 'pipe
-                                    :filter 'jg-filter
-                                    :sentinel 'jg-sentinel)))
-        ;; XXX
-        (message "jg-str: %S" jg-str)
-        ;; XXX: both 'binary and 'utf-8 seem to cause problems...
-        ;;(set-process-coding-system jg-proc 'binary)
-        (when jg-proc
-          ;; XXX: is this sufficient?
-          (jg-reset-temp-output)
-          (process-send-string jg-proc jg-str)
-          (process-send-eof jg-proc)))
-    (error
-     (message "Error: %s %s" (car err) (cdr err)))))
+  (jg-verify (list "-f" "text"
+                   "-n" "0")))
 
 ;;;###autoload
 (defun jg-verify-all-remaining ()
-  "Evalute a suitable set of expressions."
+  "Evalute a suitable set of expressions for all remaining comment blocks."
   (interactive)
-  (condition-case err
-      (let* ((jg-str (jg-get-buffer-text))
-             (jg-proc (make-process :name "jg"
-                                    :buffer nil
-                                    :command (list (jg-path)
-                                                   "-f" "text"
-                                                   "-n" "0"
-                                                   "-l"
-                                                   (number-to-string
-                                                    (line-number-at-pos))
-                                                   )
-                                    :connection-type 'pipe
-                                    :filter 'jg-filter
-                                    :sentinel 'jg-sentinel)))
-        ;; XXX
-        (message "jg-str: %S" jg-str)
-        ;; XXX: both 'binary and 'utf-8 seem to cause problems...
-        ;;(set-process-coding-system jg-proc 'binary)
-        (when jg-proc
-          ;; XXX: is this sufficient?
-          (jg-reset-temp-output)
-          (process-send-string jg-proc jg-str)
-          (process-send-eof jg-proc)))
-    (error
-     (message "Error: %s %s" (car err) (cdr err)))))
+  (jg-verify (list "-f" "text"
+                   "-n" "0"
+                   "-l" (number-to-string (line-number-at-pos)))))
 
 ;;;; Footer
 
