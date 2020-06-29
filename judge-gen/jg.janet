@@ -12,6 +12,9 @@
 
 # POSSIBILITIES:
 #
+# * in handle_one, instead of `(break false)`, perhaps different
+#   values could be returned to indicate different types of errors
+#
 # * consider different reporting modes.  concrete examples:
 #
 #   * for earliest / quickest feedback, have _verify output info as soon
