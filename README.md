@@ -327,7 +327,7 @@ Comment block test runner.
 ### Editor Support
 
 There is also preliminary support for use from Emacs (see the
-[emacs](judge-gen/emacs) subdirectory).  I've also had some success
+[emacs](emacs) subdirectory).  I've also had some success
 with VSCode and Neovim integration, but am not sure whether it's worth
 it overall.
 
@@ -349,7 +349,7 @@ it overall.
 
 ## Notes
 
-See [notes.txt](judge-gen/notes.txt).
+See [notes.txt](notes.txt).
 
 ## Acknowledgements
 
