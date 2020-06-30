@@ -12,6 +12,8 @@
 
 # POSSIBILITIES:
 #
+# * support non-absolute paths for arguments to jg-verdict
+#
 # * merge jg and jg-verdict executables -- one benefit is disk space
 #   reduction (currently 500kb * 2)
 #
@@ -57,6 +59,3 @@
 # * is the output from jg rewrite really jdn?  will it always be serializable /
 #   deserializable?
 
-# TODO:
-#
-# * document --judge-dir-name and --judge-file-prefix
