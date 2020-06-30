@@ -1,0 +1,62 @@
+# LIMITS:
+#
+# * doesn't handle code that is not "well-formed"
+#
+# * newlines after comment blocks are currently considered part of the
+#   identified comment block, this affects the searching for target
+#   comment blocks.  to avoid including a comment block as a target,
+#   place the cursor beyond the last non-whitespace character that
+#   counts as part of the comment block (should be a closing paren)
+#
+# * likely only works with utf-8
+
+# POSSIBILITIES:
+#
+# * merge jg and jg-verdict executables -- one benefit is disk space
+#   reduction (currently 500kb * 2)
+#
+# * in handle_one, instead of `(break false)`, perhaps different
+#   values could be returned to indicate different types of errors
+#
+# * consider different reporting modes for jg.  concrete examples:
+#
+#   * for earliest / quickest feedback, have _verify output info as soon
+#     as it is available
+#
+#   * for slower feedback, have _verify just pass back all test
+#     results at the end when they are all ready
+#
+#   different receivers might be set up for handling test results, but
+#   this may be getting too elaborate at this stage :)
+#
+# * produce code with comment blocks unwrapped inline -- test context is
+#   is more likely to be correct than just appending tests after original
+#   code
+#
+# * could have option to send code to janet -k before main jg processing
+#
+# * jg could try to only parse not too far beyond current cursor location
+#
+# * consider various "rewriting" targets, e.g. testament
+#
+# * conversion of these types of "tests" to external files to
+#   "transition" when things have solidifed enough
+
+# ISSUES:
+#
+# * how to handle rather large return values -- load from external file?
+#
+# * how / whether to try to test output (such as from `print`)
+#
+# * consider using :s instead of :ws in pegs, also in janet-peg-grammar
+#
+# * :refresh true is used for the project .janet files, is this a concern?
+
+# QUESTIONS:
+#
+# * is the output from jg rewrite really jdn?  will it always be serializable /
+#   deserializable?
+
+# TODO:
+#
+# * document --judge-dir-name and --judge-file-prefix

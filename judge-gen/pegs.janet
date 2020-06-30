@@ -1,4 +1,4 @@
-(import grammar)
+(import ../vendor/grammar)
 
 (def jg-comments
   (->
