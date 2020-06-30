@@ -163,7 +163,11 @@ jpm run judge
 (2) and (3) exist so that (4) gets the information it needs to run.
 
 (1) exists so that path manipulation can be done conveniently and in a
-platform-independent manner.
+platform-independent manner.  (At the moment, it's up to a project's
+author to figure out how to do path-handling within `project.janet`.
+The way shown here is just one possibility.  There are bits within
+`jpm` itself that can help with this, but they are unfortunately
+marked private.)
 
 It's also possible to integrate with `jpm test`, by appropriately
 adding something like the following to `project.janet`:
