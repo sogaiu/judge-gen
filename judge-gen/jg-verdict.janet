@@ -38,7 +38,6 @@
       :file (os/execute
              ["jg"
               "--prepend"
-              "--number" "0"
               "--output" (path/join judge-root
                                     ;subdirs
                                     (string

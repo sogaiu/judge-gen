@@ -9,9 +9,9 @@
   (def {:format format
         :input input
         :line line
-        :number number
         :output output
         :prepend prepend
+        :single single
         :version version} opts)
   # XXX: review
   (when version
@@ -24,11 +24,12 @@
   # slice the code up into segments
   (var segments (segments/parse-buffer buf))
   (assert segments (string "Failed to parse input:" input))
-  # find which segment the cursor (position) is in
-  (var from (segments/find-segment segments position))
-  (assert from (string "Failed to find segment for position: " position))
+  (var at nil)
+  (when (< 0 line)
+    # find segment relevant to cursor location
+    (set at (segments/find-segment segments position)))
   # find an appropriate comment block
-  (var comment-blocks (segments/find-comment-blocks segments from number))
+  (def comment-blocks (segments/find-comment-blocks segments at single))
   (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content if appropriate
@@ -50,10 +51,10 @@
  (comment
   # XXX: this kind of expression isn't handled properly by jg
   (handle-one {:input file-path
-               :line 1
-               :number 0
+               :line 0
                :output ""
-               :prepend false})
+               :prepend false
+               :single true})
  )
 
  )

@@ -34,12 +34,12 @@
 
 ;; `jg-verify-all'
 
-;; `jg-verify-all-remaining'
+;; `jg-verify-up-thru'
 
 ;; These should lead to jg executing "tests" in one comment block, all
-;; comment blocks, or all remaining comment blocks, respectively.
-;; Which comment blocks are selected is influenced by where point is
-;; (except for `jg-verify-all`).
+;; comment blocks, or up through the comment block "nearest" point,
+;; respectively.  Which comment blocks are selected is influenced by
+;; where point is (except for `jg-verify-all`).
 
 ;;; Code:
 
@@ -121,24 +121,23 @@
 
 ;;;###autoload
 (defun jg-verify-one ()
-  "Evalute a suitable set of expressions for one comment block."
+  "Evalute relevant expressions for one comment block."
   (interactive)
   (jg-verify (list "-f" "text"
+                   "-s"
                    "-l" (number-to-string (line-number-at-pos)))))
 
 ;;;###autoload
 (defun jg-verify-all ()
-  "Evalute a suitable set of expressions for all comment blocks."
+  "Evalute relevant expressions for all comment blocks."
   (interactive)
-  (jg-verify (list "-f" "text"
-                   "-n" "0")))
+  (jg-verify (list "-f" "text")))
 
 ;;;###autoload
-(defun jg-verify-all-remaining ()
-  "Evalute a suitable set of expressions for all remaining comment blocks."
+(defun jg-verify-up-thru ()
+  "Evalute relevant expressions up through comment block nearest point."
   (interactive)
   (jg-verify (list "-f" "text"
-                   "-n" "0"
                    "-l" (number-to-string (line-number-at-pos)))))
 
 (defvar jg-interaction-mode-map
@@ -147,7 +146,7 @@
       "Judge Gen Interaction Mode Menu"
       '("Jg"
         ["Verify one comment block" jg-verify-one t]
-        ["Verify all remaining comment blocks" jg-verify-all-remaining t]
+        ["Verify up through" jg-verify-up-thru t]
         ["Verify all comment blocks" jg-verify-all t]))
     map)
   "Jg interaction mode map.")
@@ -182,10 +181,11 @@ The following keys are available in `jg-interaction-mode`:
    (setq jg-proc
          (make-process :name "jg"
                        :command (list (jg-path)
+                                      "-f" "text"
                                       "-l"
                                       (number-to-string
                                        (line-number-at-pos))
-                                      "-f" "text"
+                                      "-s"
                                       )
                        :connection-type 'pipe
                        :filter 'jg-filter

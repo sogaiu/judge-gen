@@ -42,15 +42,25 @@
   ith)
 
 (defn find-comment-blocks
-  [segments from number]
+  [segments at single]
   (var comment-blocks @[])
-  (var remaining number)
-  (loop [i :range [from (length segments)]]
-    (when (and (not= number 0)
-               (= remaining 0))
-      (break))
-    (def {:value code-str} (get segments i))
-    (when (peg/match pegs/comment-block-maybe code-str)
-      (-- remaining)
-      (array/push comment-blocks code-str)))
+  (cond
+    # find only one
+    single
+    (loop [i :range [at (length segments)]]
+      (def {:value code-str} (get segments i))
+      (when (peg/match pegs/comment-block-maybe code-str)
+        (array/push comment-blocks code-str)
+        (break)))
+    # find all up through segment `at`, inclusive
+    at
+    (loop [i :range [0 (inc at)]]
+      (def {:value code-str} (get segments i))
+      (when (peg/match pegs/comment-block-maybe code-str)
+        (array/push comment-blocks code-str)))
+    # find all
+    (loop [i :range [0 (length segments)]]
+      (def {:value code-str} (get segments i))
+      (when (peg/match pegs/comment-block-maybe code-str)
+        (array/push comment-blocks code-str))))
   comment-blocks)

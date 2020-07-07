@@ -199,30 +199,24 @@ Prepend a source file to tests found within it (intention is that the
 result should then be executable for testing):
 
 ```
-jg --prepend --number 0 <source-file> > file-with-tests.janet
+jg --prepend <source-file> > file-with-tests.janet
 ```
 
 or:
 
 ```
-jg -p -n 0 <source-file> > file-with-tests.janet
+jg -p <source-file> > file-with-tests.janet
 ```
 
 Just produce tests (result meant to be used via a REPL where
 expressions in the source file have already been evaluated):
 
 ```
-jg -n 0 <source-file>
+jg <source-file>
 ```
 
-Just produce tests for the first two comment blocks in the file:
-
-```
-jg -n 2 <source-file>
-```
-
-Start looking for tests near line `90`, ignoring comment blocks that
-occur before that line:
+Produce tests for comment blocks from the beginning of the file up
+through line `90`:
 
 ```
 jg --line 90 <source-file>
@@ -232,6 +226,19 @@ or:
 
 ```
 jg -l 90 <source-file>
+```
+
+Start looking for tests near line `90`, but only pick out one comment
+block:
+
+```
+jg --line 90 --single <source-file>
+```
+
+or:
+
+```
+jg -l 90 -s <source-file>
 ```
 
 To get some brief help:
@@ -244,11 +251,12 @@ Rewrite comment blocks as tests.
 
  Optional:
  -d, --debug                                 Debug output.
+ -f, --format VALUE=jdn                      Output format, jdn or text
  -h, --help                                  Show this help message.
- -l, --line VALUE=1                          Line number to start search near, 1-based.
- -n, --number VALUE=1                        Number of comment blocks to select, 0 for all remaining.
+ -l, --line VALUE=0                          1-based cursor location linue number, 0 means no cursor.
  -o, --output VALUE=                         Path to store output to.
  -p, --prepend                               Prepend original source code.
+ -s, --single                                Select single comment block or all relevant
  -v, --version                               Version output.
 ```
 

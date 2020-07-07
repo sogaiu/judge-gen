@@ -10,7 +10,8 @@
   # XXX: error-handling?
   (loop [new-buf :iterate (file/read f :line)]
     (++ current-line-no)
-    (when (= current-line-no line-no)
+    (when (and (not= line-no 0)
+               (= current-line-no line-no))
       # line-no starts at this byte offset
       # XXX: is this off by one?
       (set line-no-byte-offset bytes-read))
