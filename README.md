@@ -8,7 +8,7 @@
   > Think: "don't have to create a separate file with specially
   > formatted tests initially"
 
-* Provide a canonical location for illustrative examples to help
+* Push for a canonical location for illustrative examples to help
   potential users form appropriate mental models.
 
   > Think: "place a few useful examples of calling a function in a
@@ -17,15 +17,7 @@
 ## Status and Warnings
 
 This is an early stage project.  The author uses it in a number of
-projects though.
-
-_WARNING_: The automation portion of this project involves generating
-test files from source files.  In order to keep these up-to-date, the
-generation process erases the directory that files are copied /
-generated into (as well as the content of the directory).
-
-Please don't use this tool without source control or something that
-provides adequate protection from data loss.  Thanks!
+projects though.  Be sure to examine the [fine print](doc/warning.md).
 
 ## How
 
@@ -38,23 +30,32 @@ provides adequate protection from data loss.  Thanks!
     value, e.g.:
 
     ```
-    (- 1 1)
-    # => 0
+    (comment
+
+      (- 1 1)
+      # => 0
+
+    )
     ```
 
     Note the use of `=>`.
 
-  * Instead of a single line comment, a long-string may be used to
-    express an expected return value.  This makes it possible to format
-    the expected return value for easier human recognition, e.g.:
+  * A long-string (backquote-delimited) placed after an expression may
+    also be used to indicate an expected return value.  This makes it
+    possible to format the expected return value for easier human
+    recognition, e.g.:
 
     ```
-    (put (table :alpha "first" :beta "second") :gamma "third")
-    `
-    {:alpha "first"
-     :beta "second"
-     :gamma "third"}
-    `
+    (comment
+
+      (put (table :alpha "first" :beta "second") :gamma "third")
+      `
+      {:alpha "first"
+       :beta "second"
+       :gamma "third"}
+      `
+
+    )
     ```
 
   * Expected errors may also be expressed using an appropriate single
@@ -67,14 +68,27 @@ provides adequate protection from data loss.  Thanks!
 
     Note the use of `!`.
 
-* Having done some combination of the above things, employ the
-  `jg(.exe)` binary to transform such code into executable tests.
+    More than one expression + expected value info pair can be placed
+    in a comment block.  It's also fine to put other forms in the
+    comment block that don't have expected value info appearing after
+    them, all forms in comment blocks will be included in tests.
 
-* More conveniently, run a single command to have your directory of
-  source files transformed into executable tests, run them, and see a
-  summary.  This can be done via phony target(s) in `project.janet`
-  (e.g. by running `jpm run judge`) or via the `jg-verdict(.exe)`
-  executable.  See the Usage section below for details.
+* Having done some combination of the above things, to execute tests
+  you can:
+
+  * Run a single command to have your directory of source files
+    transformed into tests, execute them, and see a summary.  This can
+    be done via:
+
+    * A phony target(s) in `project.janet` (e.g. by running `jpm run
+      judge` or `jpm test`).  See the Usage section below for details.
+
+    * Manually via the `jg-verdict(.exe)` command line tool.
+
+    * Some other tooling that calls `jg-verdict(.exe)` and/or `jg(.exe)`.
+
+  * Run the tests via a REPL connection by using editor integration.
+    See below for some details in the Usage section.
 
 ## Installation
 
@@ -177,14 +191,16 @@ test` is invoked.
 Not adding (5) means that whatever `jpm test` did before will ALSO be
 done in addition to running comment-block tests.
 
-### jg
-
-[Command line tool](doc/jg.md) -- create tests based on existing source code.
-
-### jg-verdict
+### jg-verdict(.exe)
 
 [Command line test runner](doc/jg-verdict.md) -- generate tests, run
-them, and display report.
+them, and display report.  Note that `jg-verdict(.exe)` calls
+`jg(.exe)` as part of its operation.
+
+### jg(.exe)
+
+[Command line tool](doc/jg.md) -- create tests based on existing
+source code.
 
 ### Editor Support
 

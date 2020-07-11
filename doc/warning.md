@@ -1,0 +1,8 @@
+_WARNING_: The automation portion of this project involves generating
+test files from source files.  In order to keep these up-to-date, the
+generation process erases the directory that files are copied /
+generated into (as well as the content of the directory).
+
+Please don't use this tool without source control or something that
+provides adequate protection from data loss.  Thanks!
+There are two related things to be aware of:
