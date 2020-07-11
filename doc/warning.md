@@ -5,4 +5,4 @@ generated into (as well as the content of the directory).
 
 Please don't use this tool without source control or something that
 provides adequate protection from data loss.  Thanks!
-There are two related things to be aware of:
+
