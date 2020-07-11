@@ -78,11 +78,7 @@ Alternatively, `jpm install` should place `jg(.exe)` and
 
 ### phony target(s) in project.janet
 
-One way to have comment block tests for source files generated, run,
-and summarized via the invocation of a single command, is to add phony
-target(s) to `project.janet`.
-
-Here is a sample with an explanation following:
+Here is a sample `project.janet` with an explanation following:
 ```clojure
 # (1)
 (import ./vendor/path)
