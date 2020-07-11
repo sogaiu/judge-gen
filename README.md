@@ -210,7 +210,7 @@ and Neovim integration, but am not sure whether it's worth it overall.
 
 ## Tweaking
 
-[Configuring some names](tweaking.md)
+[Configuring some names](doc/tweaking.md)
 
 ## Notes
 
