@@ -87,7 +87,7 @@ jpm deps && jpm build
 ```
 
 Success should yield the [jg](doc/jg.md) and
-[jg-verdict](doc/jg-verdict) binaries in the `build` subdirectory.
+[jg-verdict](doc/jg-verdict.md) binaries in the `build` subdirectory.
 
 Make the binaries available on `PATH` somehow, e.g. make symlinks to
 the created binaries from some directory that is already on `PATH`.
