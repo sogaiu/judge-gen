@@ -22,73 +22,38 @@ projects though.  Be sure to examine the [fine print](doc/warning.md).
 ## How
 
 * Within `comment` blocks, put expressions / forms to be tested along
-  with brief records of expected values.
+  with brief records of expected values:
 
-  * After placing an expression to test in a comment block, on the
-    line immediately following the expression, put an appropriately
-    formatted single line comment containing the expected return
-    value, e.g.:
+  ```
+  (comment
 
-    ```
-    (comment
+    (- 1 1)
+    # => 0
 
-      (- 1 1)
-      # => 0
+  )
+  ```
 
-    )
-    ```
+  Note the use of a single line comment and `=>` to express an
+  expected return value.
 
-    Note the use of `=>`.
+  More details [here](doc/tips-and-tweaking.md).
 
-  * A long-string (backquote-delimited) placed after an expression may
-    also be used to indicate an expected return value.  This makes it
-    possible to format the expected return value for easier human
-    recognition, e.g.:
-
-    ```
-    (comment
-
-      (put (table :alpha "first" :beta "second") :gamma "third")
-      `
-      {:alpha "first"
-       :beta "second"
-       :gamma "third"}
-      `
-
-    )
-    ```
-
-  * Expected errors may also be expressed using an appropriate single
-    line comment, e.g.:
-
-    ```
-    (error "this is an error")
-    # !
-    ```
-
-    Note the use of `!`.
-
-    More than one expression + expected value info pair can be placed
-    in a comment block.  It's also fine to put other forms in the
-    comment block that don't have expected value info appearing after
-    them, all forms in comment blocks will be included in tests.
-
-* Having done some combination of the above things, to execute tests
-  you can:
+* To execute such expressed tests you can:
 
   * Run a single command to have your directory of source files
     transformed into tests, execute them, and see a summary.  This can
     be done via:
 
     * A phony target(s) in `project.janet` (e.g. by running `jpm run
-      judge` or `jpm test`).  See the Usage section below for details.
+      judge` or `jpm test`).
 
     * Manually via the `jg-verdict(.exe)` command line tool.
 
     * Some other tooling that calls `jg-verdict(.exe)` and/or `jg(.exe)`.
 
   * Run the tests via a REPL connection by using editor integration.
-    See below for some details in the Usage section.
+
+  See the Usage section below for some details.
 
 ## Installation
 
@@ -208,25 +173,10 @@ There is also preliminary support for use from Emacs (see the
 [emacs](emacs) subdirectory).  I've also had some success with VSCode
 and Neovim integration, but am not sure whether it's worth it overall.
 
-## Tips
+## Tips and Tweaking
 
-* Use `[]` instead of `()` in some places to express return values, e.g.
-
-  ```
-  # => [:hi 1]
-  ```
-
-  not:
-
-  ```
-  # => (:hi 1)
-  ```
-
-* Express return values that span multiple lines by using long strings
-
-## Tweaking
-
-[Configuring some names](doc/tweaking.md)
+Some tips and configuration information may be found
+[here](doc/tips-and-tweaking.md).
 
 ## Notes
 
