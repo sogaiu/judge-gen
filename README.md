@@ -24,24 +24,8 @@ test files from source files.  In order to keep these up-to-date, the
 generation process erases the directory that files are copied /
 generated into (as well as the content of the directory).
 
-There are two related things to be aware of:
-
-* This directory has a default name of `judge` and lives within one's
-  project directory.  If that name is a problem (e.g. your project is
-  already using it or wants to use it), there is a way to select a
-  different name.
-
-* The generated test files all start with the prefix `judge-`.  A file
-  that starts with that prefix is treated as a test file.  The prefix
-  may be configured to be something else though, so if any of your
-  source files uses that prefix, please choose a prefix that is not
-  used by any of your source files.
-
-See the `jg-verdict` portion of the Usage section for the command line
-parameters that enable selection of these things.
-
-Finally, please don't use this tool without source control or
-something that provides adequate protection from data loss.  Thanks!
+Please don't use this tool without source control or something that
+provides adequate protection from data loss.  Thanks!
 
 ## How
 
@@ -102,8 +86,8 @@ cd judge-gen
 jpm deps && jpm build
 ```
 
-Success should yield the `jg(.exe)` and `jg-verdict(.exe)` binaries in
-the `build` subdirectory.
+Success should yield the [jg](doc/jg.md) and
+[jg-verdict](doc/jg-verdict) binaries in the `build` subdirectory.
 
 Make the binaries available on `PATH` somehow, e.g. make symlinks to
 the created binaries from some directory that is already on `PATH`.
@@ -199,14 +183,14 @@ done in addition to running comment-block tests.
 
 ### jg-verdict
 
-[Command line test runner](doc/jg-verdict.md) -- generate tests, run them, and display report.
+[Command line test runner](doc/jg-verdict.md) -- generate tests, run
+them, and display report.
 
 ### Editor Support
 
 There is also preliminary support for use from Emacs (see the
-[emacs](emacs) subdirectory).  I've also had some success
-with VSCode and Neovim integration, but am not sure whether it's worth
-it overall.
+[emacs](emacs) subdirectory).  I've also had some success with VSCode
+and Neovim integration, but am not sure whether it's worth it overall.
 
 ## Tips
 
@@ -223,6 +207,10 @@ it overall.
   ```
 
 * Express return values that span multiple lines by using long strings
+
+## Tweaking
+
+[Configuring some names](tweaking.md)
 
 ## Notes
 
