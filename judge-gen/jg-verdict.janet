@@ -35,14 +35,15 @@
                    (make-judges fpath (array/push subdirs path)
                                 judge-root judge-file-prefix)
                    (array/pop subdirs))
-      :file (os/execute
-             ["jg"
-              "--prepend"
-              "--output" (path/join judge-root
-                                    ;subdirs
-                                    (string
-                                     judge-file-prefix path))
-              fpath] :p))))
+      :file (when (= (path/ext fpath) ".janet")
+              (os/execute
+               ["jg"
+                "--prepend"
+                "--output" (path/join judge-root
+                                      ;subdirs
+                                      (string
+                                       judge-file-prefix path))
+                fpath] :p)))))
 
 (comment
 
