@@ -1,5 +1,7 @@
 # LIMITS:
 #
+# * tests producing output on stdout can break reporting
+#
 # * doesn't handle code that is not "well-formed"
 #
 # * newlines after comment blocks are currently considered part of the
