@@ -1,10 +1,31 @@
 (import ../vendor/grammar)
 
+(var in-comment false)
+
 (def jg-comments
   (->
    # jg* from grammar are structs, need something mutable
    (table ;(kvs grammar/jg))
    (put :main '(choice (capture :value) :comment))
+   #
+   (put :comment-block ~(sequence
+                          "("
+                          (any :ws)
+                          (drop (cmt (capture "comment")
+                                     ,|(do
+                                         (set in-comment true)
+                                         #(print "enter:" $ ":" in-comment)
+                                         $)))
+                          :root
+                          (drop (cmt (capture ")")
+                                     ,|(do
+                                         (set in-comment false)
+                                         #(print "exit:" $ ":" in-comment)
+                                         $)))))
+   (put :ptuple ~(choice :comment-block
+                         (sequence "("
+                                   :root
+                                   (choice ")" (error "")))))
    # classify certain comments
    (put :comment ~(sequence
                    (any :ws)
@@ -14,18 +35,26 @@
                           (capture (sequence
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
-                         ,|[:returns (string/trim $)])
+                         ,|(do #(print "1:" in-comment)
+                               (if-not in-comment
+                                 [:returns (string/trim $)]
+                                 "")))
                     (cmt (sequence
                           "#" (any :ws) "!"
                           (capture (sequence
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
-                         ,|[:throws (string/trim $)])
-                    (capture (sequence
-                              "#"
-                              (any (if-not (+ "\n" -1) 1))
-                              (any "\n")))
-                   (any :ws))))
+                         ,|(do #(print "2:" in-comment)
+                               (if-not in-comment
+                                 [:throws (string/trim $)]
+                                 "")))
+                    (cmt (capture (sequence
+                                    "#"
+                                    (any (if-not (+ "\n" -1) 1))
+                                    (any "\n")))
+                         ,|(do #(print "3:" in-comment)
+                               $))
+                    (any :ws))))
    # tried using a table with a peg but had a problem, so use a struct
    table/to-struct))
 
