@@ -1,6 +1,6 @@
 (import ../vendor/grammar)
 
-(var in-comment false)
+(var in-comment 0)
 
 (def jg-comments
   (->
@@ -13,13 +13,13 @@
                           (any :ws)
                           (drop (cmt (capture "comment")
                                      ,|(do
-                                         (set in-comment true)
+                                         (++ in-comment)
                                          #(print "enter:" $ ":" in-comment)
                                          $)))
                           :root
                           (drop (cmt (capture ")")
                                      ,|(do
-                                         (set in-comment false)
+                                         (-- in-comment)
                                          #(print "exit:" $ ":" in-comment)
                                          $)))))
    (put :ptuple ~(choice :comment-block
@@ -36,7 +36,7 @@
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
                          ,|(do #(print "1:" in-comment)
-                               (if-not in-comment
+                               (if (zero? in-comment)
                                  [:returns (string/trim $)]
                                  "")))
                     (cmt (sequence
@@ -45,7 +45,7 @@
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
                          ,|(do #(print "2:" in-comment)
-                               (if-not in-comment
+                               (if (zero? in-comment)
                                  [:throws (string/trim $)]
                                  "")))
                     (cmt (capture (sequence

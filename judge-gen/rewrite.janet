@@ -105,7 +105,7 @@
   [blk]
   (var rewritten-forms @[])
   # parse the comment block and rewrite some parts
-  (set pegs/in-comment false)
+  (set pegs/in-comment 0)
   (each cmt-or-frm (peg/match pegs/inner-forms blk)
     (when (not= cmt-or-frm "")
       (if (empty? rewritten-forms)
@@ -128,7 +128,7 @@
                       (rewrite-tagged (first maybe-long-bytes) last-form)]
                   (assert rewritten (string "match failed for long-string"))
                   (array/push rewritten-forms rewritten))))))))
-    (set pegs/in-comment false))
+    (set pegs/in-comment 0))
   rewritten-forms)
 
 (comment
@@ -146,7 +146,7 @@
   # => @["(_verify/is (+ 1 1)\n   2)\n\n"]
 
   (do
-    (set pegs/in-comment false)
+    (set pegs/in-comment 0)
     (peg/match pegs/inner-forms comment-str))
   # => @["(+ 1 1)\n  " [:returns "2"]]
 
@@ -163,7 +163,7 @@
 `)
 
   (do
-    (set pegs/in-comment false)
+    (set pegs/in-comment 0)
     (peg/match pegs/inner-forms comment-in-comment-str))
   # => @["" "(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
 
