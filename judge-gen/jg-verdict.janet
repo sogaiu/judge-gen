@@ -71,8 +71,7 @@
       :directory (judge fpath results judge-root judge-file-prefix)
       :file (when (and (string/has-prefix? judge-file-prefix path)
                        (string/has-suffix? ".janet" fpath))
-              # XXX
-              (print path)
+              (print "  " path)
               (def command (string/join
                             [(dyn :executable "janet")
                              "-e"
