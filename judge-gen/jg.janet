@@ -1,7 +1,7 @@
-(import ./args :refresh true)
-(import ./input :refresh true)
-(import ./rewrite :refresh true)
-(import ./segments :refresh true)
+(import ./args :fresh true)
+(import ./input :fresh true)
+(import ./rewrite :fresh true)
+(import ./segments :fresh true)
 
 # XXX: consider `(break false)` instead of just `assert`?
 (defn handle-one

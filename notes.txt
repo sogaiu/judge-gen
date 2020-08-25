@@ -54,7 +54,7 @@
 #
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
-# * :refresh true is used for the project .janet files, is this a concern?
+# * :fresh true is used for the project .janet files, is this a concern?
 
 # QUESTIONS:
 #

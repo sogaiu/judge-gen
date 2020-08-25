@@ -1,4 +1,4 @@
-(import ./pegs :refresh true)
+(import ./pegs :fresh true)
 
 (defn rewrite-tagged
   [tagged-item last-form]
