@@ -22,6 +22,7 @@
 
 (comment
 
+  # XXX: not good to have this kind of test?
  (def test-path
    "/tmp/jg-test.txt")
 
