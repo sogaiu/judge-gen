@@ -65,6 +65,19 @@
 
 (defn judge
   [dir results judge-root judge-file-prefix]
+  (var count 0)
+  # XXX: improve this?
+  (def results-dir
+    # XXX: what about windows...
+    (path/join "/tmp"
+      (string "judge-gen-" (os/time))))
+  (defn make-results-fpath
+    [fname i]
+    (let [fpath (path/join results-dir
+                  (string i "-" fname))]
+      # note: create-dirs expects a path ending in a filename
+      (jpm/create-dirs fpath)
+      fpath))
   (each path (os/dir dir)
     (def fpath (path/join dir path))
     (case (os/stat fpath :mode)
@@ -72,14 +85,28 @@
       :file (when (and (string/has-prefix? judge-file-prefix path)
                        (string/has-suffix? ".janet" fpath))
               (print "  " path)
+              (def results-fpath
+                (make-results-fpath path count))
               (def command (string/join
                             [(dyn :executable "janet")
                              "-e"
                              (string "'(os/cd \"" judge-root "\")'")
                              "-e"
-                             (string "'(dofile \"" fpath "\")'")] # avoid `main`
+                             (string "'"
+                                     "(do "
+                                     "  (setdyn :judge-gen/test-out "
+                                     "          \"" results-fpath "\") "
+                                     "  (dofile \"" fpath "\") "
+                                     ")"
+                                     "'")] # avoid `main`
                             " "))
-              (put results fpath (jpm/pslurp command))))))
+              (let [output (jpm/pslurp command)]
+                (when (not= output "")
+                  (spit (path/join results-dir
+                          (string "stdout-" count "-" path ".txt"))
+                    output)))
+              (put results fpath (slurp results-fpath))
+              (++ count)))))
 
 (defn summarize
   [results]

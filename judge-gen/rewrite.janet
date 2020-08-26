@@ -97,7 +97,9 @@
 
 (defn _verify/dump-results
   []
-  (printf "%j" _verify/test-results))
+  (if-let [test-out (dyn :judge-gen/test-out)]
+    (spit test-out (string/format "%j" _verify/test-results))
+    (printf "%j" _verify/test-results)))
 
 ``)
 
