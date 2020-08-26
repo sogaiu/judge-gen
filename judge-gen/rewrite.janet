@@ -101,35 +101,58 @@
 
 ``)
 
+(defn has-tests
+  [forms]
+  # XXX: atm, if one of forms is [:returns val] or [:throws val]
+  #      there is potentially at least one test.  the only other
+  #      type of thing in forms should be a string
+  (not (all |(not (tuple? $))
+            forms)))
+
+(comment
+
+  (has-tests @["(+ 1 1)\n  " [:returns "2"]])
+  # => true
+
+  (has-tests @["(error \"2\")\n  " [:throws "2"]])
+  # => true
+
+  (has-tests @["(comment \"2\")\n  "])
+  # => false
+
+  )
+
 (defn rewrite-block-with-verify
   [blk]
   (var rewritten-forms @[])
   # parse the comment block and rewrite some parts
   (set pegs/in-comment 0)
-  (each cmt-or-frm (peg/match pegs/inner-forms blk)
-    (when (not= cmt-or-frm "")
-      (if (empty? rewritten-forms)
-        (array/push rewritten-forms cmt-or-frm)
-        (let [last-form (array/pop rewritten-forms)]
-          (if (= (type cmt-or-frm) :tuple)
-            # tuple requires special handling
-            (let [rewritten
-                  (rewrite-tagged cmt-or-frm last-form)]
-              (assert rewritten (string "match failed for: " cmt-or-frm))
-              (array/push rewritten-forms rewritten))
-            # long-bytes require special handling
-            (let [maybe-long-bytes (peg/match pegs/long-bytes cmt-or-frm)]
-              (if-not maybe-long-bytes
-                (do
-                  (array/push rewritten-forms last-form)
-                  (array/push rewritten-forms cmt-or-frm))
-                # long-bytes are handled like tuples
+  (let [parsed (peg/match pegs/inner-forms blk)]
+    (when (has-tests parsed)
+      (each cmt-or-frm parsed
+        (when (not= cmt-or-frm "")
+          (if (empty? rewritten-forms)
+            (array/push rewritten-forms cmt-or-frm)
+            (let [last-form (array/pop rewritten-forms)]
+              (if (= (type cmt-or-frm) :tuple)
+                # tuple requires special handling
                 (let [rewritten
-                      (rewrite-tagged (first maybe-long-bytes) last-form)]
-                  (assert rewritten (string "match failed for long-string"))
-                  (array/push rewritten-forms rewritten))))))))
-    (set pegs/in-comment 0))
-  rewritten-forms)
+                      (rewrite-tagged cmt-or-frm last-form)]
+                  (assert rewritten (string "match failed for: " cmt-or-frm))
+                  (array/push rewritten-forms rewritten))
+                # long-bytes require special handling
+                (let [maybe-long-bytes (peg/match pegs/long-bytes cmt-or-frm)]
+                  (if-not maybe-long-bytes
+                    (do
+                      (array/push rewritten-forms last-form)
+                      (array/push rewritten-forms cmt-or-frm))
+                    # long-bytes are handled like tuples
+                    (let [rewritten
+                          (rewrite-tagged (first maybe-long-bytes) last-form)]
+                      (assert rewritten (string "match failed on long-string"))
+                      (array/push rewritten-forms rewritten))))))))
+        (set pegs/in-comment 0)))
+    rewritten-forms))
 
 (comment
 
@@ -150,6 +173,17 @@
     (peg/match pegs/inner-forms comment-str))
   # => @["(+ 1 1)\n  " [:returns "2"]]
 
+  (def comment-with-no-test-str `
+(comment
+
+  (+ 1 1)
+
+)
+`)
+
+  (rewrite-block-with-verify comment-with-no-test-str)
+  # => @[]
+
   (def comment-in-comment-str `
 (comment
 
@@ -168,7 +202,7 @@
   # => @["" "(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
 
   (rewrite-block-with-verify comment-in-comment-str)
-  # => @["(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
+  # => @[]
 
   )
 
