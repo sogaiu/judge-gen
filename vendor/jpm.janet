@@ -45,3 +45,11 @@
   [cmd]
   (string/trim (with [f (file/popen cmd)]
                      (:read f :all))))
+
+(defn create-dirs
+  "Create all directories needed for a file (mkdir -p)."
+  [dest]
+  (def segs (peg/match path-splitter dest))
+  (for i 1 (length segs)
+    (def path (string/join (slice segs 0 i) sep))
+    (unless (empty? path) (os/mkdir path))))
