@@ -66,4 +66,9 @@
 #
 # * is the output from jg rewrite really jdn?  will it always be serializable /
 #   deserializable?
-
+#
+# * where to document usage of temporary directory to store test results and
+#   output?
+#
+# * how to get the equivalent of `/tmp` on windows for the purpose of
+#   creating a temporary directory to store test results and output?
