@@ -40,9 +40,53 @@
   Note the use of `!`.
 
 * More than one expression + expected value info pair can be placed in
-  a comment block.  It's also fine to put other forms in the comment
-  block that don't have expected value info appearing after them, all
-  forms in comment blocks will be included in tests.
+  a comment block.  For example, in the following:
+
+  ```
+  (comment
+
+    (+ 1 1)
+    # => 2
+
+    (- 1 1)
+    # => 0
+
+  )
+  ```
+
+  two tests will be created and executed.
+
+* It's also fine to put other forms in the comment block that don't
+  have expected value info appearing after them, all such forms will
+  be included in tests.  For example, in the following:
+
+  ```
+  (comment
+
+    (def a 1)
+
+    (+ a 1)
+    # => 2
+
+  )
+  ```
+
+  `(def a 1)` will be executed during testing.
+
+* However, if a comment block has no tests (i.e. no expected values
+  indicated), the forms within the comment block will NOT be executed.
+  Thus, for the following:
+
+  ```
+  (comment
+
+    (print "hi")
+
+  )
+  ```
+
+  since there are no expected values indicated, `(print "hi")` will
+  NOT be executed.
 
 ## Tweaking
 
