@@ -1,4 +1,4 @@
-(import ../vendor/argparse)
+(import ./vendor/argparse)
 
 (def params
   ["Rewrite comment blocks as tests."

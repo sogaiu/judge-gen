@@ -1,7 +1,7 @@
 (import ./args-verdict :fresh true)
 (import ./utils :fresh true)
-(import ../vendor/jpm)
-(import ../vendor/path)
+(import ./vendor/jpm)
+(import ./vendor/path)
 
 (defn make-judges
   [dir subdirs judge-root judge-file-prefix]

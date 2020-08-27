@@ -1,4 +1,4 @@
-(import ../vendor/grammar)
+(import ./vendor/grammar)
 
 (var in-comment 0)
 
