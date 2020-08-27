@@ -160,8 +160,8 @@ them, and display report.  Note that `jg-verdict(.exe)` calls
 
 ### jg(.exe)
 
-[Command line tool](doc/jg.md) -- create tests based on existing
-source code.
+[Command line test file generator](doc/jg.md) -- create tests based on
+existing source code.
 
 ### Editor Support
 
