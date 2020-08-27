@@ -22,21 +22,22 @@
                                        judge-file-prefix path))
                 fpath] :p)))))
 
+# XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
- (def proj-root
-   (path/join (os/getenv "HOME")
-              "src" "judge-gen"))
+  (def proj-root
+    (path/join (os/getenv "HOME")
+               "src" "judge-gen"))
 
- (def judge-root
-   (path/join proj-root "judge"))
+  (def judge-root
+    (path/join proj-root "judge"))
 
- (def src-root
-   (path/join proj-root "judge-gen"))
+  (def src-root
+    (path/join proj-root "judge-gen"))
 
- #(os/mkdir judge-root)
+  (os/mkdir judge-root)
 
- #(make-judges src-root @[] judge-root "judge-")
+  (make-judges src-root @[] judge-root "judge-")
 
  )
 
@@ -146,9 +147,10 @@
   (utils/print-dashes)
   (print "all judgements made."))
 
+# XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
- #(summarize @{})
+  (summarize @{})
 
  )
 
@@ -188,6 +190,7 @@
   # summarize results
   (summarize results))
 
+# XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
  (def proj-root
@@ -197,13 +200,10 @@
  (def src-root
    (path/join proj-root "judge-gen"))
 
- (comment
-  # XXX: this kind of expression isn't handled properly by jg
   (handle-one {:judge-dir-name "judge"
                :judge-file-prefix "judge-"
                :proj-root proj-root
                :src-root src-root})
-  )
 
  )
 

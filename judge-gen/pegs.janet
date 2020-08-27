@@ -280,22 +280,22 @@
 
 (comment
 
- (peg/match comment-block-maybe `
+  (peg/match comment-block-maybe `
 (comment
 
   (= a (+ x 1))
 
 )
 `)
- # => @[]
+  # => @[]
 
- (peg/match comment-block-maybe `
+  (peg/match comment-block-maybe `
 
 (comment
 
   :a
 )
 `)
- # => @[]
+  # => @[]
 
  )

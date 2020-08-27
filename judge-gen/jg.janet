@@ -44,18 +44,16 @@
     (print out))
   true)
 
+# XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
- (def file-path "./jg.janet")
+  (def file-path "./jg.janet")
 
- (comment
-  # XXX: this kind of expression isn't handled properly by jg
   (handle-one {:input file-path
                :line 0
                :output ""
                :prepend false
                :single true})
- )
 
  )
 

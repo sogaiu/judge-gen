@@ -12,11 +12,11 @@
 
 (comment
 
- (rewrite-tagged [:returns true] "(= 1 1)")
- # => "(_verify/is (= 1 1) true)\n\n"
+  (rewrite-tagged [:returns true] "(= 1 1)")
+  # => "(_verify/is (= 1 1) true)\n\n"
 
- (rewrite-tagged [:throws "yuck"] "(error \"yuck\")")
- # => "(_verify/is-error (error \"yuck\"))\n\n"
+  (rewrite-tagged [:throws "yuck"] "(error \"yuck\")")
+  # => "(_verify/is-error (error \"yuck\"))\n\n"
 
  )
 
@@ -235,7 +235,10 @@
   (string verify-as-string
           (string/join forms "")))
 
+# XXX: since there are no tests in this comment block, nothing will execute
 (comment
+
+   # XXX: expected values are all large here -- not testing
 
   (def sample `
 (comment
@@ -245,11 +248,7 @@
 
   )`)
 
-  (comment
-
-    (rewrite-with-verify [sample] "text")
-
-    )
+  (rewrite-with-verify [sample] "text")
 
   (def sample-comment-form `
 (comment
@@ -269,11 +268,7 @@
 )
 `)
 
-  (comment
-    # XXX: expected value is large...store in external file?
-    (rewrite-with-verify [sample-comment-form] "jdn")
-
-    )
+  (rewrite-with-verify [sample-comment-form] "jdn")
 
  (def comment-in-comment `
 (comment
@@ -288,10 +283,6 @@
 )
 `)
 
- (comment
-   # XXX: expected value is large...store in external file?
-   (rewrite-with-verify [comment-in-comment] "jdn")
-
-   )
+ (rewrite-with-verify [comment-in-comment] "jdn")
 
  )
