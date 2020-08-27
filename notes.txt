@@ -12,6 +12,9 @@
 
 # POSSIBILITIES:
 #
+# * identify each test by the line number its definition begins on
+#   in the source file.
+#
 # * jg-verdict's --debug flag should lead to jg's --debug flag being
 #   enabled?
 #
@@ -38,7 +41,9 @@
 #   is more likely to be correct than just appending tests after original
 #   code
 #
-# * could have option to send code to janet -k before main jg processing
+# * could have option to send code to janet -k before main jg processing.
+#   atm, `janet -k` doesn't appear to work for files that have
+#   `(import ...)` in them, so this may not be an option.
 #
 # * jg could try to only parse not too far beyond current cursor location
 #
