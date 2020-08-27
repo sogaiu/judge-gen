@@ -1,30 +1,7 @@
 (import ./args-verdict :fresh true)
+(import ./utils :fresh true)
 (import ../vendor/jpm)
 (import ../vendor/path)
-
-(defn print-color
-  [msg color]
-  (let [color-num (match color
-                    :black 30
-                    :blue 34
-                    :cyan 36
-                    :green 32
-                    :magenta 35
-                    :red 31
-                    :white 37
-                    :yellow 33)]
-    (prin (string "\e[" color-num "m"
-                  msg
-                  "\e[0m"))))
-
-(defn dashes
-  [&opt n]
-  (default n 60)
-  (string/repeat "-" n))
-
-(defn print-dashes
-  [&opt n]
-  (print (dashes n)))
 
 (defn make-judges
   [dir subdirs judge-root judge-file-prefix]
@@ -66,11 +43,12 @@
 (defn judge
   [dir results judge-root judge-file-prefix]
   (var count 0)
-  # XXX: improve this?
   (def results-dir
     # XXX: what about windows...
     (path/join "/tmp"
-      (string "judge-gen-" (os/time))))
+      (string "judge-gen-"
+              (os/time) "-"
+              (utils/rand-string 8))))
   (defn make-results-fpath
     [fname i]
     (let [fpath (path/join results-dir
@@ -144,11 +122,11 @@
                  :name test-name
                  :passed test-passed
                  :test-form test-form} fail)
-           (print-color "failed" :red)
+           (utils/print-color "failed" :red)
            (print ": " test-name)
-           (print-color "form" :red)
+           (utils/print-color "form" :red)
            (printf ": %M" test-form)
-           (print-color "value" :red)
+           (utils/print-color "value" :red)
            # XXX: this could use some work...
            (if (< 30 (length (describe test-value)))
              (print ":")
@@ -159,13 +137,13 @@
     (break))
   (if (not= total-passed total-tests)
     (do
-      (print-dashes)
-        (print-color total-passed :red))
-    (print-color total-passed :green))
+      (utils/print-dashes)
+        (utils/print-color total-passed :red))
+    (utils/print-color total-passed :green))
   (prin " of ")
-  (print-color total-tests :green)
+  (utils/print-color total-tests :green)
   (print " passed")
-  (print-dashes)
+  (utils/print-dashes)
   (print "all judgements made."))
 
 (comment
@@ -198,14 +176,14 @@
   (print "removed judge dir")
   # copy source files
   (jpm/copy src-root judge-root)
-  (print-dashes)
+  (utils/print-dashes)
   # create judge files
   (make-judges src-root @[] judge-root judge-file-prefix)
   # judge
   (print "judging...")
   (var results @{})
   (judge judge-root results judge-root judge-file-prefix)
-  (print-dashes)
+  (utils/print-dashes)
   (print)
   # summarize results
   (summarize results))
