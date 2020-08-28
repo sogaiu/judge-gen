@@ -180,6 +180,20 @@
 (decl-abspath "win32")
 
 #
+# Satisfy linter
+#
+
+(defn sep [pre sep] nil)
+(defn delim [pre d] nil)
+(defn dirname [pre] nil)
+(defn basename [pre] nil)
+(defn parts [pre sep] nil)
+(defn normalize [pre sep sep-pattern lead] nil)
+(defn join [pre sep] nil)
+(defn abspath [pre] nil)
+(defn abspath? [path] nil)
+
+#
 # Specialize for current OS
 #
 
