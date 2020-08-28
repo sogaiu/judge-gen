@@ -2,21 +2,26 @@
 
 (defn rewrite-tagged
   [tagged-item last-form]
-  (let [[tag value] tagged-item]
-    (match [tag value]
-      [:returns value]
-      (string "(_verify/is " last-form " " value ")\n\n")
-      [:throws _]
-      (string "(_verify/is-error " last-form ")\n\n")
+  (let [[tag pos value] tagged-item]
+    (match [tag pos value]
+      [:returns pos value]
+      (string "(_verify/is " last-form " "
+                             value " "
+                             "\"test-at-offset-" pos "\""
+                             ")\n\n")
+      [:throws pos _]
+      (string "(_verify/is-error " last-form " "
+                                 "\"test-at-offset-" pos "\""
+                                 ")\n\n")
       nil)))
 
 (comment
 
-  (rewrite-tagged [:returns true] "(= 1 1)")
-  # => "(_verify/is (= 1 1) true)\n\n"
+  (rewrite-tagged [:returns 1 true] "(= 1 1)")
+  # => "(_verify/is (= 1 1) true \"test-at-offset-1\")\n\n"
 
-  (rewrite-tagged [:throws "yuck"] "(error \"yuck\")")
-  # => "(_verify/is-error (error \"yuck\"))\n\n"
+  (rewrite-tagged [:throws 1 "yuck"] "(error \"yuck\")")
+  # => "(_verify/is-error (error \"yuck\") \"test-at-offset-1\")\n\n"
 
  )
 
@@ -103,6 +108,8 @@
 
 ``)
 
+# XXX: this may not be quite correct -- a long-string within a comment
+#      block may lead to a comment block being marked as having a test
 (defn has-tests
   [forms]
   # XXX: atm, if one of forms is [:returns val] or [:throws val]
@@ -113,10 +120,10 @@
 
 (comment
 
-  (has-tests @["(+ 1 1)\n  " [:returns "2"]])
+  (has-tests @["(+ 1 1)\n  " [:returns 1 "2"]])
   # => true
 
-  (has-tests @["(error \"2\")\n  " [:throws "2"]])
+  (has-tests @["(error \"2\")\n  " [:throws 1 "2"]])
   # => true
 
   (has-tests @["(comment \"2\")\n  "])
@@ -134,25 +141,40 @@
       (each cmt-or-frm parsed
         (when (not= cmt-or-frm "")
           (if (empty? rewritten-forms)
-            (array/push rewritten-forms cmt-or-frm)
+            (if (and (= (type cmt-or-frm) :tuple)
+                     (= (first cmt-or-frm) :long-string))
+              (array/push rewritten-forms (in cmt-or-frm 2))
+              (array/push rewritten-forms cmt-or-frm))
             (let [last-form (array/pop rewritten-forms)]
+              # tuple requires special handling
               (if (= (type cmt-or-frm) :tuple)
-                # tuple requires special handling
-                (let [rewritten
-                      (rewrite-tagged cmt-or-frm last-form)]
-                  (assert rewritten (string "match failed for: " cmt-or-frm))
-                  (array/push rewritten-forms rewritten))
-                # long-bytes require special handling
-                (let [maybe-long-bytes (peg/match pegs/long-bytes cmt-or-frm)]
-                  (if-not maybe-long-bytes
-                    (do
-                      (array/push rewritten-forms last-form)
-                      (array/push rewritten-forms cmt-or-frm))
-                    # long-bytes are handled like tuples
-                    (let [rewritten
-                          (rewrite-tagged (first maybe-long-bytes) last-form)]
-                      (assert rewritten (string "match failed on long-string"))
-                      (array/push rewritten-forms rewritten))))))))
+                (cond
+                  (or (= (first cmt-or-frm) :returns)
+                      (= (first cmt-or-frm) :throws))
+                  (let [rewritten
+                        (rewrite-tagged cmt-or-frm last-form)]
+                    (assert rewritten (string "match failed for: " cmt-or-frm))
+                    (array/push rewritten-forms rewritten))
+                  #
+                  (= (first cmt-or-frm) :long-string)
+                  (let [[_ pos long-string] cmt-or-frm
+                        lsc-match
+                        (peg/match pegs/long-bytes long-string)
+                        _ (assert lsc-match
+                                  (string "no match for long string content"))
+                        rewritten
+                        (rewrite-tagged [:returns pos
+                                                 (first lsc-match)]
+                                        last-form)]
+                    (assert rewritten
+                            (string "match failed on long-string"))
+                    (array/push rewritten-forms rewritten))
+                  #
+                  (error (string "unexpected tuple type:" 
+                                 (first cmt-or-frm))))
+                (do
+                  (array/push rewritten-forms last-form)
+                  (array/push rewritten-forms cmt-or-frm))))))                
         (set pegs/in-comment 0)))
     rewritten-forms))
 
@@ -168,12 +190,12 @@
 `)
 
   (rewrite-block-with-verify comment-str)
-  # => @["(_verify/is (+ 1 1)\n   2)\n\n"]
+  # => @["(_verify/is (+ 1 1)\n   2 \"test-at-offset-26\")\n\n"]
 
   (do
     (set pegs/in-comment 0)
     (peg/match pegs/inner-forms comment-str))
-  # => @["(+ 1 1)\n  " [:returns "2"]]
+  # => @["(+ 1 1)\n  " [:returns 26 "2"]]
 
   (def comment-with-no-test-str `
 (comment

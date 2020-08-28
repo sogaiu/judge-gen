@@ -6,7 +6,10 @@
   (->
    # jg* from grammar are structs, need something mutable
    (table ;(kvs grammar/jg))
-   (put :main '(choice (capture :value) :comment))
+   #
+   (put :main '(choice :long-string
+                       (capture :value)
+                       :comment))
    #
    (put :comment-block ~(sequence
                           "("
@@ -22,10 +25,16 @@
                                          (-- in-comment)
                                          #(print "exit:" $ ":" in-comment)
                                          $)))))
+   #
    (put :ptuple ~(choice :comment-block
                          (sequence "("
                                    :root
                                    (choice ")" (error "")))))
+   #
+   (put :long-string ~(cmt (capture (sequence
+                                     (position)
+                                     ,(in grammar/jg :long-string)))
+                           ,|[:long-string (first $&) (in $& 1)]))
    # classify certain comments
    (put :comment ~(sequence
                    (any :ws)
@@ -33,21 +42,21 @@
                     (cmt (sequence
                           "#" (any :ws) "=>"
                           (capture (sequence
+                                    (position)
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
-                         ,|(do #(print "1:" in-comment)
-                               (if (zero? in-comment)
-                                 [:returns (string/trim $)]
-                                 "")))
+                         ,|(if (zero? in-comment)
+                             [:returns (first $&) (string/trim (in $& 1))]
+                             ""))
                     (cmt (sequence
                           "#" (any :ws) "!"
                           (capture (sequence
-                                    (any (if-not (choice "\n" -1) 1))
-                                    (any "\n"))))
-                         ,|(do #(print "2:" in-comment)
-                               (if (zero? in-comment)
-                                 [:throws (string/trim $)]
-                                 "")))
+                                     (position)
+                                     (any (if-not (choice "\n" -1) 1))
+                                     (any "\n"))))
+                         ,|(if (zero? in-comment)
+                             [:throws (first $&) (string/trim (in $& 1))]
+                             ""))
                     (cmt (capture (sequence
                                     "#"
                                     (any (if-not (+ "\n" -1) 1))
@@ -75,15 +84,26 @@
 
 (comment
 
- (peg/match inner-forms `
+  (peg/match inner-forms "(comment ``hi there\nho ho`` )")
+  # => @[[:long-string 9 "``hi there\nho ho``"]]
+
+  (peg/match inner-forms `
 (comment
   (- 1 1)
   # => 0
 )
 `)
- # => @["(- 1 1)\n  " [:returns "0"]]
+ # => @["(- 1 1)\n  " [:returns 25 "0"]]
 
- (peg/match inner-forms `
+  (peg/match inner-forms `
+(comment
+  (error "hi")
+  # !
+)
+`)
+ # => @["(error \"hi\")\n  " [:throws 29 ""]]
+
+  (peg/match inner-forms `
 (comment
 
   (def a 1)
@@ -105,9 +125,9 @@
   "# this is just a comment\n\n"
   "(def b 2)\n\n  "
   "(= 1 (- b a))\n  "
-  [:returns "true"]
+  [:returns 86 "true"]
   "(error \"ouch\")\n  "
-  [:throws ""]]
+  [:throws 115 ""]]
 `
 )
 
@@ -126,7 +146,8 @@
                              :close)
                             ,(fn [& args]
                                # XXX: not sure if this is quite correct
-                               [:returns (get args (- (length args) 2))]))
+                               #[:returns (get args (- (length args) 2))]
+                               (get args (- (length args) 2))))
                  :open (capture :delim :n)
                  :delim (some "`")
                  :close (cmt (sequence
@@ -138,13 +159,13 @@
 (comment
 
  (peg/match long-bytes "``\"a string\"``")
- # => @[[:returns "\"a string\""]]
+ # => @["\"a string\""]
 
  (peg/match long-bytes "`(def a 1)`")
- # => @[[:returns "(def a 1)"]]
+ # => @["(def a 1)"]
 
  (peg/match long-bytes "   ``(def a 1)``   ")
- # => @[[:returns "(def a 1)"]]
+ # => @["(def a 1)"]
 
  )
 
