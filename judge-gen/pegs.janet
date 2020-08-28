@@ -6,7 +6,8 @@
   (->
    # jg* from grammar are structs, need something mutable
    (table ;(kvs grammar/jg))
-   (put :main '(choice (capture :value) :comment))
+   (put :main '(choice (capture :value)
+                       :comment))
    #
    (put :comment-block ~(sequence
                           "("
@@ -14,13 +15,11 @@
                           (drop (cmt (capture "comment")
                                      ,|(do
                                          (++ in-comment)
-                                         #(print "enter:" $ ":" in-comment)
                                          $)))
                           :root
                           (drop (cmt (capture ")")
                                      ,|(do
                                          (-- in-comment)
-                                         #(print "exit:" $ ":" in-comment)
                                          $)))))
    (put :ptuple ~(choice :comment-block
                          (sequence "("
@@ -35,25 +34,22 @@
                           (capture (sequence
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
-                         ,|(do #(print "1:" in-comment)
-                               (if (zero? in-comment)
-                                 [:returns (string/trim $)]
-                                 "")))
+                         ,|(if (zero? in-comment)
+                             [:returns (string/trim $)]
+                             ""))
                     (cmt (sequence
                           "#" (any :ws) "!"
                           (capture (sequence
                                     (any (if-not (choice "\n" -1) 1))
                                     (any "\n"))))
-                         ,|(do #(print "2:" in-comment)
-                               (if (zero? in-comment)
-                                 [:throws (string/trim $)]
-                                 "")))
+                         ,|(if (zero? in-comment)
+                             [:throws (string/trim $)]
+                             ""))
                     (cmt (capture (sequence
                                     "#"
                                     (any (if-not (+ "\n" -1) 1))
                                     (any "\n")))
-                         ,|(do #(print "3:" in-comment)
-                               $))
+                         ,|(identity $))
                     (any :ws))))
    # tried using a table with a peg but had a problem, so use a struct
    table/to-struct))
