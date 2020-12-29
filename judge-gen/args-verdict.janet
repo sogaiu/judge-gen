@@ -44,12 +44,18 @@
 
 (defn parse
   []
-  (let [res (argparse/argparse ;params)
-        judge-dir-name (res "judge-dir-name")
+  (def res (argparse/argparse ;params))
+  (unless res
+    (break nil))
+  (let [judge-dir-name (res "judge-dir-name")
         judge-file-prefix (res "judge-file-prefix")
-        proj-root (res "project-root")
-        src-root (res "source-root")
+        proj-root (or (res "project-root") "")
+        src-root (or (res "source-root") "")
         version (res "version")]
+    # XXX: work on this
+    (when version
+      (print "jg-verdict pre-release")
+      (break nil))
     (setdyn :debug (res "debug"))
     (assert (os/stat proj-root)
             (string "Project root not detected: " proj-root))

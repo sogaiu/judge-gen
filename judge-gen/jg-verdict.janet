@@ -160,11 +160,7 @@
   (def {:judge-dir-name judge-dir-name
         :judge-file-prefix judge-file-prefix
         :proj-root proj-root
-        :src-root src-root
-        :version version} opts)
-  # XXX: review
-  (when version
-    (break true))
+        :src-root src-root} opts)
   (def judge-root
     (path/join proj-root judge-dir-name))
   # check if jg is accessible
@@ -209,5 +205,6 @@
 
 (defn main
   [& args]
-  (when (not (handle-one (args-verdict/parse)))
-    (os/exit 1)))
+  (when-let [opts (args-verdict/parse)]
+    (when (not (handle-one opts))
+      (os/exit 1))))
