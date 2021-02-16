@@ -103,26 +103,43 @@
 
 ``)
 
-(defn has-tests
+(defn maybe-has-tests
   [forms]
-  # XXX: atm, if one of forms is [:returns val] or [:throws val]
-  #      there is potentially at least one test.  the only other
-  #      type of thing in forms should be a string
-  (not (all |(not (tuple? $))
-            forms)))
+  (when forms
+    (some |(or (tuple? $)
+               (and (string? $)
+                    (peg/find pegs/long-string $)))
+          forms)))
 
 (comment
 
-  (has-tests @["(+ 1 1)\n  " [:returns "2"]])
+  (maybe-has-tests @["(+ 1 1)\n  " [:returns "2"]])
   # => true
 
-  (has-tests @["(error \"2\")\n  " [:throws "2"]])
+  (maybe-has-tests @["(error \"2\")\n  " [:throws "2"]])
   # => true
 
-  (has-tests @["(comment \"2\")\n  "])
-  # => false
+  (maybe-has-tests @["(comment \"2\")\n  "])
+  # => nil
 
-  )
+  (let [parsed (peg/match pegs/inner-forms ```
+(comment
+  (- 1 1)
+  ``
+  0
+  ``
+)
+```)]
+    (maybe-has-tests parsed))
+  # => 0
+
+  (maybe-has-tests @["(- 1 1)\n  " "``\n  0\n  ``\n"])
+  # => 0
+
+  (maybe-has-tests @["(- 1 1)\n  " "\n  0\n  \n"])
+  # => nil
+
+)
 
 (defn rewrite-block-with-verify
   [blk]
@@ -130,7 +147,7 @@
   # parse the comment block and rewrite some parts
   (set pegs/in-comment 0)
   (let [parsed (peg/match pegs/inner-forms blk)]
-    (when (has-tests parsed)
+    (when (maybe-has-tests parsed)
       (each cmt-or-frm parsed
         (when (not= cmt-or-frm "")
           (if (empty? rewritten-forms)
@@ -153,8 +170,8 @@
                           (rewrite-tagged (first maybe-long-bytes) last-form)]
                       (assert rewritten (string "match failed on long-string"))
                       (array/push rewritten-forms rewritten))))))))
-        (set pegs/in-comment 0)))
-    rewritten-forms))
+        (set pegs/in-comment 0))))
+  rewritten-forms)
 
 (comment
 
@@ -205,6 +222,49 @@
 
   (rewrite-block-with-verify comment-in-comment-str)
   # => @[]
+
+  # at one point this worked while a comment block that didn't
+  # have any tests with expected values expressed with `# => ...`
+  # would not (e.g. only have tests that use long strings to express
+  # expected values)
+  (def comment-with-long-string-expected-value-test ```
+(comment
+
+  (- 1 1)
+  # => 0
+
+  (+ 1 1)
+  ``
+  2
+  ``
+
+)
+```)
+
+  (rewrite-block-with-verify comment-with-long-string-expected-value-test)
+  ``
+  @["(_verify/is (- 1 1)\n   0)\n\n"
+    "(_verify/is (+ 1 1)\n   \n  2\n  )\n\n"]
+  ``
+
+  # this used to not work.  adding at least one test that expressed
+  # a return value using `# => ...` would lead to things working (i.e.
+  # tests would be detected)
+  (def only-long-string-expected-value-test ```
+(comment
+
+  (+ 1 1)
+  ``
+  2
+  ``
+
+)
+```)
+
+  (rewrite-block-with-verify only-long-string-expected-value-test)
+  ```
+  @["(_verify/is (+ 1 1)\n   \n  2\n  )\n\n"]
+  ```
 
   )
 

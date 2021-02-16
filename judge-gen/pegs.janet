@@ -79,6 +79,39 @@
 `)
  # => @["(- 1 1)\n  " [:returns "0"]]
 
+  (peg/match inner-forms ```
+(comment
+
+  (- 1 1)
+  # => 0
+
+  (+ 1 1)
+  ``
+  2
+  ``
+
+)
+```)
+  ```
+  '@["(- 1 1)\n  "
+     (:returns "0")
+     "(+ 1 1)\n  "
+     "``\n  2\n  ``\n\n"]
+  ```
+
+ (peg/match inner-forms ```
+(comment
+  (- 1 1)
+  ``
+  0
+  ``
+)
+```)
+ ```
+ @["(- 1 1)\n  "
+   "``\n  0\n  ``\n"]
+ ```
+
  (peg/match inner-forms `
 (comment
 
@@ -143,6 +176,31 @@
  # => @[[:returns "(def a 1)"]]
 
  )
+
+(def long-string
+  ~{:main (drop (sequence :open
+                          (any (if-not :close 1))
+                          :close))
+    :open (capture :delim :n)
+    :delim (some "`")
+    :close (cmt (sequence
+                  (not (look -1 "`"))
+                  (backref :n)
+                  (capture :delim))
+                ,=)})
+
+(comment
+
+  (peg/find long-string "``hi``")
+  # => 0
+
+  (peg/find long-string ":a ``hi``")
+  # => 3
+
+  (peg/find long-string "")
+  # => nil
+
+)
 
 # recognize next top-level form, returning a map
 # modify a copy of jg
