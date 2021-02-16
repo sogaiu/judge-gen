@@ -1,25 +1,15 @@
-(import ./judge-gen/vendor/path)
+(import ./support/path)
 
 (declare-project
   :name "judge-gen"
-  :url "https://github.com/sogaiu/judge-gen"
-  :repo "git+https://github.com/sogaiu/judge-gen.git")
+  :url "https://codeberg.org/sogaiu/judge-gen"
+  :repo "git+https://codeberg.org/sogaiu/judge-gen.git")
 
 (def proj-root
   (os/cwd))
 
 (def src-root
   (path/join proj-root "judge-gen"))
-
-(declare-executable
- :name "jg"
- :entry (path/join src-root "jg.janet")
- :install true)
-
-(declare-executable
- :name "jg-verdict"
- :entry (path/join src-root "jg-verdict.janet")
- :install true)
 
 (phony "netrepl" []
        (os/execute
