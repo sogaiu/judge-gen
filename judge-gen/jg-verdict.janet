@@ -83,7 +83,7 @@
                 (when (not= output "")
                   (spit (path/join results-dir
                           (string "stdout-" count "-" path ".txt"))
-                    output)))
+                        output)))
               (put results fpath (slurp results-fpath))
               (++ count)))))
 
