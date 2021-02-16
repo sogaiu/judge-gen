@@ -12,8 +12,68 @@
 
 # POSSIBILITIES:
 #
+# * only support the `# => ...` method to specify expected values.
+#   some consequences might include:
+#   * simpler to explain and document
+#   * simpler to implement
+#   * implementation may be more "correct" (e.g. detecting tests)
+#   * some existing tests may need to be updated
+#   * multi-line expected values can still be expressed by making the
+#     test a comparison (e.g. using `deep=`) that expects a value of
+#     true.  one of the two things being compared can be the test
+#     expression and the other can be the expected multiline value.
+#     * editor's indentation features can work
+#     * syntax highlighting can work
+#     * no longer have to think of an appropriate number of backticks
+#     * the multiline value doesn't require special quoting that might
+#       have been necessary otherwise when expressed as an expected
+#       valus
+#     * may be a bit less compact in representation than the long-string
+#       syntax
+#   * testing for errors can be done using `try`
+#
+# * remove the bits that select portions of the source based on provided
+#   line information as well as trying to detect "all relevant" comment
+#   blocks.  for the generated test file, always have the original source
+#   prepended at the beginning (i.e. don't make this an option).
+#
 # * identify each test by the line number its definition begins on
-#   in the source file.
+#   in the source file.  how can the line and column info be obtained?
+#   the location information should be based on the original source and
+#   not on the generated test file.
+#
+# * try to fix the issue of not successfully serializing test results.
+#   could using marshaling / unmarshaling work?
+#
+# * mode of operation that could work with the standard test directory:
+#   * add single file to test directory
+#     * this file is triggered by `jpm test`
+#     * it scans the test directory for test files that have:
+#       * appropriate `import` / `require` forms at the top
+#       * one or more `comment` blocks containing tests
+#       * note: the scanning should skip the triggered single file
+#     * for each found file
+#       * produce a test file - in a temp directory?
+#       * run the test file
+#       * collect results
+#     * use the collected results to produce a report that details:
+#       * how many failures
+#       * which files had failures
+#       * idenifiers / locators for each failure
+#
+# * consider removing building of command line executable -- just bundle
+#   with projects, applying the "add single file to test directory" idea
+#   above.  command line executable might be provided later.
+#
+# * would using recent janet-peg for parsing as well as rewriting
+#   source be any better than the current approach?
+#
+# * could have option to send code to janet -k before main jg processing.
+#   atm, `janet -k` doesn't appear to work for files that have
+#   `(import ...)` in them, so this may not be an option.
+#
+# * consider various "rewriting" targets, e.g. testament, helper.janet
+#   for "transition" purposes
 #
 # * jg-verdict's --debug flag should lead to jg's --debug flag being
 #   enabled?
@@ -41,22 +101,15 @@
 #   is more likely to be correct than just appending tests after original
 #   code
 #
-# * could have option to send code to janet -k before main jg processing.
-#   atm, `janet -k` doesn't appear to work for files that have
-#   `(import ...)` in them, so this may not be an option.
-#
 # * jg could try to only parse not too far beyond current cursor location
 #
-# * consider various "rewriting" targets, e.g. testament
-#
-# * conversion of these types of "tests" to external files to
-#   "transition" when things have solidifed enough
 
 # ISSUES:
 #
 # * how to handle rather large return values -- load from external file?
 #
-# * how / whether to try to test output (such as from `print`)
+# * how / whether to try to test output (such as from `print`) -- see
+#   spork's `capture-stdout` for an idea
 #
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
@@ -65,10 +118,20 @@
 # QUESTIONS:
 #
 # * is the output from jg rewrite really jdn?  will it always be serializable /
-#   deserializable?
+#   deserializable?  this has been a problem.  perhaps marhsalling might
+#   work better?
 #
 # * where to document usage of temporary directory to store test results and
 #   output?
 #
 # * how to get the equivalent of `/tmp` on windows for the purpose of
 #   creating a temporary directory to store test results and output?
+#
+# * provide a mode to work on stuff outside a comment block?
+#
+#   so for example the following at the top-level:
+#
+#     (def a 1)
+#     # => 1
+#
+#   ought to work?
