@@ -47,15 +47,12 @@
 
 (defn main
   [& args]
-  (def parsed (args/parse))
-  (unless parsed
+  (def opts (args/parse))
+  (unless opts
     (os/exit 1))
   (cond
-    (parsed :version)
+    (opts :version)
     (print "judge-gen alpha")
     #
-    (handle-one parsed)
+    (handle-one opts)
     true))
-
-
-

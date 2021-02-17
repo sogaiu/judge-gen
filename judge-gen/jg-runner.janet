@@ -1,5 +1,6 @@
-(import ./args-verdict :fresh true)
-(import ./utils :fresh true)
+(import ./utils)
+(import ./jg)
+(import ./args-runner)
 (import ./vendor/jpm)
 (import ./vendor/path)
 
@@ -13,14 +14,13 @@
                                 judge-root judge-file-prefix)
                    (array/pop subdirs))
       :file (when (= (path/ext fpath) ".janet")
-              (os/execute
-               ["jg"
-                "--prepend"
-                "--output" (path/join judge-root
-                                      ;subdirs
-                                      (string
-                                       judge-file-prefix path))
-                fpath] :p)))))
+              (jg/handle-one {:input fpath
+                              :line 0
+                              :output (path/join judge-root
+                                                 ;subdirs
+                                                 (string
+                                                   judge-file-prefix path))
+                              :prepend true})))))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
@@ -55,7 +55,10 @@
     (let [fpath (path/join results-dir
                   (string i "-" fname))]
       # note: create-dirs expects a path ending in a filename
-      (jpm/create-dirs fpath)
+      (try
+        (jpm/create-dirs fpath)
+        ([err]
+          (errorf "failed to create dir for path: " fpath)))
       fpath))
   (each path (os/dir dir)
     (def fpath (path/join dir path))
@@ -66,6 +69,8 @@
               (print "  " path)
               (def results-fpath
                 (make-results-fpath path count))
+              # XXX
+              #(eprintf "results path: %s" results-fpath)
               (def command (string/join
                             [(dyn :executable "janet")
                              "-e"
@@ -79,11 +84,13 @@
                                      ")"
                                      "'")] # avoid `main`
                             " "))
+              # XXX
+              #(eprintf "command: %s" command)
               (let [output (jpm/pslurp command)]
                 (when (not= output "")
                   (spit (path/join results-dir
                           (string "stdout-" count "-" path ".txt"))
-                        output)))
+                    output)))
               (put results fpath (slurp results-fpath))
               (++ count)))))
 
@@ -163,10 +170,6 @@
         :src-root src-root} opts)
   (def judge-root
     (path/join proj-root judge-dir-name))
-  # check if jg is accessible
-  (when (not= 0 (os/shell "jg --version"))
-    (eprint "failed to find jg in PATH")
-    (break))
   # remove old judge directory
   (print (string "cleaning out: " judge-root))
   (jpm/rm judge-root)
@@ -203,8 +206,15 @@
 
  )
 
+# XXX: imitate jg's main?
 (defn main
   [& args]
-  (when-let [opts (args-verdict/parse)]
-    (when (not (handle-one opts))
-      (os/exit 1))))
+  (def opts (args-runner/parse))
+  (unless opts
+    (os/exit 1))
+  (cond
+    (opts :version)
+    (print "jg-runner alpha")
+    #
+    (handle-one opts)
+    true))

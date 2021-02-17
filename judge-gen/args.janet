@@ -25,25 +25,16 @@
 
  (def file-path "./jg.janet")
 
- (do
-   (setdyn :args ["jg" file-path])
-   (argparse/argparse ;params))
-`
-@{"version" false
-  "output" ""
-  "format" "jdn"
-  :default file-path}
-`
+  (deep=
+    (do
+      (setdyn :args ["jg" file-path])
+      (argparse/argparse ;params))
 
- (do
-   (setdyn :args ["jg" file-path "-p"])
-   (argparse/argparse ;params))
-`
-@{"version" false
-  "output" ""
-  "format" "jdn"
-  :default file-path}
-`
+    @{"version" false
+      "output" ""
+      :order @[:default]
+      "format" "jdn"
+      :default file-path}) # => true
 
  )
 
