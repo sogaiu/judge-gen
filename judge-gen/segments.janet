@@ -42,7 +42,13 @@
        :start 0
        :type :value
        :end 19}
-      {:value "(comment\n\n      (+ a 1)\n      # => 2\n\n      (def b 3)\n\n      (- b a)\n      # => 2\n\n    )\n    "
+      {:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
        :start 19
        :type :value
        :end 112}]
@@ -66,7 +72,13 @@
        :start 0
        :type :value
        :end 19}
-      {:value "(comment\n\n      (+ a 1)\n      # => 2\n\n      (def b 3)\n\n      (- b a)\n      # => 2\n\n    )\n    "
+      {:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
        :start 19
        :type :value
        :end 112}])
@@ -74,7 +86,13 @@
   (deep=
     (find-comment-blocks segments)
     #
-    @["(comment\n\n      (+ a 1)\n      # => 2\n\n      (def b 3)\n\n      (- b a)\n      # => 2\n\n    )\n    "]
+    @[(string "(comment\n\n      "
+              "(+ a 1)\n      "
+              "# => 2\n\n      "
+              "(def b 3)\n\n      "
+              "(- b a)\n      "
+              "# => 2\n\n    "
+              ")\n    ")]
     ) # => true
 
 )
