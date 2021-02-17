@@ -36,143 +36,57 @@ projects though.  Be sure to examine the [fine print](doc/warning.md).
   Note the use of a single line comment and `=>` to express an
   expected return value.
 
-  More details [here](doc/tips-and-tweaking.md).
+  See [Tips and Tweaking](doc/tips-and-tweaking.md) for more details.
 
-* To execute such expressed tests you can:
+* Once some setup steps are followed, tests can be run by: `jpm test`
 
-  * Run a single command to have your directory of source files
-    transformed into tests, execute them, and see a summary.  This can
-    be done via:
+## Setup Steps
 
-    * A phony target(s) in `project.janet` (e.g. by running `jpm run
-      judge` or `jpm test`).
+Some files and directories need to be prepared in one's project.  See
+the end of this section for the brief version.
 
-    * Manually via the `jg-verdict(.exe)` command line tool.
+### Details
 
-    * Some other tooling that calls `jg-verdict(.exe)` and/or `jg(.exe)`.
+One such arrangement relative to the project root directory is:
 
-  * Run the tests via a REPL connection by using editor integration.
+1. `test/runner.janet` - test runner and reporter
+2. `support` - a directory for judge-gen's code
+3. `examples` - a directory for files that get turned into test files
 
-  See the Usage section below for some details.
+`test/runner.janet` needs to be minimally configured to know where the
+directory for 3. is.  That can be done by modifying the `def` form for
+`src-root`.  The `runner.janet` file in this repository's `test`
+subdirectory can be used as a template.
 
-## Installation
+`support` can be populated by copying files from this repository's
+`judge-gen` subdirectory.
 
-Clone and build:
+`examples` is the subdirectory to house files that get turned into
+tests.  It can be the directory containing the project's source (and
+doesn't need to be named `examples`).  It's most likely to work if
+this is a direct subdirectory of the project's root directory.
 
-```
-git clone https://github.com/sogaiu/judge-gen
-cd judge-gen
-jpm deps && jpm build
-```
+See [Tips and Tweaking](doc/tips-and-tweaking.md) for more information
+about configuration.
 
-Success should yield the [jg](doc/jg.md) and
-[jg-verdict](doc/jg-verdict.md) binaries in the `build` subdirectory.
+### Specific Steps
 
-Make the binaries available on `PATH` somehow, e.g. make symlinks to
-the created binaries from some directory that is already on `PATH`.
-
-Alternatively, `jpm install` should place `jg(.exe)` and
-`jg-verdict(.exe)` in janet's `binpath`.
+1. Create `test/runner.janet` based on the one in this repository.
+2. Edit the contained `def` form for `src-root` to point at `examples`
+   (or other appropriate location as discussed above).
+3. Create the `support` subdirectory and copy the content of this
+   repository's `judge-gen` subdirectory (so one of the files in
+   the `support` will be `jg.janet`, for example).
+4. Create the `examples` directory depending on what was done in step 2.
 
 ## Usage
 
-### phony target(s) in project.janet
+To run the tests and get a report: `jpm test`
 
-Here is a sample `project.janet` with an explanation following:
-```clojure
-# (1)
-(import ./vendor/path)
+## Sample Configurations
 
-(declare-project
- :name "janet-peg-grammar"
- :url "https://github.com/sogaiu/janet-peg-grammar"
- :repo "git+https://github.com/sogaiu/janet-peg-grammar.git")
-
-# (2)
-(def proj-root
-  (os/cwd))
-
-# (3)
-(def src-root
-  (path/join proj-root "janet-peg-grammar"))
-
-(declare-source
- :source [(path/join src-root "grammar.janet")])
-
-(phony "netrepl" []
-       (os/execute
-        ["janet" "-e" (string "(os/cd \"" src-root "\")"
-                              "(import spork/netrepl)"
-                              "(netrepl/server)")] :p))
-
-# (4)
-(phony "judge" ["build"]
-       (os/execute ["jg-verdict"
-                    "-p" proj-root
-                    "-s" src-root] :p))
-```
-
-The main point of interest is (4).  This makes it possible to run the
-comment block tests via an invocation like:
-
-```
-jpm run judge
-```
-
-(2) and (3) exist so that (4) gets the information it needs to run.
-
-(1) exists so that path manipulation can be done conveniently and in a
-platform-independent manner.  (At the moment, it's up to a project's
-author to figure out how to do path-handling within `project.janet`.
-The way shown here is just one possibility.  There are bits within
-`jpm` itself that can help with this, but they are unfortunately
-marked private.)
-
-It's also possible to integrate with `jpm test`, by appropriately
-adding something like the following to `project.janet`:
-
-```clojure
-# (5)
-# XXX: the following can be used to arrange for the overriding of the
-#      "test" phony target
-(put (dyn :rules) "test" nil)
-# (6)
-(phony "test" ["build"]
-       (os/execute ["jg-verdict"
-                    "-p" proj-root
-                    "-s" src-root] :p))
-```
-
-Adding (6) makes it so that `jpm test` will cause comment block tests
-to run.
-
-If (5) is also added, only the comment block tests will run when `jpm
-test` is invoked.
-
-Not adding (5) means that whatever `jpm test` did before will ALSO be
-done in addition to running comment-block tests.
-
-### jg-verdict(.exe)
-
-[Command line test runner](doc/jg-verdict.md) -- generate tests, run
-them, and display report.  Note that `jg-verdict(.exe)` calls
-`jg(.exe)` as part of its operation.
-
-### jg(.exe)
-
-[Command line test file generator](doc/jg.md) -- create tests based on
-existing source code.
-
-### Editor Support
-
-There is also preliminary support for use from Emacs (see the
-[emacs](emacs) subdirectory).  I've also had some success with VSCode
-and Neovim integration, but am not sure whether it's worth it overall.
-
-## Tips and Tweaking
-
-Some tips and configuration information may be found
-[here](doc/tips-and-tweaking.md).
+This repository can serve as an example, but
+[margaret](https://gitlab.com/sogaiu/margaret) is another example.
 
 ## Notes
 
