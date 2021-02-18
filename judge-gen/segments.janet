@@ -40,6 +40,7 @@
     #
     @[{:value "    (def a 1)\n\n    "
        :start 0
+       :s-line 1
        :type :value
        :end 19}
       {:value (string "(comment\n\n      "
@@ -50,6 +51,7 @@
                       "# => 2\n\n    "
                       ")\n    ")
        :start 19
+       :s-line 3
        :type :value
        :end 112}]
     ) # => true
@@ -60,9 +62,10 @@
   [segments]
   (var comment-blocks @[])
   (loop [i :range [0 (length segments)]]
-    (def {:value code-str} (get segments i))
+    (def segment (get segments i))
+    (def {:value code-str} segment)
     (when (peg/match pegs/comment-block-maybe code-str)
-      (array/push comment-blocks code-str)))
+      (array/push comment-blocks segment)))
   comment-blocks)
 
 (comment
@@ -70,6 +73,7 @@
   (def segments
     @[{:value "    (def a 1)\n\n    "
        :start 0
+       :s-line 1
        :type :value
        :end 19}
       {:value (string "(comment\n\n      "
@@ -80,19 +84,25 @@
                       "# => 2\n\n    "
                       ")\n    ")
        :start 19
+       :s-line 3
        :type :value
        :end 112}])
 
   (deep=
     (find-comment-blocks segments)
     #
-    @[(string "(comment\n\n      "
-              "(+ a 1)\n      "
-              "# => 2\n\n      "
-              "(def b 3)\n\n      "
-              "(- b a)\n      "
-              "# => 2\n\n    "
-              ")\n    ")]
-    ) # => true
+    @[{:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :start 19
+       :s-line 3
+       :type :value
+       :end 112}]
+    )
+  # => true
 
 )
