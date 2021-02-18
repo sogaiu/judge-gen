@@ -6,11 +6,16 @@
 
 # POSSIBILITIES:
 #
-# * try to fix the issue of not successfully serializing test results.
-#   could using marshaling / unmarshaling work?
+# * downside of using `(deep= A B)` with expected value of true is
+#   when the test fails, there's not a whole lot of useful information
+#   apart from the failure.  is this just a trade-off that has to be
+#   made with the current approach?
 #
 # * currently using `in-comment` var in `pegs.janet`.  this is ugly
 #   and prone to error.  figure out a way to not have to use this.
+#
+# * determine whether there is cruft in the _verify-related definition
+#   string (e.g. may be summarize is not used?)
 #
 # * could have option to send code to janet -k before main jg processing.
 #   atm, `janet -k` doesn't appear to work for files that have
@@ -52,10 +57,6 @@
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 
 # QUESTIONS:
-#
-# * is the output from jg rewrite really jdn?  will it always be serializable /
-#   deserializable?  this has been a problem.  perhaps marhsalling might
-#   work better?
 #
 # * where to document usage of temporary directory to store test results and
 #   output?
