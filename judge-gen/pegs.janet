@@ -117,26 +117,22 @@
     (table ;(kvs grammar/jg))
     # also record location and type information, instead of just recognizing
     (put :main ~(choice (cmt (sequence
-                               (position)
                                (line)
                                (capture :value)
                                (position))
                              ,|(do
-                                 (def [start s-line value end] $&)
+                                 (def [s-line value end] $&)
                                  {:end end
-                                  :start start
                                   :s-line s-line
                                   :type :value
                                   :value value}))
                         (cmt (sequence
-                               (position)
                                (line)
                                (capture :comment)
                                (position))
                              ,|(do
-                                 (def [start s-line value end] $&)
+                                 (def [s-line value end] $&)
                                  {:end end
-                                  :start start
                                   :s-line s-line
                                   :type :comment
                                   :value value}))))
@@ -156,7 +152,6 @@
     #
     @[{:type :comment
        :value "# \"my test\"\n"
-       :start 0
        :s-line 1
        :end 12}]) # => true
 
@@ -166,7 +161,6 @@
     #
     @[{:type :value
        :value "(+ 1 1)\n"
-       :start 12
        :s-line 2
        :end 20}]) # => true
 
@@ -179,7 +173,6 @@
     #
     @[{:type :comment
        :value "# => 2\n"
-       :start 20
        :s-line 3
        :end 27}]) # => true
 
@@ -216,7 +209,6 @@
     #
     @[{:type :value
        :value "(def a 1)\n\n"
-       :start 0
        :s-line 1
        :end 11}]
     ) # => true
@@ -228,7 +220,6 @@
     @[{:type :value
        :value
        "(comment\n\n  (+ 1 1)\n\n  # hi there\n\n  (comment :a )\n\n)\n\n"
-       :start 11
        :s-line 3
        :end 66}]
     ) # => true
@@ -239,7 +230,6 @@
     #
     @[{:type :value
        :value "(def x 0)\n\n"
-       :start 66
        :s-line 13
        :end 77}]
     ) # => true
@@ -250,7 +240,6 @@
     #
     @[{:type :value
        :value "(comment\n\n  (= a (+ x 1))\n\n)"
-       :start 77
        :s-line 15
        :end 105}]
     ) # => true
