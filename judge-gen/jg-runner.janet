@@ -142,14 +142,21 @@
     (print fpath)
     (each fail failed-tests
       (def {:test-value test-value
+            :expected-value expected-value
             :name test-name
             :passed test-passed
             :test-form test-form} fail)
-      (utils/print-color "failed" :red)
+      (utils/print-color "  failed" :red)
       (print ": " test-name)
-      (utils/print-color "form" :red)
+      (utils/print-color "    form" :red)
       (printf ": %M" test-form)
-      (utils/print-color "value" :red)
+      (utils/print-color "expected" :red)
+      # XXX: this could use some work...
+      (if (< 30 (length (describe expected-value)))
+        (print ":")
+        (prin ": "))
+      (printf "%M" expected-value)
+      (utils/print-color "  actual" :red)
       # XXX: this could use some work...
       (if (< 30 (length (describe test-value)))
         (print ":")
