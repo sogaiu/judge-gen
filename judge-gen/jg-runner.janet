@@ -86,12 +86,31 @@
                              " "))
               # XXX
               #(eprintf "command: %s" command)
-              (let [output (jpm/pslurp command)]
+              (let [output (try
+                             (jpm/pslurp command)
+                             ([err]
+                               (eprint err)
+                               (errorf "command failed: %s" command)))]
                 (when (not= output "")
                   (spit (path/join results-dir
                                    (string "stdout-" count "-" path ".txt"))
                         output)))
-              (put results fpath (slurp results-fpath))
+              (def marshalled-results
+                (try
+                  (slurp results-fpath)
+                  ([err]
+                    (eprint err)
+                    (errorf "failed to read in marshalled results from: %s"
+                            results-fpath))))
+              (def results-for-path
+                (try
+                  (unmarshal (buffer marshalled-results))
+                  ([err]
+                    (eprintf err)
+                    (errorf "failed to unmarshal content from: %s"
+                            results-fpath))))
+              (put results
+                   fpath results-for-path)
               (++ count)))))
 
 (defn summarize
@@ -103,14 +122,10 @@
   (var total-tests 0)
   (var total-passed 0)
   (def failures @{})
-  (eachp [fpath details] results
+  (eachp [fpath test-results] results
     (def name (path/basename fpath))
-    (when (not= "" details) # XXX: sign of a problem?
-      (def p (parser/new))
-      # XXX: error-handling...
-      (parser/consume p details)
+    (when test-results
       (var passed 0)
-      (def test-results (parser/produce p))
       (var num-tests (length test-results))
       (var fails @[])
       (each test-result test-results
