@@ -1,5 +1,6 @@
 (import ./vendor/grammar)
 
+# XXX: any way to avoid this?
 (var in-comment 0)
 
 (def jg-comments
@@ -27,30 +28,24 @@
                                    (choice ")" (error "")))))
    # classify certain comments
    (put :comment ~(sequence
-                   (any :ws)
-                   (choice
-                    (cmt (sequence
-                          "#" (any :ws) "=>"
-                          (capture (sequence
-                                    (any (if-not (choice "\n" -1) 1))
-                                    (any "\n"))))
-                         ,|(if (zero? in-comment)
-                             [:returns (string/trim $)]
-                             ""))
-                    (cmt (sequence
-                          "#" (any :ws) "!"
-                          (capture (sequence
-                                    (any (if-not (choice "\n" -1) 1))
-                                    (any "\n"))))
-                         ,|(if (zero? in-comment)
-                             [:throws (string/trim $)]
-                             ""))
-                    (cmt (capture (sequence
-                                    "#"
-                                    (any (if-not (+ "\n" -1) 1))
-                                    (any "\n")))
-                         ,|(identity $))
-                    (any :ws))))
+                    (any :ws)
+                    (choice
+                      (cmt (sequence
+                             (line)
+                             "#" (any :ws) "=>"
+                             (capture (sequence
+                                        (any (if-not (choice "\n" -1) 1))
+                                        (any "\n"))))
+                           ,|(if (zero? in-comment)
+                               # record value and line
+                               [:returns (string/trim $1) $0]
+                               ""))
+                      (cmt (capture (sequence
+                                      "#"
+                                      (any (if-not (+ "\n" -1) 1))
+                                      (any "\n")))
+                           ,|(identity $))
+                      (any :ws))))
    # tried using a table with a peg but had a problem, so use a struct
    table/to-struct))
 
@@ -71,136 +66,48 @@
 
 (comment
 
- (peg/match inner-forms `
-(comment
-  (- 1 1)
-  # => 0
-)
-`)
- # => @["(- 1 1)\n  " [:returns "0"]]
-
-  (peg/match inner-forms ```
-(comment
-
-  (- 1 1)
-  # => 0
-
-  (+ 1 1)
-  ``
-  2
-  ``
-
-)
-```)
-  ```
-  '@["(- 1 1)\n  "
-     (:returns "0")
-     "(+ 1 1)\n  "
-     "``\n  2\n  ``\n\n"]
-  ```
-
- (peg/match inner-forms ```
-(comment
-  (- 1 1)
-  ``
-  0
-  ``
-)
-```)
- ```
- @["(- 1 1)\n  "
-   "``\n  0\n  ``\n"]
- ```
-
- (peg/match inner-forms `
-(comment
-
-  (def a 1)
-
-  # this is just a comment
-
-  (def b 2)
-
-  (= 1 (- b a))
+  (deep=
+    #
+    (peg/match
+      inner-forms
+      ``
+      (comment
+        (- 1 1)
+        # => 0
+      )
+      ``)
+    #
+    @["(- 1 1)\n  "
+      [:returns "0" 3]])
   # => true
 
-  (error "ouch")
-  # !
-
-)
-`)
-`
-@["(def a 1)\n\n  "
-  "# this is just a comment\n\n"
-  "(def b 2)\n\n  "
-  "(= 1 (- b a))\n  "
-  [:returns "true"]
-  "(error \"ouch\")\n  "
-  [:throws ""]]
-`
-)
-
-# recognize and capture what's between a long string's delimiters
-(def long-bytes
-  ~{:main (sequence
-           (any :ws)
-           :long-bytes
-           (any :ws))
+  (deep=
     #
-    :ws (set " \0\f\n\r\t\v")
+    (peg/match
+      inner-forms
+      ``
+      (comment
+
+        (def a 1)
+
+        # this is just a comment
+
+        (def b 2)
+
+        (= 1 (- b a))
+        # => true
+
+      )
+      ``)
     #
-    :long-bytes {:main (cmt (sequence
-                             :open
-                             (capture (any (if-not :close 1)))
-                             :close)
-                            ,(fn [& args]
-                               # XXX: not sure if this is quite correct
-                               [:returns (get args (- (length args) 2))]))
-                 :open (capture :delim :n)
-                 :delim (some "`")
-                 :close (cmt (sequence
-                              (not (> -1 "`"))
-                              (backref :n)
-                              (capture :delim))
-                             ,=)}})
+    @["(def a 1)\n\n  "
+      "# this is just a comment\n\n"
+      "(def b 2)\n\n  "
+      "(= 1 (- b a))\n  "
+      [:returns "true" 10]])
+  # => true
 
-(comment
-
- (peg/match long-bytes "``\"a string\"``")
- # => @[[:returns "\"a string\""]]
-
- (peg/match long-bytes "`(def a 1)`")
- # => @[[:returns "(def a 1)"]]
-
- (peg/match long-bytes "   ``(def a 1)``   ")
- # => @[[:returns "(def a 1)"]]
-
- )
-
-(def long-string
-  ~{:main (drop (sequence :open
-                          (any (if-not :close 1))
-                          :close))
-    :open (capture :delim :n)
-    :delim (some "`")
-    :close (cmt (sequence
-                  (not (look -1 "`"))
-                  (backref :n)
-                  (capture :delim))
-                ,=)})
-
-(comment
-
-  (peg/find long-string "``hi``")
-  # => 0
-
-  (peg/find long-string ":a ``hi``")
-  # => 3
-
-  (peg/find long-string "")
-  # => nil
-
-)
+  )
 
 # recognize next top-level form, returning a map
 # modify a copy of jg
@@ -210,19 +117,27 @@
    (table ;(kvs grammar/jg))
    # also record location and type information, instead of just recognizing
    (put :main ~(choice (cmt (sequence
-                              (position) (capture :value) (position))
+                              (position)
+                              (line)
+                              (capture :value)
+                              (position))
                             ,|(do
-                                (def [start value end] $&)
+                                (def [start s-line value end] $&)
                                 {:end end
                                  :start start
+                                 :s-line s-line
                                  :type :value
                                  :value value}))
                        (cmt (sequence
-                              (position) (capture :comment) (position))
+                              (position)
+                              (line)
+                              (capture :comment)
+                              (position))
                             ,|(do
-                                (def [start value end] $&)
+                                (def [start s-line value end] $&)
                                 {:end end
                                  :start start
+                                 :s-line s-line
                                  :type :comment
                                  :value value}))))
    # tried using a table with a peg but had a problem, so use a struct
@@ -230,96 +145,116 @@
 
 (comment
 
- (def sample-source
-   (string "# \"my test\"\n"
-           "(+ 1 1)\n"
-           "# => 2\n"))
+  (def sample-source
+    (string "# \"my test\"\n"
+            "(+ 1 1)\n"
+            "# => 2\n"))
 
- (peg/match jg-pos sample-source 0)
-`
-@[{:type :comment
-   :value "# \"my test\"\n"
-   :start 0
-   :end 12}]
-`
+  (deep=
+    #
+    (peg/match jg-pos sample-source 0)
+    #
+    @[{:type :comment
+       :value "# \"my test\"\n"
+       :start 0
+       :s-line 1
+       :end 12}]) # => true
 
- (peg/match jg-pos sample-source 12)
-`
- @[{:type :value
-    :value "(+ 1 1)\n"
-    :start 12
-    :end 20}]
-`
+  (deep=
+    #
+    (peg/match jg-pos sample-source 12)
+    #
+    @[{:type :value
+       :value "(+ 1 1)\n"
+       :start 12
+       :s-line 2
+       :end 20}]) # => true
 
- (string/slice sample-source 12 20)
- # => "(+ 1 1)\n"
+  (string/slice sample-source 12 20)
+  # => "(+ 1 1)\n"
 
- (peg/match jg-pos sample-source 20)
-`
-@[{:type :comment
-   :value "# => 2\n"
-   :start 20
-   :end 27}]
-`
+  (deep=
+    #
+    (peg/match jg-pos sample-source 20)
+    #
+    @[{:type :comment
+       :value "# => 2\n"
+       :start 20
+       :s-line 3
+       :end 27}]) # => true
 
 )
 
 (comment
 
- (def top-level-comments-sample `
+  (def top-level-comments-sample
+    ``
+    (def a 1)
 
-(def a 1)
+    (comment
 
-(comment
+      (+ 1 1)
 
-  (+ 1 1)
+      # hi there
 
-  # hi there
+      (comment :a )
 
-  (comment :a )
+    )
 
-)
+    (def x 0)
 
-(def x 0)
+    (comment
 
-(comment
+      (= a (+ x 1))
 
-  (= a (+ x 1))
+    )
+    ``)
 
-)
-`)
+  (deep=
+    #
+    (peg/match jg-pos top-level-comments-sample)
+    #
+    @[{:type :value
+       :value "(def a 1)\n\n"
+       :start 0
+       :s-line 1
+       :end 11}]
+    ) # => true
 
- (peg/match jg-pos top-level-comments-sample)
-`
-@[{:type :value
-   :value "\n(def a 1)\n\n"
-   :start 0
-   :end 12}]
-`
+  (deep=
+    #
+    (peg/match jg-pos top-level-comments-sample 11)
+    #
+    @[{:type :value
+       :value
+       "(comment\n\n  (+ 1 1)\n\n  # hi there\n\n  (comment :a )\n\n)\n\n"
+       :start 11
+       :s-line 3
+       :end 66}]
+    ) # => true
 
- (peg/match jg-pos top-level-comments-sample 12)
-`
-@[{:type :value
-   :value "(comment\n\n  (+ 1 1)\n\n  # hi there\n\n  (comment :a )\n\n)\n\n"
-   :start 12
-   :end 67}]
-`
+  (deep=
+    #
+    (peg/match jg-pos top-level-comments-sample 66)
+    #
+    @[{:type :value
+       :value "(def x 0)\n\n"
+       :start 66
+       :s-line 13
+       :end 77}]
+    ) # => true
 
- (peg/match jg-pos top-level-comments-sample 67)
-`
-@[{:type :value
-   :value "(def x 0)\n\n"
-   :start 67
-   :end 78}]
-`
+  (deep=
+    #
+    (peg/match jg-pos top-level-comments-sample 77)
+    #
+    @[{:type :value
+       :value "(comment\n\n  (= a (+ x 1))\n\n)"
+       :start 77
+       :s-line 15
+       :end 105}]
+    ) # => true
 
- (peg/match jg-pos top-level-comments-sample 78)
-`
-@[{:type :value
-   :value "(comment\n\n  (= a (+ x 1))\n\n)"
-   :start 78
-   :end 106}]
-`
  )
 
 (def comment-block-maybe
@@ -334,22 +269,26 @@
 
 (comment
 
-  (peg/match comment-block-maybe `
-(comment
+  (peg/match
+    comment-block-maybe
+    ``
+    (comment
 
-  (= a (+ x 1))
+      (= a (+ x 1))
 
-)
-`)
+    )
+    ``)
   # => @[]
 
-  (peg/match comment-block-maybe `
+  (peg/match
+    comment-block-maybe
+    ``
 
-(comment
+    (comment
 
-  :a
-)
-`)
+      :a
+    )
+    ``)
   # => @[]
 
  )

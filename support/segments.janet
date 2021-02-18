@@ -1,4 +1,4 @@
-(import ./pegs :fresh true)
+(import ./pegs)
 
 (defn parse-buffer
   [buf]
@@ -16,51 +16,93 @@
     (set from (segment :end)))
   segments)
 
-(defn find-segment
-  [segments position]
-  (var ith nil)
-  (var val nil)
-  (var shifted 0)
-  (eachp [i segment] segments
-         (def {:end end
-               :start start
-               :value value} segment)
-         (when (dyn :debug)
-           (eprint "start: " start)
-           (eprint "end: " end))
-         (when (<= start position (dec end))
-           (set ith i)
-           (set val value)
-           (set shifted (- position start))
-           (break)))
-  # adjust if position is within trailing whitespace
-  (when ith
-    # attempt to capture any non-whitespace
-    (when (empty? (peg/match '(any (choice :s (capture :S)))
-                              val shifted))
-      (++ ith)))
-  ith)
+(comment
+
+  (def code-buf
+    @``
+    (def a 1)
+
+    (comment
+
+      (+ a 1)
+      # => 2
+
+      (def b 3)
+
+      (- b a)
+      # => 2
+
+    )
+    ``)
+
+  (deep=
+    (parse-buffer code-buf)
+    #
+    @[{:value "    (def a 1)\n\n    "
+       :start 0
+       :s-line 1
+       :type :value
+       :end 19}
+      {:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :start 19
+       :s-line 3
+       :type :value
+       :end 112}]
+    ) # => true
+
+  )
 
 (defn find-comment-blocks
-  [segments at single]
+  [segments]
   (var comment-blocks @[])
-  (cond
-    # find only one
-    single
-    (loop [i :range [at (length segments)]]
-      (def {:value code-str} (get segments i))
-      (when (peg/match pegs/comment-block-maybe code-str)
-        (array/push comment-blocks code-str)
-        (break)))
-    # find all up through segment `at`, inclusive
-    at
-    (loop [i :range [0 (inc at)]]
-      (def {:value code-str} (get segments i))
-      (when (peg/match pegs/comment-block-maybe code-str)
-        (array/push comment-blocks code-str)))
-    # find all
-    (loop [i :range [0 (length segments)]]
-      (def {:value code-str} (get segments i))
-      (when (peg/match pegs/comment-block-maybe code-str)
-        (array/push comment-blocks code-str))))
+  (loop [i :range [0 (length segments)]]
+    (def segment (get segments i))
+    (def {:value code-str} segment)
+    (when (peg/match pegs/comment-block-maybe code-str)
+      (array/push comment-blocks segment)))
   comment-blocks)
+
+(comment
+
+  (def segments
+    @[{:value "    (def a 1)\n\n    "
+       :start 0
+       :s-line 1
+       :type :value
+       :end 19}
+      {:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :start 19
+       :s-line 3
+       :type :value
+       :end 112}])
+
+  (deep=
+    (find-comment-blocks segments)
+    #
+    @[{:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :start 19
+       :s-line 3
+       :type :value
+       :end 112}]
+    )
+  # => true
+
+)

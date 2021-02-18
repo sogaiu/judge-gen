@@ -26,19 +26,19 @@
 
 (comment
 
- (do
-   (setdyn :args ["jg-verdict"
-                  "-p" ".."
-                  "-s" "."])
-   (argparse/argparse ;params))
-`
-@{"version" false
-  "judge-file-prefix" "judge-"
-  "judge-dir-name" "judge"
-  :order @["project-root" "source-root"]
-  "project-root" ".."
-  "source-root" "."}
-`
+  (deep=
+    (do
+      (setdyn :args ["jg-verdict"
+                     "-p" ".."
+                     "-s" "."])
+      (argparse/argparse ;params))
+
+    @{"version" false
+      "judge-file-prefix" "judge-"
+      "judge-dir-name" "judge"
+      :order @["project-root" "source-root"]
+      "project-root" ".."
+      "source-root" "."}) # => true
 
  )
 
