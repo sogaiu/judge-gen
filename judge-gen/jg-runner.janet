@@ -39,7 +39,7 @@
 
   (make-judges src-root @[] judge-root "judge-")
 
- )
+  )
 
 (defn judge
   [dir results judge-root judge-file-prefix]
@@ -47,13 +47,13 @@
   (def results-dir
     # XXX: what about windows...
     (path/join "/tmp"
-      (string "judge-gen-"
-              (os/time) "-"
-              (utils/rand-string 8))))
+               (string "judge-gen-"
+                       (os/time) "-"
+                       (utils/rand-string 8))))
   (defn make-results-fpath
     [fname i]
     (let [fpath (path/join results-dir
-                  (string i "-" fname))]
+                           (string i "-" fname))]
       # note: create-dirs expects a path ending in a filename
       (try
         (jpm/create-dirs fpath)
@@ -72,25 +72,25 @@
               # XXX
               #(eprintf "results path: %s" results-fpath)
               (def command (string/join
-                            [(dyn :executable "janet")
-                             "-e"
-                             (string "'(os/cd \"" judge-root "\")'")
-                             "-e"
-                             (string "'"
-                                     "(do "
-                                     "  (setdyn :judge-gen/test-out "
-                                     "          \"" results-fpath "\") "
-                                     "  (dofile \"" fpath "\") "
-                                     ")"
-                                     "'")] # avoid `main`
-                            " "))
+                             [(dyn :executable "janet")
+                              "-e"
+                              (string "'(os/cd \"" judge-root "\")'")
+                              "-e"
+                              (string "'"
+                                      "(do "
+                                      "  (setdyn :judge-gen/test-out "
+                                      "          \"" results-fpath "\") "
+                                      "  (dofile \"" fpath "\") "
+                                      ")"
+                                      "'")] # avoid `main`
+                             " "))
               # XXX
               #(eprintf "command: %s" command)
               (let [output (jpm/pslurp command)]
                 (when (not= output "")
                   (spit (path/join results-dir
-                          (string "stdout-" count "-" path ".txt"))
-                    output)))
+                                   (string "stdout-" count "-" path ".txt"))
+                        output)))
               (put results fpath (slurp results-fpath))
               (++ count)))))
 
@@ -104,49 +104,49 @@
   (var total-passed 0)
   (def failures @{})
   (eachp [fpath details] results
-         (def name (path/basename fpath))
-         (when (not= "" details) # XXX: sign of a problem?
-           (def p (parser/new))
-           # XXX: error-handling...
-           (parser/consume p details)
-           (var passed 0)
-           (def test-results (parser/produce p))
-           (var num-tests (length test-results))
-           (var fails @[])
-           (each test-result test-results
-             (++ total-tests)
-             (def {:passed test-passed} test-result)
-             (if test-passed
-               (do
-                 (++ passed)
-                 (++ total-passed))
-               (array/push fails test-result)))
-           (when (not (empty? fails))
-             (put failures fpath fails))))
+    (def name (path/basename fpath))
+    (when (not= "" details) # XXX: sign of a problem?
+      (def p (parser/new))
+      # XXX: error-handling...
+      (parser/consume p details)
+      (var passed 0)
+      (def test-results (parser/produce p))
+      (var num-tests (length test-results))
+      (var fails @[])
+      (each test-result test-results
+        (++ total-tests)
+        (def {:passed test-passed} test-result)
+        (if test-passed
+          (do
+            (++ passed)
+            (++ total-passed))
+          (array/push fails test-result)))
+      (when (not (empty? fails))
+        (put failures fpath fails))))
   (eachp [fpath failed-tests] failures
-         (print fpath)
-         (each fail failed-tests
-           (def {:test-value test-value
-                 :name test-name
-                 :passed test-passed
-                 :test-form test-form} fail)
-           (utils/print-color "failed" :red)
-           (print ": " test-name)
-           (utils/print-color "form" :red)
-           (printf ": %M" test-form)
-           (utils/print-color "value" :red)
-           # XXX: this could use some work...
-           (if (< 30 (length (describe test-value)))
-             (print ":")
-             (prin ": "))
-           (printf "%M" test-value)))
+    (print fpath)
+    (each fail failed-tests
+      (def {:test-value test-value
+            :name test-name
+            :passed test-passed
+            :test-form test-form} fail)
+      (utils/print-color "failed" :red)
+      (print ": " test-name)
+      (utils/print-color "form" :red)
+      (printf ": %M" test-form)
+      (utils/print-color "value" :red)
+      # XXX: this could use some work...
+      (if (< 30 (length (describe test-value)))
+        (print ":")
+        (prin ": "))
+      (printf "%M" test-value)))
   (when (= 0 total-tests)
     (print "No tests found, so no judgements made.")
     (break))
   (if (not= total-passed total-tests)
     (do
       (utils/print-dashes)
-        (utils/print-color total-passed :red))
+      (utils/print-color total-passed :red))
     (utils/print-color total-passed :green))
   (prin " of ")
   (utils/print-color total-tests :green)
@@ -159,7 +159,7 @@
 
   (summarize @{})
 
- )
+  )
 
 # XXX: consider `(break false)` instead of just `assert`?
 (defn handle-one
@@ -192,21 +192,20 @@
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
- (def proj-root
-   (path/join (os/getenv "HOME")
-              "src" "judge-gen"))
+  (def proj-root
+    (path/join (os/getenv "HOME")
+               "src" "judge-gen"))
 
- (def src-root
-   (path/join proj-root "judge-gen"))
+  (def src-root
+    (path/join proj-root "judge-gen"))
 
   (handle-one {:judge-dir-name "judge"
                :judge-file-prefix "judge-"
                :proj-root proj-root
                :src-root src-root})
 
- )
+  )
 
-# XXX: imitate jg's main?
 (defn main
   [& args]
   (def opts (args-runner/parse))
