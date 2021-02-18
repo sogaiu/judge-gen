@@ -8,13 +8,13 @@
     (string "(_verify/is "
             last-form " "
             value " "
-            (string "\"" "line-" (+ line offset) "\"") ")\n\n")
+            (string "\"" "line-" (dec (+ line offset)) "\"") ")\n\n")
     nil))
 
 (comment
 
   (rewrite-tagged [:returns true 1] "(= 1 1)" 1)
-  # => "(_verify/is (= 1 1) true \"line-2\")\n\n"
+  # => "(_verify/is (= 1 1) true \"line-1\")\n\n"
 
  )
 
@@ -144,7 +144,7 @@
      :s-line 3})
 
   (rewrite-block-with-verify comment-blk)
-  # => @["(_verify/is (+ 1 1)\n   2 \"line-7\")\n\n"]
+  # => @["(_verify/is (+ 1 1)\n   2 \"line-6\")\n\n"]
 
   (do
     (set pegs/in-comment 0)
