@@ -1,5 +1,5 @@
 (import ../support/jg-runner :as "jgr")
-(import ../support/path)
+(import ../support/vendor/path)
 
 # from the perspective of `jpm test`
 (def proj-root
