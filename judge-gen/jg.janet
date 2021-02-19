@@ -24,13 +24,11 @@
     (break false))
   (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
-  # output rewritten content if appropriate
-  (def out @"")
-  (buffer/blit out buf -1)
-  (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1)
+  # output rewritten content
+  (buffer/blit buf (rewrite/rewrite-with-verify comment-blocks) -1)
   (if (not= "" output)
-    (spit output out)
-    (print out))
+    (spit output buf)
+    (print buf))
   true)
 
 # XXX: since there are no tests in this comment block, nothing will execute
@@ -38,8 +36,14 @@
 
   (def file-path "./jg.janet")
 
+  # output to stdout
   (handle-one {:input file-path
                :output ""
+               :single true})
+
+  # output to file
+  (handle-one {:input file-path
+               :output "/tmp/judge-gen-test-output.txt"
                :single true})
 
   )
