@@ -5,10 +5,6 @@
    "debug" {:help "Debug output."
             :kind :flag
             :short "d"}
-   "format" {:default "jdn"
-             :help "Output format, jdn or text."
-             :kind :option
-             :short "f"}
    "output" {:default ""
              :help "Path to store output to."
              :kind :option
@@ -29,11 +25,10 @@
     (do
       (setdyn :args ["jg" file-path])
       (argparse/argparse ;params))
-
+    #
     @{"version" false
       "output" ""
       :order @[:default]
-      "format" "jdn"
       :default file-path}) # => true
 
   )
@@ -42,16 +37,11 @@
   []
   (when-let [res (argparse/argparse ;params)]
     (let [input (res :default)
-          format (res "format")
           # XXX: overwrites...dangerous?
           output (res "output")
           version (res "version")]
       (setdyn :debug (res "debug"))
-      (assert (or (= format "jdn")
-                  (= format "text"))
-              "Format should be jdn or text.")
       (assert input "Input should be filepath or -")
-      {:format format
-       :input input
+      {:input input
        :output output
        :version version})))

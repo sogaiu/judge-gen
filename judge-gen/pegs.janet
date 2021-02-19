@@ -1,9 +1,9 @@
 (import ./vendor/grammar)
 
 # XXX: any way to avoid this?
-(var in-comment 0)
+(var- in-comment 0)
 
-(def jg-comments
+(def- jg-comments
   (->
     # jg* from grammar are structs, need something mutable
     (table ;(kvs grammar/jg))
@@ -107,7 +107,84 @@
       [:returns "true" 10]])
   # => true
 
+  # demo of having failure test output give nicer results
+  (def result
+    @["(def a 1)\n\n  "
+      "# this is just a comment\n\n"
+      "(def b 2)\n\n  "
+      "(= 1 (- b a))\n  "
+      [:returns "true" 10]])
+
+  (peg/match
+    inner-forms
+    ``
+    (comment
+
+      (def a 1)
+
+      # this is just a comment
+
+      (def b 2)
+
+      (= 1 (- b a))
+      # => true
+
+    )
+    ``)
+    # => result
+
   )
+
+(defn parse-comment-block
+  [cmt-blk-str]
+  # mutating outer in-comment
+  (set in-comment 0)
+  (peg/match inner-forms cmt-blk-str))
+
+(comment
+
+  (def comment-str
+    ``
+    (comment
+
+      (+ 1 1)
+      # => 2
+
+    )
+    ``)
+
+  (parse-comment-block comment-str)
+  # => @["(+ 1 1)\n  " [:returns "2" 4]]
+
+  (def comment-with-no-test-str
+    ``
+    (comment
+
+      (+ 1 1)
+
+    )
+    ``)
+
+  (parse-comment-block comment-with-no-test-str)
+  # => @["(+ 1 1)\n\n"]
+
+  (def comment-in-comment-str
+    ``
+    (comment
+
+      (comment
+
+         (+ 1 1)
+         # => 2
+
+       )
+    )
+    ``)
+
+  (parse-comment-block comment-in-comment-str)
+  # => @["" "(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
+
+)
 
 # recognize next top-level form, returning a map
 # modify a copy of jg

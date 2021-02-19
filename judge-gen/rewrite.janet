@@ -91,8 +91,7 @@
   (def {:value blk-str
         :s-line offset} blk)
   # parse the comment block and rewrite some parts
-  (set pegs/in-comment 0)
-  (let [parsed (peg/match pegs/inner-forms blk-str)]
+  (let [parsed (pegs/parse-comment-block blk-str)]
     (when (has-tests parsed)
       (each cmt-or-frm parsed
         (when (not= cmt-or-frm "")
@@ -106,8 +105,7 @@
                 (assert rewritten (string "match failed for: " cmt-or-frm))
                 (array/push rewritten-forms rewritten))
               # not an expected value, continue
-              (array/push rewritten-forms cmt-or-frm))))
-        (set pegs/in-comment 0))))
+              (array/push rewritten-forms cmt-or-frm)))))))
   rewritten-forms)
 
 (comment
@@ -128,11 +126,6 @@
 
   (rewrite-block-with-verify comment-blk)
   # => @["(_verify/is (+ 1 1)\n   2 \"line-6\")\n\n"]
-
-  (do
-    (set pegs/in-comment 0)
-    (peg/match pegs/inner-forms comment-str))
-  # => @["(+ 1 1)\n  " [:returns "2" 4]]
 
   (def comment-with-no-test-str
     ``
@@ -168,19 +161,13 @@
     {:value comment-in-comment-str
      :s-line 10})
 
-  (do
-    (set pegs/in-comment 0)
-    (peg/match pegs/inner-forms comment-in-comment-str))
-  # => @["" "(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
-
   (rewrite-block-with-verify comment-blk-in-comment-blk)
   # => @[]
 
   )
 
 (defn rewrite-with-verify
-  [cmt-blks &opt format]
-  (default format "jdn")
+  [cmt-blks]
   (var rewritten-forms @[])
   # parse comment blocks and rewrite some parts
   (each blk cmt-blks
@@ -192,16 +179,7 @@
                     "(_verify/start-tests)\n\n"]
                   rewritten-forms
                   @["\n(_verify/end-tests)\n"
-                    (cond
-                      (= format "jdn")
-                      "\n(_verify/dump-results)\n"
-                      #
-                      (= format "text")
-                      "\n(_verify/summarize)\n"
-                      # XXX: is this appropriate?
-                      (do
-                        (eprint "warning: unrecognized format: " format)
-                        "\n(_verify/dump-results)\n"))]))
+                    "\n(_verify/dump-results)\n"]))
   (string verify-as-string
           (string/join forms "")))
 
@@ -220,7 +198,8 @@
     )
     ``)
 
-  (rewrite-with-verify [sample] "text")
+  (rewrite-with-verify [{:value sample
+                         :s-line 1}])
 
   (def sample-comment-form
     ``
@@ -238,7 +217,8 @@
     )
     ``)
 
-  (rewrite-with-verify [sample-comment-form] "jdn")
+  (rewrite-with-verify [{:value sample-comment-form
+                         :s-line 1}])
 
   (def comment-in-comment
     ``
@@ -254,6 +234,7 @@
     )
     ``)
 
-  (rewrite-with-verify [comment-in-comment] "jdn")
+  (rewrite-with-verify [{:value comment-in-comment
+                         :s-line 1}])
 
   )

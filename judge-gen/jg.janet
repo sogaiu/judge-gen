@@ -6,8 +6,7 @@
 # XXX: consider `(break false)` instead of just `assert`?
 (defn handle-one
   [opts]
-  (def {:format format
-        :input input
+  (def {:input input
         :output output
         :version version} opts)
   # XXX: review
@@ -28,7 +27,7 @@
   # output rewritten content if appropriate
   (def out @"")
   (buffer/blit out buf -1)
-  (buffer/blit out (rewrite/rewrite-with-verify comment-blocks format) -1)
+  (buffer/blit out (rewrite/rewrite-with-verify comment-blocks) -1)
   (if (not= "" output)
     (spit output out)
     (print out))
