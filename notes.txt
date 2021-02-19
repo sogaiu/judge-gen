@@ -8,10 +8,10 @@
 
 # POSSIBILITIES:
 #
-# * currently using `in-comment` var in `pegs.janet`.  this is ugly
-#   and prone to error.  figure out a way to not have to use this.
-#
 # * single-file version for ease of installation?
+#
+# * _verify/dump-results uses "%p" in a branch.  could that be a problem
+#   in some cases?
 #
 # * downside of using `(deep= A B)` with expected value of true is
 #   when the test fails, there's not a whole lot of useful information
