@@ -3,6 +3,8 @@
 # * doesn't handle code that is not "well-formed"
 #
 # * likely only works with utf-8
+#
+# * doesn't clean up temporary files and directories
 
 # POSSIBILITIES:
 #
@@ -45,6 +47,7 @@
 #   source be any better than the current approach?
 #   * possibly easier to transform and output?
 #   * possibly easier to determine line / column info for tests?
+#   * examine alc.x-as-tests for hints
 
 # ISSUES:
 #
