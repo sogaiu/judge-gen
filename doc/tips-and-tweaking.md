@@ -65,7 +65,7 @@
 
 ## Tweaking
 
-### Fine tuning information
+### Fine Tuning Configuration
 
 * The directory housing the tests has a default name of `judge` and
   lives within one's project directory.  If that name is a problem
@@ -78,15 +78,12 @@
   source files uses that prefix, please choose a prefix that is not
   used by any of your source files.
 
-These things can be configured by editing `test/runner.janet`
+These things can be configured by editing `test/judge-gen.janet`
 appropriately.
 
 ### Using judge-gen With Other Testing Methods
 
-If other test files are also to be triggered by `jpm test`, comment out:
+If other test files are also to be triggered by `jpm test`, ensure that
+the `silence-jpm-test` setting in `test/judge-gen.janet` is set to `nil`
+or `false`.
 
-```
-(os/exit 1)
-```
-
-at the end of `test/runner.janet`.
