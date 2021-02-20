@@ -45,9 +45,7 @@
   [& args]
   (if (dyn :verbose)
     (print ;(interpose " " args)))
-  (def res (os/execute args :p))
-  (unless (zero? res)
-    (error (string "command exited with status " res))))
+  (os/execute args :px))
 
 (defn jpm/copy
   "Copy a file or directory recursively from one location to another."
