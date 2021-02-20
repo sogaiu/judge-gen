@@ -14,11 +14,23 @@
 
 # POSSIBILITIES:
 #
+# * find parts that don't work on windows and try to fix
+#
 # * consider having test/judge-gen.janet read configuration information
 #   from a separate file.
 #   * current method risks losing configuration information upon upgrade
+#   * current method leads to likelihood of having to edit
+#     test/judge-gen.janet on each upgrade (tedious and error-prone?)
 #   * current method risks breaking test/judge-gen.janet because a user
 #     typically has to edit it at least once
+#
+# * can use one judge-gen.janet per directory of source files, but that
+#   would lead to multiple judge-gen.janet files.  perhaps an alternative
+#   to have a single configuration file that could "drive" judge-gen.janet
+#   to be used for multple directories.
+#
+# * if the config file route is taken, ensure it is optional.  i.e. make
+#   sure that judge-gen.janet can operate without the config file.
 #
 # * consider if there is any benefit in allowing some control over
 #   test file execution order, e.g.
