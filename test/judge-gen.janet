@@ -279,9 +279,7 @@
   [& args]
   (if (dyn :verbose)
     (print ;(interpose " " args)))
-  (def res (os/execute args :p))
-  (unless (zero? res)
-    (error (string "command exited with status " res))))
+  (os/execute args :px))
 
 (defn jpm/copy
   "Copy a file or directory recursively from one location to another."
@@ -544,7 +542,7 @@
 
   (deep=
     (do
-      (setdyn :args ["jg-verdict"
+      (setdyn :args ["jg-runner"
                      "-p" ".."
                      "-s" "."])
       (argparse/argparse ;args-runner/params))
@@ -1669,15 +1667,23 @@
 (defn input/slurp-input
   [input]
   (var f nil)
-  (if (= input "-")
-    (set f stdin)
-    (if (os/stat input)
-      # XXX: handle failure?
-      (set f (file/open input :rb))
-      (do
-        (eprint "path not found: " input)
-        (break [nil nil]))))
-  (file/read f :all))
+  (try
+    (if (= input "-")
+      (set f stdin)
+      (if (os/stat input)
+        (set f (file/open input :rb))
+        (do
+          (eprint "path not found: " input)
+          (break nil))))
+    ([err]
+      (eprintf "slurp-input failed")
+      (error err)))
+  #
+  (var buf nil)
+  (defer (file/close f)
+    (set buf @"")
+    (file/read f :all buf))
+  buf)
 
 (def args/params
   ["Rewrite comment blocks as tests."
