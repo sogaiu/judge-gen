@@ -8,54 +8,24 @@
 #
 # * doesn't handle edge case of two comments lines in a row that
 #   look like expected value lines
+#
+# * updating an existing judge-gen installation has the downside of
+#   potentially erasing previous configuration information.
 
 # POSSIBILITIES:
 #
-# * single-file version for ease of installation?
-#   * move all relevant files to a single directory
-#   * rename all definitions to have an appropriate prefix (e.g. path/ for
-#     things in path.janet)
-#   * change all import forms to use :prefix ""
-#   * test whether program still runs
-#   * identify order for things to be concatenated (depth first search
-#     starting at a particular file and visiting import forms)
-#     * jg-jpm-test
-#       * path
-#       * jg-runner
-#         * utils
-#         * jg
-#           * args
-#             * argparse
-#           * input
-#           * rewrite
-#             * pegs
-#               * grammar
-#           * segments
-#             * pegs
-#               * grammar
-#         * args-runner
-#           * argparse
-#         * jpm
-#         * path
-#       * config
-#     * order of concatenation is thus:
-#       * config
-#       * path
-#       * jpm
-#       * argparse
-#       * args-runner
-#       * grammar
-#       * pegs
-#       * segments
-#       * rewrite
-#       * input
-#       * args
-#       * jg
-#       * utils
-#       * jg-runner
-#       * jg-jpm-test
-#   * concatenate files in order
-#   * remove import forms
+# * consider having test/judge-gen.janet read configuration information
+#   from a separate file.
+#   * current method risks losing configuration information upon upgrade
+#   * current method risks breaking test/judge-gen.janet because a user
+#     typically has to edit it at least once
+#
+# * consider if there is any benefit in allowing some control over
+#   test file execution order, e.g.
+#   * sort by name
+#   * sort by other criteria
+#   * random
+#   * custom order
 #
 # * _verify/dump-results uses "%p" in a branch.  could that be a problem
 #   in some cases?
@@ -63,7 +33,10 @@
 # * downside of using `(deep= A B)` with expected value of true is
 #   when the test fails, there's not a whole lot of useful information
 #   apart from the failure.  is this just a trade-off that has to be
-#   made with the current approach?
+#   made with the current approach?  there is a way to write things
+#   that avoids this, but that method requires writing a `def` before
+#   the expression to be evaluated and then using the name of the
+#   `def` as the expected value.
 #
 # * could have option to send code to janet -k before main jg processing.
 #   atm, `janet -k` doesn't appear to work for files that have
