@@ -174,7 +174,8 @@
   (utils/print-color total-tests :green)
   (print " passed")
   (utils/print-dashes)
-  (print "all judgements made."))
+  (print "all judgements made.")
+  (= total-passed total-tests))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment

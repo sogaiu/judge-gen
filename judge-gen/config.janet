@@ -14,7 +14,7 @@
 
 # disable "All tests passed." message from `jpm test` if true
 (def silence-jpm-test
-  true)
+  false)
 
 # configuration ends here
 

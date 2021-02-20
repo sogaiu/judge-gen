@@ -14,7 +14,7 @@
 
 # disable "All tests passed." message from `jpm test` if true
 (def silence-jpm-test
-  true)
+  false)
 
 # configuration ends here
 
@@ -308,6 +308,7 @@
   (for i 1 (length segs)
     (def path (string/join (slice segs 0 i) jpm/sep))
     (unless (empty? path) (os/mkdir path))))
+
 ### argparse.janet
 ###
 ### A library for parsing command-line arguments
@@ -1982,7 +1983,8 @@
   (utils/print-color total-tests :green)
   (print " passed")
   (utils/print-dashes)
-  (print "all judgements made."))
+  (print "all judgements made.")
+  (= total-passed total-tests))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
@@ -2045,11 +2047,12 @@
   [src-dir-name]
   (path/join proj-root src-dir-name))
 
-(jg-runner/handle-one
-  {:judge-dir-name judge-dir-name
-   :judge-file-prefix judge-file-prefix
-   :proj-root proj-root
-   :src-root (src-root src-dir-name)})
-
-(when silence-jpm-test
-  (os/exit 1))
+(let [all-passed (jg-runner/handle-one
+                   {:judge-dir-name judge-dir-name
+                    :judge-file-prefix judge-file-prefix
+                    :proj-root proj-root
+                    :src-root (src-root src-dir-name)})]
+  (when (not all-passed)
+    (os/exit 1))
+  (when silence-jpm-test
+    (os/exit 1)))
