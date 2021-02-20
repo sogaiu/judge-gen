@@ -36,52 +36,52 @@ projects though.  Be sure to examine the [fine print](doc/warning.md).
   Note the use of a single line comment and `=>` to express an
   expected return value.
 
+  One might call the form + expected value comment a "comment block
+  test".
+
   See [Tips and Tweaking](doc/tips-and-tweaking.md) for more details.
 
 * Once some setup steps are followed, tests can be run by: `jpm test`
 
 ## Setup Steps
 
-Some files and directories need to be prepared in one's project.  See
-the end of this section for the brief version.
+### Basic Description
 
-### Details
+Copy a specific file to a project's `test` subdirectory.
 
-One such arrangement relative to the project root directory is:
-
-1. `test/runner.janet` - test runner and reporter
-2. `support` - a directory for judge-gen's code
-3. `examples` - a directory for files that get turned into test files
-
-`test/runner.janet` needs to be minimally configured to know where the
-directory for 3. is.  That can be done by modifying the `def` form for
-`src-root`.  The `runner.janet` file in this repository's `test`
-subdirectory can be used as a template.
-
-`support` can be populated by copying files from this repository's
-`judge-gen` subdirectory.
-
-`examples` is the subdirectory to house files that get turned into
-tests.  It can be the directory containing the project's source (and
-doesn't need to be named `examples`).  It's most likely to work if
-this is a direct subdirectory of the project's root directory.
-
-See [Tips and Tweaking](doc/tips-and-tweaking.md) for more information
-about configuration.
+Edit the file so it knows where the files with "comment block" tests
+live.
 
 ### Specific Steps
 
-1. Create `test/runner.janet` based on the one in this repository.
-2. Edit the contained `def` form for `src-root` to point at `examples`
-   (or other appropriate location as discussed above).
-3. Create the `support` subdirectory and copy the content of this
-   repository's `judge-gen` subdirectory (so one of the files in
-   the `support` will be `jg.janet`, for example).
-4. Create the `examples` directory depending on what was done in step 2.
+1. Copy the file `test/judge-gen.janet` from this repository to the
+   target project's `test` subdirectory.
+2. Near the top of the file, change the `def` form for `src-dir-name`
+   to have the value `examples` (or other appropriate name).
+3. Create the `examples` directory (or other suitable) if it doesn't
+   exist already.
+4. If the directory in the previous step doesn't have at least
+   one file with a comment block test in it, do something about that :)
+
+### The Longer Explanation
+
+A single file (`test/judge-gen.janet`) needs to be copied to a
+project's `test` subdirectory and then usually at least one definition
+in the file (`src-dir-name`) needs to be changed.
+
+The value for `src-dir-name` represents the name of a subdirectory in
+the project's root directory that contains files with "comment block"
+tests (as described above).
+
+The aforementioned directory (the one that `src-dir-name` specifies)
+needs to exist and have appropriate files in it.
 
 ## Usage
 
 To run the tests and get a report: `jpm test`
+
+Add more tests / examples by creating more comment block tests in
+files that live in the directory specified by `src-dir-name`.
 
 ## Sample Configurations
 
