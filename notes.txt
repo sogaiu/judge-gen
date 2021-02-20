@@ -5,6 +5,9 @@
 # * likely only works with utf-8
 #
 # * doesn't clean up temporary files and directories
+#
+# * doesn't handle edge case of two comments lines in a row that
+#   look like expected value lines
 
 # POSSIBILITIES:
 #
