@@ -28,7 +28,7 @@
 
   (deep=
     (do
-      (setdyn :args ["jg-verdict"
+      (setdyn :args ["jg-runner"
                      "-p" ".."
                      "-s" "."])
       (argparse/argparse ;args-runner/params))
