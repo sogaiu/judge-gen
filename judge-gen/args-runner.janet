@@ -1,6 +1,6 @@
-(import ./vendor/argparse)
+(import ./argparse :prefix "")
 
-(def params
+(def args-runner/params
   ["Comment block test runner."
    "debug" {:help "Debug output."
             :kind :flag
@@ -31,7 +31,7 @@
       (setdyn :args ["jg-verdict"
                      "-p" ".."
                      "-s" "."])
-      (argparse/argparse ;params))
+      (argparse/argparse ;args-runner/params))
 
     @{"version" false
       "judge-file-prefix" "judge-"
@@ -42,9 +42,9 @@
 
   )
 
-(defn parse
+(defn args-runner/parse
   []
-  (def res (argparse/argparse ;params))
+  (def res (argparse/argparse ;args-runner/params))
   (unless res
     (break nil))
   (let [judge-dir-name (res "judge-dir-name")

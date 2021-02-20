@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-(defn- pad-right
+(defn- argparse/pad-right
   "Pad a string on the right with some spaces."
   [str n]
   (def len (length str))
@@ -30,7 +30,7 @@
     str
     (string str (string/repeat " " (- n len)))))
 
-(defn argparse
+(defn argparse/argparse
   "Parse (dyn :args) according to options. If the arguments are incorrect,
   will return nil and print usage information.
 
@@ -114,7 +114,7 @@
                [])))
         (def usage-fragment
           (string
-            (pad-right (string usage-prefix " ") 45)
+            (argparse/pad-right (string usage-prefix " ") 45)
             (if-let [h (handler :help)] h "")
             "\n"))
         (buffer/push-string (if (handler :required) reqdoc opdoc)
@@ -203,3 +203,4 @@
       (put res name (handler :default))))
 
   (if-not bad res))
+

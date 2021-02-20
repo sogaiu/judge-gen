@@ -1,4 +1,4 @@
-(import ./support/vendor/path)
+(import ./support/path)
 
 (declare-project
   :name "judge-gen"

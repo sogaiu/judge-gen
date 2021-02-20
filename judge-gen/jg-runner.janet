@@ -1,19 +1,19 @@
-(import ./utils)
-(import ./jg)
-(import ./args-runner)
-(import ./vendor/jpm)
-(import ./vendor/path)
+(import ./utils :prefix "")
+(import ./jg :prefix "")
+(import ./args-runner :prefix "")
+(import ./jpm :prefix "")
+(import ./path :prefix "")
 
-(defn make-judges
+(defn jg-runner/make-judges
   [dir subdirs judge-root judge-file-prefix]
   (each path (os/dir dir)
     (def fpath (path/join dir path))
     (case (os/stat fpath :mode)
       :directory (do
-                   (make-judges fpath (array/push subdirs path)
-                                judge-root judge-file-prefix)
+                   (jg-runner/make-judges fpath (array/push subdirs path)
+                                          judge-root judge-file-prefix)
                    (array/pop subdirs))
-      :file (when (= (path/ext fpath) ".janet")
+      :file (when (string/has-suffix? ".janet" fpath)
               (jg/handle-one {:input fpath
                               :line 0
                               :output (path/join judge-root
@@ -37,11 +37,11 @@
 
   (os/mkdir judge-root)
 
-  (make-judges src-root @[] judge-root "judge-")
+  (jg-runner/make-judges src-root @[] judge-root "judge-")
 
   )
 
-(defn judge
+(defn jg-runner/judge
   [dir results judge-root judge-file-prefix]
   (var count 0)
   (def results-dir
@@ -63,7 +63,7 @@
   (each path (os/dir dir)
     (def fpath (path/join dir path))
     (case (os/stat fpath :mode)
-      :directory (judge fpath results judge-root judge-file-prefix)
+      :directory (jg-runner/judge fpath results judge-root judge-file-prefix)
       :file (when (and (string/has-prefix? judge-file-prefix path)
                        (string/has-suffix? ".janet" fpath))
               (print "  " path)
@@ -113,7 +113,7 @@
                    fpath results-for-path)
               (++ count)))))
 
-(defn summarize
+(defn jg-runner/summarize
   [results]
   (when (empty? results)
     # XXX: somehow messes things up?
@@ -179,12 +179,12 @@
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
-  (summarize @{})
+  (jg-runner/summarize @{})
 
   )
 
 # XXX: consider `(break false)` instead of just `assert`?
-(defn handle-one
+(defn jg-runner/handle-one
   [opts]
   (def {:judge-dir-name judge-dir-name
         :judge-file-prefix judge-file-prefix
@@ -201,15 +201,15 @@
   (jpm/copy src-root judge-root)
   (utils/print-dashes)
   # create judge files
-  (make-judges src-root @[] judge-root judge-file-prefix)
+  (jg-runner/make-judges src-root @[] judge-root judge-file-prefix)
   # judge
   (print "judging...")
   (var results @{})
-  (judge judge-root results judge-root judge-file-prefix)
+  (jg-runner/judge judge-root results judge-root judge-file-prefix)
   (utils/print-dashes)
   (print)
   # summarize results
-  (summarize results))
+  (jg-runner/summarize results))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
@@ -221,21 +221,10 @@
   (def src-root
     (path/join proj-root "judge-gen"))
 
-  (handle-one {:judge-dir-name "judge"
-               :judge-file-prefix "judge-"
-               :proj-root proj-root
-               :src-root src-root})
+  (jg-runner/handle-one {:judge-dir-name "judge"
+                         :judge-file-prefix "judge-"
+                         :proj-root proj-root
+                         :src-root src-root})
 
   )
 
-(defn main
-  [& args]
-  (def opts (args-runner/parse))
-  (unless opts
-    (os/exit 1))
-  (cond
-    (opts :version)
-    (print "jg-runner alpha")
-    #
-    (handle-one opts)
-    true))

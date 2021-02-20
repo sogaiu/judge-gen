@@ -1,6 +1,6 @@
-(import ./vendor/argparse)
+(import ./argparse :prefix "")
 
-(def params
+(def args/params
   ["Rewrite comment blocks as tests."
    "debug" {:help "Debug output."
             :kind :flag
@@ -24,7 +24,7 @@
   (deep=
     (do
       (setdyn :args ["jg" file-path])
-      (argparse/argparse ;params))
+      (argparse/argparse ;args/params))
     #
     @{"version" false
       "output" ""
@@ -33,9 +33,9 @@
 
   )
 
-(defn parse
+(defn args/parse
   []
-  (when-let [res (argparse/argparse ;params)]
+  (when-let [res (argparse/argparse ;args/params)]
     (let [input (res :default)
           # XXX: overwrites...dangerous?
           output (res "output")

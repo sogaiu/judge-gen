@@ -1,9 +1,9 @@
-(import ./vendor/grammar)
+(import ./grammar :prefix "")
 
 # XXX: any way to avoid this?
-(var- in-comment 0)
+(var- pegs/in-comment 0)
 
-(def- jg-comments
+(def- pegs/jg-comments
   (->
     # jg* from grammar are structs, need something mutable
     (table ;(kvs grammar/jg))
@@ -15,12 +15,12 @@
                            (any :ws)
                            (drop (cmt (capture "comment")
                                       ,|(do
-                                          (++ in-comment)
+                                          (++ pegs/in-comment)
                                           $)))
                            :root
                            (drop (cmt (capture ")")
                                       ,|(do
-                                          (-- in-comment)
+                                          (-- pegs/in-comment)
                                           $)))))
     (put :ptuple ~(choice :comment-block
                           (sequence "("
@@ -36,7 +36,7 @@
                               (capture (sequence
                                          (any (if-not (choice "\n" -1) 1))
                                          (any "\n"))))
-                            ,|(if (zero? in-comment)
+                            ,|(if (zero? pegs/in-comment)
                                 # record value and line
                                 [:returns (string/trim $1) $0]
                                 ""))
@@ -49,7 +49,7 @@
     # tried using a table with a peg but had a problem, so use a struct
     table/to-struct))
 
-(def inner-forms
+(def pegs/inner-forms
   ~{:main :inner-forms
     #
     :inner-forms (sequence
@@ -57,7 +57,7 @@
                    (any :ws)
                    "comment"
                    (any :ws)
-                   (any (choice :ws ,jg-comments))
+                   (any (choice :ws ,pegs/jg-comments))
                    (any :ws)
                    ")")
     #
@@ -69,7 +69,7 @@
   (deep=
     #
     (peg/match
-      inner-forms
+      pegs/inner-forms
       ``
       (comment
         (- 1 1)
@@ -84,7 +84,7 @@
   (deep=
     #
     (peg/match
-      inner-forms
+      pegs/inner-forms
       ``
       (comment
 
@@ -116,7 +116,7 @@
       [:returns "true" 10]])
 
   (peg/match
-    inner-forms
+    pegs/inner-forms
     ``
     (comment
 
@@ -135,11 +135,11 @@
 
   )
 
-(defn parse-comment-block
+(defn pegs/parse-comment-block
   [cmt-blk-str]
-  # mutating outer in-comment
-  (set in-comment 0)
-  (peg/match inner-forms cmt-blk-str))
+  # mutating outer pegs/in-comment
+  (set pegs/in-comment 0)
+  (peg/match pegs/inner-forms cmt-blk-str))
 
 (comment
 
@@ -153,7 +153,7 @@
     )
     ``)
 
-  (parse-comment-block comment-str)
+  (pegs/parse-comment-block comment-str)
   # => @["(+ 1 1)\n  " [:returns "2" 4]]
 
   (def comment-with-no-test-str
@@ -165,7 +165,7 @@
     )
     ``)
 
-  (parse-comment-block comment-with-no-test-str)
+  (pegs/parse-comment-block comment-with-no-test-str)
   # => @["(+ 1 1)\n\n"]
 
   (def comment-in-comment-str
@@ -181,14 +181,14 @@
     )
     ``)
 
-  (parse-comment-block comment-in-comment-str)
+  (pegs/parse-comment-block comment-in-comment-str)
   # => @["" "(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
 
 )
 
 # recognize next top-level form, returning a map
 # modify a copy of jg
-(def jg-pos
+(def pegs/jg-pos
   (->
     # jg* from grammar are structs, need something mutable
     (table ;(kvs grammar/jg))
@@ -225,7 +225,7 @@
 
   (deep=
     #
-    (peg/match jg-pos sample-source 0)
+    (peg/match pegs/jg-pos sample-source 0)
     #
     @[{:type :comment
        :value "# \"my test\"\n"
@@ -234,7 +234,7 @@
 
   (deep=
     #
-    (peg/match jg-pos sample-source 12)
+    (peg/match pegs/jg-pos sample-source 12)
     #
     @[{:type :value
        :value "(+ 1 1)\n"
@@ -246,7 +246,7 @@
 
   (deep=
     #
-    (peg/match jg-pos sample-source 20)
+    (peg/match pegs/jg-pos sample-source 20)
     #
     @[{:type :comment
        :value "# => 2\n"
@@ -282,7 +282,7 @@
 
   (deep=
     #
-    (peg/match jg-pos top-level-comments-sample)
+    (peg/match pegs/jg-pos top-level-comments-sample)
     #
     @[{:type :value
        :value "(def a 1)\n\n"
@@ -292,7 +292,7 @@
 
   (deep=
     #
-    (peg/match jg-pos top-level-comments-sample 11)
+    (peg/match pegs/jg-pos top-level-comments-sample 11)
     #
     @[{:type :value
        :value
@@ -303,7 +303,7 @@
 
   (deep=
     #
-    (peg/match jg-pos top-level-comments-sample 66)
+    (peg/match pegs/jg-pos top-level-comments-sample 66)
     #
     @[{:type :value
        :value "(def x 0)\n\n"
@@ -313,7 +313,7 @@
 
   (deep=
     #
-    (peg/match jg-pos top-level-comments-sample 77)
+    (peg/match pegs/jg-pos top-level-comments-sample 77)
     #
     @[{:type :value
        :value "(comment\n\n  (= a (+ x 1))\n\n)"
@@ -323,7 +323,7 @@
 
   )
 
-(def comment-block-maybe
+(def pegs/comment-block-maybe
   ~{:main (sequence
             (any :ws)
             "("
@@ -336,7 +336,7 @@
 (comment
 
   (peg/match
-    comment-block-maybe
+    pegs/comment-block-maybe
     ``
     (comment
 
@@ -347,7 +347,7 @@
   # => @[]
 
   (peg/match
-    comment-block-maybe
+    pegs/comment-block-maybe
     ``
 
     (comment

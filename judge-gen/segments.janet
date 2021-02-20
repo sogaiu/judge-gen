@@ -1,6 +1,6 @@
-(import ./pegs)
+(import ./pegs :prefix "")
 
-(defn parse-buffer
+(defn segments/parse-buffer
   [buf]
   (var segments @[])
   (var from 0)
@@ -36,7 +36,7 @@
     ``)
 
   (deep=
-    (parse-buffer code-buf)
+    (segments/parse-buffer code-buf)
     #
     @[{:value "    (def a 1)\n\n    "
        :s-line 1
@@ -56,7 +56,7 @@
 
   )
 
-(defn find-comment-blocks
+(defn segments/find-comment-blocks
   [segments]
   (var comment-blocks @[])
   (loop [i :range [0 (length segments)]]
@@ -85,7 +85,7 @@
        :end 112}])
 
   (deep=
-    (find-comment-blocks segments)
+    (segments/find-comment-blocks segments)
     #
     @[{:value (string "(comment\n\n      "
                       "(+ a 1)\n      "

@@ -1,10 +1,10 @@
-(import ./args)
-(import ./input)
-(import ./rewrite)
-(import ./segments)
+(import ./args :prefix "")
+(import ./input :prefix "")
+(import ./rewrite :prefix "")
+(import ./segments :prefix "")
 
 # XXX: consider `(break false)` instead of just `assert`?
-(defn handle-one
+(defn jg/handle-one
   [opts]
   (def {:input input
         :output output
@@ -37,25 +37,14 @@
   (def file-path "./jg.janet")
 
   # output to stdout
-  (handle-one {:input file-path
+  (jg/handle-one {:input file-path
                :output ""
                :single true})
 
   # output to file
-  (handle-one {:input file-path
+  (jg/handle-one {:input file-path
                :output "/tmp/judge-gen-test-output.txt"
                :single true})
 
   )
 
-(defn main
-  [& args]
-  (def opts (args/parse))
-  (unless opts
-    (os/exit 1))
-  (cond
-    (opts :version)
-    (print "judge-gen alpha")
-    #
-    (handle-one opts)
-    true))

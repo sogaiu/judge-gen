@@ -1,4 +1,4 @@
-(defn print-color
+(defn utils/print-color
   [msg color]
   (let [color-num (match color
                     :black 30
@@ -13,16 +13,16 @@
                   msg
                   "\e[0m"))))
 
-(defn dashes
+(defn utils/dashes
   [&opt n]
   (default n 60)
   (string/repeat "-" n))
 
-(defn print-dashes
+(defn utils/print-dashes
   [&opt n]
-  (print (dashes n)))
+  (print (utils/dashes n)))
 
-(defn rand-string
+(defn utils/rand-string
   [n]
   (->> (os/cryptorand n)
        (map |(string/format "%02x" $))
@@ -31,7 +31,7 @@
 (comment
 
   (let [len 8
-        res (rand-string len)]
+        res (utils/rand-string len)]
     (truthy? (and (= (length res) (* 2 len))
                   # only uses hex
                   (all |(peg/find '(range "09" "af" "AF")

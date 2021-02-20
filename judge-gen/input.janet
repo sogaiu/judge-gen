@@ -1,4 +1,4 @@
-(defn slurp-input
+(defn input/slurp-input
   [input]
   (var f nil)
   (if (= input "-")

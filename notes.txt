@@ -9,6 +9,50 @@
 # POSSIBILITIES:
 #
 # * single-file version for ease of installation?
+#   * move all relevant files to a single directory
+#   * rename all definitions to have an appropriate prefix (e.g. path/ for
+#     things in path.janet)
+#   * change all import forms to use :prefix ""
+#   * test whether program still runs
+#   * identify order for things to be concatenated (depth first search
+#     starting at a particular file and visiting import forms)
+#     * jg-jpm-test
+#       * path
+#       * jg-runner
+#         * utils
+#         * jg
+#           * args
+#             * argparse
+#           * input
+#           * rewrite
+#             * pegs
+#               * grammar
+#           * segments
+#             * pegs
+#               * grammar
+#         * args-runner
+#           * argparse
+#         * jpm
+#         * path
+#       * config
+#     * order of concatenation is thus:
+#       * config
+#       * path
+#       * jpm
+#       * argparse
+#       * args-runner
+#       * grammar
+#       * pegs
+#       * segments
+#       * rewrite
+#       * input
+#       * args
+#       * jg
+#       * utils
+#       * jg-runner
+#       * jg-jpm-test
+#   * concatenate files in order
+#   * remove import forms
 #
 # * _verify/dump-results uses "%p" in a branch.  could that be a problem
 #   in some cases?
