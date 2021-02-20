@@ -2,7 +2,7 @@
 
 # highly likely will want to tweak this
 (def src-dir-name
-  "judge-gen")
+  "examples")
 
 # only tweak if trying to prevent collision with existing dir
 (def judge-dir-name
