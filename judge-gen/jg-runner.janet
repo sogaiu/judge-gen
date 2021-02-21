@@ -12,18 +12,20 @@
     (each path (os/dir src-root)
       (def fpath (path/join src-root path))
       (case (os/stat fpath :mode)
-        :directory (do
-                     (helper fpath (array/push subdirs path)
-                             judge-root judge-file-prefix)
-                     (array/pop subdirs))
-        :file (when (string/has-suffix? ".janet" fpath)
-                (jg/handle-one {:input fpath
-                                :line 0
-                                :output (path/join judge-root
-                                                   ;subdirs
-                                                   (string
-                                                     judge-file-prefix path))
-                                :prepend true})))))
+        :directory
+        (do
+          (helper fpath (array/push subdirs path)
+                  judge-root judge-file-prefix)
+          (array/pop subdirs))
+        #
+        :file
+        (when (string/has-suffix? ".janet" fpath)
+          (jg/handle-one {:input fpath
+                          :lint true # XXX: make optional?
+                          :output (path/join judge-root
+                                             ;subdirs
+                                             (string
+                                               judge-file-prefix path))})))))
   #
   (helper src-root subdirs judge-root judge-file-prefix))
 
