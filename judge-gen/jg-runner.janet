@@ -219,34 +219,42 @@
         :src-root src-root} opts)
   (def judge-root
     (path/join proj-root judge-dir-name))
-  # remove old judge directory
-  (prin "cleaning out: " judge-root " ... ")
-  (jpm/rm judge-root)
-  # make a fresh judge directory
-  (os/mkdir judge-root)
-  (print "done")
-  # copy source files -- each item needs to be done separately for windows
-  (prin "copying source files... ")
-  # shhhhh
-  (with-dyns [:out @""]
-    (each item (os/dir src-root)
-      (def full-path (path/join src-root item))
-      (jpm/copy full-path judge-root)))
-  (print "done")
-  # create judge files
-  (prin "creating tests files... ")
-  (jg-runner/make-judges src-root judge-root judge-file-prefix)
-  (print "done")
-  #
-  (utils/print-dashes)
-  # judge
-  (print "judging...")
-  (def results
-    (jg-runner/judge judge-root judge-file-prefix))
-  (utils/print-dashes)
-  (print)
-  # summarize results
-  (jg-runner/summarize results))
+  (try
+    (do
+      # remove old judge directory
+      (prin "cleaning out: " judge-root " ... ")
+      (jpm/rm judge-root)
+      # make a fresh judge directory
+      (os/mkdir judge-root)
+      (print "done")
+      # copy source files
+      (prin "copying source files... ")
+      # shhhhh
+      (with-dyns [:out @""]
+        # each item copied separately for platform consistency
+        (each item (os/dir src-root)
+          (def full-path (path/join src-root item))
+          (jpm/copy full-path judge-root)))
+      (print "done")
+      # create judge files
+      (prin "creating tests files... ")
+      (jg-runner/make-judges src-root judge-root judge-file-prefix)
+      (print "done")
+      #
+      (utils/print-dashes)
+      # judge
+      (print "judging...")
+      (def results
+        (jg-runner/judge judge-root judge-file-prefix))
+      (utils/print-dashes)
+      (print)
+      # summarize results
+      (jg-runner/summarize results))
+    #
+    ([err]
+      (eprint "judge-gen runner failed")
+      (eprint err)
+      nil)))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
