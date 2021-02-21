@@ -44,6 +44,12 @@
 #
 # * audit code for use of stdout vs stderr - likely not consistent
 #
+# * in handle_one, instead of `(break false)`, perhaps different
+#   values could be returned to indicate different types of errors
+#
+# * _verify/dump-results uses "%p" in a branch.  determine if this could
+#   be a problem but also whether this branch is ever used.
+#
 # * configuration ideas
 #   * motivation for configuration via external file
 #     * current method risks losing configuration information upon upgrade
@@ -62,15 +68,8 @@
 #     to be used for multple directories.  need to consider multiple
 #     judge directories to prevent collisions?
 #
-# * consider if there is any benefit in allowing some control over
-#   test file execution order, e.g.
-#   * sort by name
-#   * sort by other criteria
-#   * random
-#   * custom order
-#
-# * _verify/dump-results uses "%p" in a branch.  could that be a problem
-#   in some cases?
+# * consider various "rewriting" targets, e.g. testament, helper.janet
+#   for "transition" / exporting purposes
 #
 # * downside of using `(deep= A B)` with expected value of true is
 #   when the test fails, there's not a whole lot of useful information
@@ -80,11 +79,12 @@
 #   the expression to be evaluated and then using the name of the
 #   `def` as the expected value.
 #
-# * consider various "rewriting" targets, e.g. testament, helper.janet
-#   for "transition" purposes
-#
-# * in handle_one, instead of `(break false)`, perhaps different
-#   values could be returned to indicate different types of errors
+# * consider if there is any benefit in allowing some control over
+#   test file execution order, e.g.
+#   * sort by name
+#   * sort by other criteria
+#   * random
+#   * custom order
 #
 # * consider different reporting modes for jg.  concrete examples:
 #
@@ -101,6 +101,15 @@
 #   is more likely to be correct than just appending tests after original
 #   code
 #
+# * consider a mode of operation to work on stuff outside a comment block?
+#
+#   so for example the following at the top-level:
+#
+#     (def a 1)
+#     # => 1
+#
+#   ought to work as input to jg's transformation process.
+#
 # * would using recent janet-peg for parsing as well as rewriting
 #   source be any better than the current approach?
 #   * possibly easier to transform and output?
@@ -115,17 +124,19 @@
 #   spork's `capture-stdout` for an idea
 #
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
-
-# QUESTIONS:
 #
-# * where to document usage of temporary directory to store test results and
-#   output?
+# * some existing repositories use an older version of judge-gen, enumerate
+#   these and consider migration to newer version.  some things that might
+#   need to be done:
+#   * ensure tests only use simplified syntax
+#   * edit project.janet to remove stale phony targets
+#   * add runner to test directory
+#   * possibly add configuration file
 #
-# * provide a mode to work on stuff outside a comment block?
-#
-#   so for example the following at the top-level:
-#
-#     (def a 1)
-#     # => 1
-#
-#   ought to work?
+# * the structure and content of the judge directory is not spelled out so
+#   well.  consider spelling this out.
+#   * timing of creation
+#   * content
+#     * test files
+#     * source files
+#     * test results (report + stdout output)
