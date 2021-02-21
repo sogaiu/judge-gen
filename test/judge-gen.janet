@@ -1911,31 +1911,27 @@
       (make-results-fpath path count))
     # XXX
     #(eprintf "results path: %s" results-fpath)
-    # XXX: for windows, this is not appropriate
-    (def command (string/join
-                   [(dyn :executable "janet")
-                    "-e"
-                    (string "'(os/cd \"" judge-root "\")'")
-                    "-e"
-                    (string "'"
-                            "(do "
-                            "  (setdyn :judge-gen/test-out "
-                            "          \"" results-fpath "\") "
-                            "  (dofile \"" full-path "\") "
-                            ")"
-                            "'")] # avoid `main`
-                   " "))
+    (def command [(dyn :executable "janet")
+                  "-e"
+                  (string "(os/cd \"" judge-root "\")")
+                  "-e"
+                  (string "(do "
+                          "  (setdyn :judge-gen/test-out "
+                          "          \"" results-fpath "\") "
+                          "  (dofile \"" full-path "\") "
+                          ")")])
     # XXX
-    #(eprintf "command: %s" command)
-    (let [output (try
-                   (jpm/pslurp command)
-                   ([err]
-                     (eprint err)
-                     (errorf "command failed: %s" command)))]
-      (when (not= output "")
-        (spit (path/join results-dir
-                         (string "stdout-" count "-" path ".txt"))
-              output)))
+    #(eprintf "command: %p" command)
+    (let [out-path
+          (path/join results-dir
+                     (string "stdout-" count "-" path ".txt"))]
+      (try
+        (with [f (file/open out-path :w)]
+          (os/execute command :px {:out f})
+          (file/flush f))
+        ([err]
+          (eprint err)
+          (errorf "command failed: %p" command))))
     (def marshalled-results
       (try
         (slurp results-fpath)
