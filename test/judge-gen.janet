@@ -1058,10 +1058,11 @@
     (when (dyn :debug)
       (eprintf "parsed: %j" parsed))
     (when (not parsed)
-      (break))
+      (break nil))
     (def segment (first parsed))
-    (assert segment
-            (string "Unexpectedly did not find segment in: " parsed))
+    (when (not segment)
+      (eprint "Unexpectedly did not find segment in: " parsed)
+      (break nil))
     (array/push segments segment)
     (set from (segment :end)))
   segments)
@@ -1656,7 +1657,7 @@
   (when (empty? results)
     # XXX: somehow messes things up?
     #(print "No test results")
-    (break))
+    (break nil))
   (var total-tests 0)
   (var total-passed 0)
   (def failures @{})
@@ -1702,7 +1703,7 @@
       (printf "%M" test-value)))
   (when (= 0 total-tests)
     (print "No tests found, so no judgements made.")
-    (break))
+    (break nil))
   (if (not= total-passed total-tests)
     (do
       (utils/print-dashes)
