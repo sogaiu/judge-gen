@@ -208,8 +208,6 @@
 
   )
 
-# XXX: consider using `try` around some of the bits below to
-#      handle errors (e.g. filesystem-related)
 # XXX: consider `(break false)` instead of just `assert`?
 (defn jg-runner/handle-one
   [opts]
