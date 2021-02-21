@@ -19,6 +19,31 @@
 
 # POSSIBILITIES:
 #
+# * document the limitation about direct subdirectories of the project
+#   directory and the "why".  a direct subdirectory of the project directory
+#   has at least the following important properties:
+#   * copying the content (contained files and directories) to a sibling
+#     directory (one that is also a direct subdirectory of the
+#     project directory) doesn't adversely affect most likely (tm)
+#     paths in import forms.  at least so far, the probability of
+#     the imports still working after copying seems pretty high.
+#     one pathological case is an import with the path of the form
+#     "../name-a/name-b", where the import is in a file which lives in
+#     a directory with name "name-a".  things like this are likely to
+#     not work with judge-gen's copying scheme.  it seems unlikely to
+#     be a problem though because why wouldn't one express the path
+#     like "./name-b" instead?
+#   * copying the content (contained files and directories) to a sibling
+#     directory also doesn't "leave behind" files and directories that might
+#     be necessary for imports to work correctly.  if a non-direct
+#     subdirectory of the project directory is specified, there is a chance
+#     its content will refer to a sibling's content (which would also be a
+#     non-direct subdirectory of the project directory), and judge-gen's
+#     copying scheme would fail for this case.
+#   if these two points are not issues for one's use case, it may be
+#   that one can use a non-direct subdirectory of the project directory
+#   (i.e. a "deeper" subdirectory) in the configuration of judge-gen.
+#
 # * audit code for use of stdout vs stderr - likely not consistent
 #
 # * jg-runner/handle one needs to handle failures of things like fileystem
