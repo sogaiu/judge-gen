@@ -283,9 +283,8 @@
 
 (defn jpm/copy
   "Copy a file or directory recursively from one location to another."
-  [src dest &opt quiet]
-  (when (not quiet)
-    (print "copying " src " to " dest "..."))
+  [src dest]
+  (print "copying " src " to " dest "...")
   (if jpm/is-win
     (let [end (last (peg/match jpm/path-splitter src))
           isdir (= (os/stat src :mode) :directory)]
@@ -1691,6 +1690,10 @@
    "debug" {:help "Debug output."
             :kind :flag
             :short "d"}
+   "lint" {:default false
+           :help "Whether to lint input."
+           :kind :flag
+           :short "l"}
    "output" {:default ""
              :help "Path to store output to."
              :kind :option
@@ -1713,6 +1716,7 @@
       (argparse/argparse ;args/params))
     #
     @{"version" false
+      "lint" false
       "output" ""
       :order @[:default]
       :default file-path}) # => true
@@ -1723,12 +1727,14 @@
   []
   (when-let [res (argparse/argparse ;args/params)]
     (let [input (res :default)
+          lint (res "lint")
           # XXX: overwrites...dangerous?
           output (res "output")
           version (res "version")]
       (setdyn :debug (res "debug"))
       (assert input "Input should be filepath or -")
       {:input input
+       :lint lint
        :output output
        :version version})))
 
@@ -1736,6 +1742,7 @@
 (defn jg/handle-one
   [opts]
   (def {:input input
+        :lint lint
         :output output
         :version version} opts)
   # XXX: review
@@ -1744,6 +1751,23 @@
   # read in the code
   (def buf (input/slurp-input input))
   (assert buf (string "Failed to read input for:" input))
+  # lint if requested
+  (when lint
+    (def lint-res @"")
+    (if (os/stat input)
+      (do
+        (with-dyns [:err lint-res]
+          (flycheck input)))
+      (do
+        (with [f (file/temp)]
+          (file/write f buf)
+          (file/flush f) # XXX: needed?
+          (file/seek f :set 0)
+          (with-dyns [:err lint-res]
+            (flycheck f)))))
+    (assert (zero? (length lint-res))
+            (string "linting failed:\n"
+                    lint-res)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (assert segments (string "Failed to parse input:" input))
@@ -1767,13 +1791,13 @@
 
   # output to stdout
   (jg/handle-one {:input file-path
-               :output ""
-               :single true})
+                  :output ""
+                  :single true})
 
   # output to file
   (jg/handle-one {:input file-path
-               :output "/tmp/judge-gen-test-output.txt"
-               :single true})
+                  :output "/tmp/judge-gen-test-output.txt"
+                  :single true})
 
   )
 
@@ -1828,18 +1852,20 @@
     (each path (os/dir src-root)
       (def fpath (path/join src-root path))
       (case (os/stat fpath :mode)
-        :directory (do
-                     (helper fpath (array/push subdirs path)
-                             judge-root judge-file-prefix)
-                     (array/pop subdirs))
-        :file (when (string/has-suffix? ".janet" fpath)
-                (jg/handle-one {:input fpath
-                                :line 0
-                                :output (path/join judge-root
-                                                   ;subdirs
-                                                   (string
-                                                     judge-file-prefix path))
-                                :prepend true})))))
+        :directory
+        (do
+          (helper fpath (array/push subdirs path)
+                  judge-root judge-file-prefix)
+          (array/pop subdirs))
+        #
+        :file
+        (when (string/has-suffix? ".janet" fpath)
+          (jg/handle-one {:input fpath
+                          :lint true # XXX: make optional?
+                          :output (path/join judge-root
+                                             ;subdirs
+                                             (string
+                                               judge-file-prefix path))})))))
   #
   (helper src-root subdirs judge-root judge-file-prefix))
 
@@ -2024,8 +2050,6 @@
 
   )
 
-# XXX: consider using `try` around some of the bits below to
-#      handle errors (e.g. filesystem-related)
 # XXX: consider `(break false)` instead of just `assert`?
 (defn jg-runner/handle-one
   [opts]
@@ -2035,32 +2059,42 @@
         :src-root src-root} opts)
   (def judge-root
     (path/join proj-root judge-dir-name))
-  # remove old judge directory
-  (prin "cleaning out: " judge-root " ... ")
-  (jpm/rm judge-root)
-  # make a fresh judge directory
-  (os/mkdir judge-root)
-  (print "done")
-  # copy source files -- each item needs to be done separately for windows
-  (prin "copying source files... ")
-  (each item (os/dir src-root)
-    (def full-path (path/join src-root item))
-    (jpm/copy full-path judge-root true))
-  (print "done")
-  # create judge files
-  (prin "creating tests files... ")
-  (jg-runner/make-judges src-root judge-root judge-file-prefix)
-  (print "done")
-  #
-  (utils/print-dashes)
-  # judge
-  (print "judging...")
-  (def results
-    (jg-runner/judge judge-root judge-file-prefix))
-  (utils/print-dashes)
-  (print)
-  # summarize results
-  (jg-runner/summarize results))
+  (try
+    (do
+      # remove old judge directory
+      (prin "cleaning out: " judge-root " ... ")
+      (jpm/rm judge-root)
+      # make a fresh judge directory
+      (os/mkdir judge-root)
+      (print "done")
+      # copy source files
+      (prin "copying source files... ")
+      # shhhhh
+      (with-dyns [:out @""]
+        # each item copied separately for platform consistency
+        (each item (os/dir src-root)
+          (def full-path (path/join src-root item))
+          (jpm/copy full-path judge-root)))
+      (print "done")
+      # create judge files
+      (prin "creating tests files... ")
+      (jg-runner/make-judges src-root judge-root judge-file-prefix)
+      (print "done")
+      #
+      (utils/print-dashes)
+      # judge
+      (print "judging...")
+      (def results
+        (jg-runner/judge judge-root judge-file-prefix))
+      (utils/print-dashes)
+      (print)
+      # summarize results
+      (jg-runner/summarize results))
+    #
+    ([err]
+      (eprint "judge-gen runner failed")
+      (eprint err)
+      nil)))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
