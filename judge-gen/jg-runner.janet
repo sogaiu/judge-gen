@@ -95,14 +95,16 @@
       (make-results-fpath path count))
     # XXX
     #(eprintf "results path: %s" results-fpath)
+    # using backticks below seemed to help make things work on multiple
+    # platforms
     (def command [(dyn :executable "janet")
                   "-e"
-                  (string "(os/cd \"" judge-root "\")")
+                  (string "(os/cd `" judge-root "`)")
                   "-e"
                   (string "(do "
                           "  (setdyn :judge-gen/test-out "
-                          "          \"" results-fpath "\") "
-                          "  (dofile \"" full-path "\") "
+                          "          `" results-fpath "`) "
+                          "  (dofile `" full-path "`) "
                           ")")])
     # XXX
     #(eprintf "command: %p" command)
