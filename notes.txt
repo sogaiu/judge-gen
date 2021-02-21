@@ -42,7 +42,10 @@
 #   that one can use a non-direct subdirectory of the project directory
 #   (i.e. a "deeper" subdirectory) in the configuration of judge-gen.
 #
-# * audit code for use of stdout vs stderr - likely not consistent
+# * audit / review code for:
+#   * use of stdout vs stderr (e.g. prin* vs eprin*)
+#   * prefer break over assert in many places?
+#   * break without argument
 #
 # * in jg/handle_one, instead of `(break false)`, perhaps different
 #   values could be returned to indicate different types of errors
