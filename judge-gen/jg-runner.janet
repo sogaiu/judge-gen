@@ -222,15 +222,23 @@
   (def judge-root
     (path/join proj-root judge-dir-name))
   # remove old judge directory
-  (print (string "cleaning out: " judge-root))
+  (prin "cleaning out: " judge-root " ... ")
   (jpm/rm judge-root)
-  # XXX
-  (print "removed judge dir")
-  # copy source files
-  (jpm/copy src-root judge-root)
-  (utils/print-dashes)
+  # make a fresh judge directory
+  (os/mkdir judge-root)
+  (print "done")
+  # copy source files -- each item needs to be done separately for windows
+  (prin "copying source files... ")
+  (each item (os/dir src-root)
+    (def full-path (path/join src-root item))
+    (jpm/copy full-path judge-root true))
+  (print "done")
   # create judge files
+  (prin "creating tests files... ")
   (jg-runner/make-judges src-root judge-root judge-file-prefix)
+  (print "done")
+  #
+  (utils/print-dashes)
   # judge
   (print "judging...")
   (def results
