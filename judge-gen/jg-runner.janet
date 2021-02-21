@@ -227,9 +227,11 @@
   (print "done")
   # copy source files -- each item needs to be done separately for windows
   (prin "copying source files... ")
-  (each item (os/dir src-root)
-    (def full-path (path/join src-root item))
-    (jpm/copy full-path judge-root true))
+  # shhhhh
+  (with-dyns [:out @""]
+    (each item (os/dir src-root)
+      (def full-path (path/join src-root item))
+      (jpm/copy full-path judge-root)))
   (print "done")
   # create judge files
   (prin "creating tests files... ")

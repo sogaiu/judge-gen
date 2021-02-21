@@ -49,9 +49,8 @@
 
 (defn jpm/copy
   "Copy a file or directory recursively from one location to another."
-  [src dest &opt quiet]
-  (when (not quiet)
-    (print "copying " src " to " dest "..."))
+  [src dest]
+  (print "copying " src " to " dest "...")
   (if jpm/is-win
     (let [end (last (peg/match jpm/path-splitter src))
           isdir (= (os/stat src :mode) :directory)]
