@@ -532,11 +532,7 @@
                    :short "p"}
    "source-root" {:help "Source root."
                   :kind :option
-                  :short "s"}
-   "version" {:default false
-              :help "Version output."
-              :kind :flag
-              :short "v"}])
+                  :short "s"}])
 
 (comment
 
@@ -547,8 +543,7 @@
                      "-s" "."])
       (argparse/argparse ;args-runner/params))
 
-    @{"version" false
-      "judge-file-prefix" "judge-"
+    @{"judge-file-prefix" "judge-"
       "judge-dir-name" "judge"
       :order @["project-root" "source-root"]
       "project-root" ".."
@@ -564,12 +559,7 @@
   (let [judge-dir-name (res "judge-dir-name")
         judge-file-prefix (res "judge-file-prefix")
         proj-root (or (res "project-root") "")
-        src-root (or (res "source-root") "")
-        version (res "version")]
-    # XXX: work on this
-    (when version
-      (print "jg-verdict pre-release")
-      (break nil))
+        src-root (or (res "source-root") "")]
     (setdyn :debug (res "debug"))
     (assert (os/stat proj-root)
             (string "Project root not detected: " proj-root))
@@ -578,8 +568,7 @@
     {:judge-dir-name judge-dir-name
      :judge-file-prefix judge-file-prefix
      :proj-root proj-root
-     :src-root src-root
-     :version version}))
+     :src-root src-root}))
 # adapted from:
 #   https://janet-lang.org/docs/syntax.html
 
@@ -1698,10 +1687,6 @@
              :help "Path to store output to."
              :kind :option
              :short "o"}
-   "version" {:default false
-              :help "Version output."
-              :kind :flag
-              :short "v"}
    :default {:default "-"
              :help "Source path or - for STDIN."
              :kind :option}])
@@ -1715,8 +1700,7 @@
       (setdyn :args ["jg" file-path])
       (argparse/argparse ;args/params))
     #
-    @{"version" false
-      "lint" false
+    @{"lint" false
       "output" ""
       :order @[:default]
       :default file-path}) # => true
@@ -1729,28 +1713,23 @@
     (let [input (res :default)
           lint (res "lint")
           # XXX: overwrites...dangerous?
-          output (res "output")
-          version (res "version")]
+          output (res "output")]
       (setdyn :debug (res "debug"))
       (assert input "Input should be filepath or -")
       {:input input
        :lint lint
-       :output output
-       :version version})))
+       :output output})))
 
-# XXX: consider `(break false)` instead of just `assert`?
 (defn jg/handle-one
   [opts]
   (def {:input input
         :lint lint
-        :output output
-        :version version} opts)
-  # XXX: review
-  (when version
-    (break true))
+        :output output} opts)
   # read in the code
   (def buf (input/slurp-input input))
-  (assert buf (string "Failed to read input for:" input))
+  (when (not buf)
+    (eprint "Failed to read input for:" input)
+    (break false))
   # lint if requested
   (when lint
     (def lint-res @"")
@@ -1765,12 +1744,14 @@
           (file/seek f :set 0)
           (with-dyns [:err lint-res]
             (flycheck f)))))
-    (assert (zero? (length lint-res))
-            (string "linting failed:\n"
-                    lint-res)))
+    (when (pos? (length lint-res))
+      (eprint "linting failed:\n" lint-res)
+      (break false)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
-  (assert segments (string "Failed to parse input:" input))
+  (when (not segments)
+    (eprint "Failed to parse input:" input)
+    (break false))
   # find comment blocks
   (def comment-blocks (segments/find-comment-blocks segments))
   (when (empty? comment-blocks)
@@ -1800,7 +1781,6 @@
                   :single true})
 
   )
-
 (defn utils/print-color
   [msg color]
   (let [color-num (match color
@@ -2050,7 +2030,6 @@
 
   )
 
-# XXX: consider `(break false)` instead of just `assert`?
 (defn jg-runner/handle-one
   [opts]
   (def {:judge-dir-name judge-dir-name
