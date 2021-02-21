@@ -18,11 +18,7 @@
                    :short "p"}
    "source-root" {:help "Source root."
                   :kind :option
-                  :short "s"}
-   "version" {:default false
-              :help "Version output."
-              :kind :flag
-              :short "v"}])
+                  :short "s"}])
 
 (comment
 
@@ -33,8 +29,7 @@
                      "-s" "."])
       (argparse/argparse ;args-runner/params))
 
-    @{"version" false
-      "judge-file-prefix" "judge-"
+    @{"judge-file-prefix" "judge-"
       "judge-dir-name" "judge"
       :order @["project-root" "source-root"]
       "project-root" ".."
@@ -50,12 +45,7 @@
   (let [judge-dir-name (res "judge-dir-name")
         judge-file-prefix (res "judge-file-prefix")
         proj-root (or (res "project-root") "")
-        src-root (or (res "source-root") "")
-        version (res "version")]
-    # XXX: work on this
-    (when version
-      (print "jg-verdict pre-release")
-      (break nil))
+        src-root (or (res "source-root") "")]
     (setdyn :debug (res "debug"))
     (assert (os/stat proj-root)
             (string "Project root not detected: " proj-root))
@@ -64,5 +54,4 @@
     {:judge-dir-name judge-dir-name
      :judge-file-prefix judge-file-prefix
      :proj-root proj-root
-     :src-root src-root
-     :version version}))
+     :src-root src-root}))

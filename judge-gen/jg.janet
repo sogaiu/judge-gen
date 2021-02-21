@@ -3,19 +3,16 @@
 (import ./rewrite :prefix "")
 (import ./segments :prefix "")
 
-# XXX: consider `(break false)` instead of just `assert`?
 (defn jg/handle-one
   [opts]
   (def {:input input
         :lint lint
-        :output output
-        :version version} opts)
-  # XXX: review
-  (when version
-    (break true))
+        :output output} opts)
   # read in the code
   (def buf (input/slurp-input input))
-  (assert buf (string "Failed to read input for:" input))
+  (when (not buf)
+    (eprint "Failed to read input for:" input)
+    (break false))
   # lint if requested
   (when lint
     (def lint-res @"")
@@ -30,12 +27,14 @@
           (file/seek f :set 0)
           (with-dyns [:err lint-res]
             (flycheck f)))))
-    (assert (zero? (length lint-res))
-            (string "linting failed:\n"
-                    lint-res)))
+    (when (pos? (length lint-res))
+      (eprint "linting failed:\n" lint-res)
+      (break false)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
-  (assert segments (string "Failed to parse input:" input))
+  (when (not segments)
+    (eprint "Failed to parse input:" input)
+    (break false))
   # find comment blocks
   (def comment-blocks (segments/find-comment-blocks segments))
   (when (empty? comment-blocks)
@@ -65,4 +64,3 @@
                   :single true})
 
   )
-

@@ -13,10 +13,6 @@
              :help "Path to store output to."
              :kind :option
              :short "o"}
-   "version" {:default false
-              :help "Version output."
-              :kind :flag
-              :short "v"}
    :default {:default "-"
              :help "Source path or - for STDIN."
              :kind :option}])
@@ -30,8 +26,7 @@
       (setdyn :args ["jg" file-path])
       (argparse/argparse ;args/params))
     #
-    @{"version" false
-      "lint" false
+    @{"lint" false
       "output" ""
       :order @[:default]
       :default file-path}) # => true
@@ -44,11 +39,9 @@
     (let [input (res :default)
           lint (res "lint")
           # XXX: overwrites...dangerous?
-          output (res "output")
-          version (res "version")]
+          output (res "output")]
       (setdyn :debug (res "debug"))
       (assert input "Input should be filepath or -")
       {:input input
        :lint lint
-       :output output
-       :version version})))
+       :output output})))

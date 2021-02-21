@@ -210,7 +210,6 @@
 
   )
 
-# XXX: consider `(break false)` instead of just `assert`?
 (defn jg-runner/handle-one
   [opts]
   (def {:judge-dir-name judge-dir-name
