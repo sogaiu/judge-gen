@@ -5,22 +5,27 @@
 (import ./path :prefix "")
 
 (defn jg-runner/make-judges
-  [dir subdirs judge-root judge-file-prefix]
-  (each path (os/dir dir)
-    (def fpath (path/join dir path))
-    (case (os/stat fpath :mode)
-      :directory (do
-                   (jg-runner/make-judges fpath (array/push subdirs path)
-                                          judge-root judge-file-prefix)
-                   (array/pop subdirs))
-      :file (when (string/has-suffix? ".janet" fpath)
-              (jg/handle-one {:input fpath
-                              :line 0
-                              :output (path/join judge-root
-                                                 ;subdirs
-                                                 (string
-                                                   judge-file-prefix path))
-                              :prepend true})))))
+  [src-root judge-root judge-file-prefix]
+  (def subdirs @[])
+  (defn helper
+    [src-root subdirs judge-root judge-file-prefix]
+    (each path (os/dir src-root)
+      (def fpath (path/join src-root path))
+      (case (os/stat fpath :mode)
+        :directory (do
+                     (helper fpath (array/push subdirs path)
+                             judge-root judge-file-prefix)
+                     (array/pop subdirs))
+        :file (when (string/has-suffix? ".janet" fpath)
+                (jg/handle-one {:input fpath
+                                :line 0
+                                :output (path/join judge-root
+                                                   ;subdirs
+                                                   (string
+                                                     judge-file-prefix path))
+                                :prepend true})))))
+  #
+  (helper src-root subdirs judge-root judge-file-prefix))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
@@ -37,27 +42,34 @@
 
   (os/mkdir judge-root)
 
-  (jg-runner/make-judges src-root @[] judge-root "judge-")
+  (jg-runner/make-judges src-root judge-root "judge-")
 
   )
 
 (defn jg-runner/find-judge-files
-  [dir judge-file-prefix file-paths]
-  (each path (os/dir dir)
-    (def full-path (path/join dir path))
-    (case (os/stat full-path :mode)
-      :directory
-      (jg-runner/find-judge-files full-path judge-file-prefix file-paths)
-      #
-      :file
-      (when (and (string/has-prefix? judge-file-prefix path)
-                 (string/has-suffix? ".janet" path))
-        (array/push file-paths [full-path path])))))
+  [dir judge-file-prefix]
+  (def file-paths @[])
+  (defn helper
+    [dir judge-file-prefix file-paths]
+    (each path (os/dir dir)
+      (def full-path (path/join dir path))
+      (case (os/stat full-path :mode)
+        :directory
+        (helper full-path judge-file-prefix file-paths)
+        #
+        :file
+        (when (and (string/has-prefix? judge-file-prefix path)
+                   (string/has-suffix? ".janet" path))
+          (array/push file-paths [full-path path]))))
+    file-paths)
+  #
+  (helper dir judge-file-prefix file-paths))
 
 (defn jg-runner/judge
-  [dir results judge-root judge-file-prefix]
-  (def file-paths @[])
-  (jg-runner/find-judge-files dir judge-file-prefix file-paths)
+  [judge-root judge-file-prefix]
+  (def results @{})
+  (def file-paths
+    (jg-runner/find-judge-files judge-root judge-file-prefix))
   (var count 0)
   (def results-dir
     # XXX: what about windows...
@@ -83,6 +95,7 @@
       (make-results-fpath path count))
     # XXX
     #(eprintf "results path: %s" results-fpath)
+    # XXX: for windows, this is not appropriate
     (def command (string/join
                    [(dyn :executable "janet")
                     "-e"
@@ -123,7 +136,8 @@
                   results-fpath))))
     (put results
          full-path results-for-path)
-    (++ count)))
+    (++ count))
+  results)
 
 (defn jg-runner/summarize
   [results]
@@ -196,6 +210,8 @@
 
   )
 
+# XXX: consider using `try` around some of the bits below to
+#      handle errors (e.g. filesystem-related)
 # XXX: consider `(break false)` instead of just `assert`?
 (defn jg-runner/handle-one
   [opts]
@@ -214,11 +230,11 @@
   (jpm/copy src-root judge-root)
   (utils/print-dashes)
   # create judge files
-  (jg-runner/make-judges src-root @[] judge-root judge-file-prefix)
+  (jg-runner/make-judges src-root judge-root judge-file-prefix)
   # judge
   (print "judging...")
-  (var results @{})
-  (jg-runner/judge judge-root results judge-root judge-file-prefix)
+  (def results
+    (jg-runner/judge judge-root judge-file-prefix))
   (utils/print-dashes)
   (print)
   # summarize results
@@ -240,4 +256,3 @@
                          :src-root src-root})
 
   )
-
