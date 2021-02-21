@@ -15,6 +15,27 @@
 # POSSIBILITIES:
 #
 # * find parts that don't work on windows and try to fix
+#   * jg-runner/judge - temp directory
+#   * construction of command line is incorrect (cf. quoting with dofile)
+#
+# * audit code for use of stdout vs stderr - likely not consistent
+#
+# * consider putting temporary files in `judge` directory
+#   * clean up would be automatic on next run
+#   * don't need to find a "global" temp directory
+#   * might need to "shield" from test running
+#
+# * possible to lint / check for well-formedness of code before
+#   trying to convert to tests?
+#   * try sending code to janet -k before main jg processing...
+#     atm, `janet -k` doesn't appear to work for files that have
+#     `(import ...)` in them, so this may not be an option.  is this
+#     still true?
+#   * possible to check as part of executing jg/handle-one?
+#
+# * each runner in test should have a unique name that can be used
+#   to look up configuration info in jg.jdn.  if there is no jg.jdn, then
+#   the name of the file specifies a subdirectory of the project directory.
 #
 # * consider having test/judge-gen.janet read configuration information
 #   from a separate file.
@@ -27,7 +48,8 @@
 # * can use one judge-gen.janet per directory of source files, but that
 #   would lead to multiple judge-gen.janet files.  perhaps an alternative
 #   to have a single configuration file that could "drive" judge-gen.janet
-#   to be used for multple directories.
+#   to be used for multple directories.  need to consider multiple
+#   judge directories to prevent collisions?
 #
 # * if the config file route is taken, ensure it is optional.  i.e. make
 #   sure that judge-gen.janet can operate without the config file.
@@ -49,10 +71,6 @@
 #   that avoids this, but that method requires writing a `def` before
 #   the expression to be evaluated and then using the name of the
 #   `def` as the expected value.
-#
-# * could have option to send code to janet -k before main jg processing.
-#   atm, `janet -k` doesn't appear to work for files that have
-#   `(import ...)` in them, so this may not be an option.
 #
 # * consider various "rewriting" targets, e.g. testament, helper.janet
 #   for "transition" purposes
