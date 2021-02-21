@@ -5,8 +5,6 @@
 #   configuration information at direct subdirectories of project
 #   directory.
 #
-# * doesn't handle code that is not "well-formed"
-#
 # * doesn't clean up temporary files and directories automatically
 #
 # * doesn't handle edge case of two comments lines in a row that
@@ -45,12 +43,6 @@
 #   (i.e. a "deeper" subdirectory) in the configuration of judge-gen.
 #
 # * audit code for use of stdout vs stderr - likely not consistent
-#
-# * jg-runner/handle one needs to handle failures of things like fileystem
-#   operations
-#
-# * try to lint / check for well-formedness of code before attemping to
-#   convert to tests.  this might be done as part of jg/handle-one
 #
 # * configuration ideas
 #   * motivation for configuration via external file
