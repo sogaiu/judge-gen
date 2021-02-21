@@ -6,14 +6,11 @@ cd judge-gen
 cat config.janet \
     path.janet \
     jpm.janet \
-    argparse.janet \
-    args-runner.janet \
     grammar.janet \
     pegs.janet \
     segments.janet \
     rewrite.janet \
     input.janet \
-    args.janet \
     jg.janet \
     utils.janet \
     jg-runner.janet \
