@@ -44,7 +44,7 @@
 #
 # * audit code for use of stdout vs stderr - likely not consistent
 #
-# * in handle_one, instead of `(break false)`, perhaps different
+# * in jg/handle_one, instead of `(break false)`, perhaps different
 #   values could be returned to indicate different types of errors
 #
 # * _verify/dump-results uses "%p" in a branch.  determine if this could
@@ -115,6 +115,10 @@
 #   * possibly easier to transform and output?
 #   * possibly easier to determine line / column info for tests?
 #   * examine alc.x-as-tests for hints
+#
+# * "compilation" process involved a lot of rewriting source
+#   could this be avoided / reduced by using `:export true` in
+#   some fashion?
 
 # ISSUES:
 #
