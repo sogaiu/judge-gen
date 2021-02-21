@@ -143,7 +143,7 @@
   (when (empty? results)
     # XXX: somehow messes things up?
     #(print "No test results")
-    (break))
+    (break nil))
   (var total-tests 0)
   (var total-passed 0)
   (def failures @{})
@@ -189,7 +189,7 @@
       (printf "%M" test-value)))
   (when (= 0 total-tests)
     (print "No tests found, so no judgements made.")
-    (break))
+    (break nil))
   (if (not= total-passed total-tests)
     (do
       (utils/print-dashes)
