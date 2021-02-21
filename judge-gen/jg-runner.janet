@@ -41,15 +41,31 @@
 
   )
 
+(defn jg-runner/find-judge-files
+  [dir judge-file-prefix file-paths]
+  (each path (os/dir dir)
+    (def full-path (path/join dir path))
+    (case (os/stat full-path :mode)
+      :directory
+      (jg-runner/find-judge-files full-path judge-file-prefix file-paths)
+      #
+      :file
+      (when (and (string/has-prefix? judge-file-prefix path)
+                 (string/has-suffix? ".janet" path))
+        (array/push file-paths [full-path path])))))
+
 (defn jg-runner/judge
   [dir results judge-root judge-file-prefix]
+  (def file-paths @[])
+  (jg-runner/find-judge-files dir judge-file-prefix file-paths)
   (var count 0)
   (def results-dir
     # XXX: what about windows...
-    (path/join "/tmp"
-               (string "judge-gen-"
+    (path/join judge-root
+               (string "."
                        (os/time) "-"
-                       (utils/rand-string 8))))
+                       (utils/rand-string 8) "-"
+                       "judge-gen")))
   (defn make-results-fpath
     [fname i]
     (let [fpath (path/join results-dir
@@ -60,58 +76,54 @@
         ([err]
           (errorf "failed to create dir for path: " fpath)))
       fpath))
-  (each path (os/dir dir)
-    (def fpath (path/join dir path))
-    (case (os/stat fpath :mode)
-      :directory (jg-runner/judge fpath results judge-root judge-file-prefix)
-      :file (when (and (string/has-prefix? judge-file-prefix path)
-                       (string/has-suffix? ".janet" fpath))
-              (print "  " path)
-              (def results-fpath
-                (make-results-fpath path count))
-              # XXX
-              #(eprintf "results path: %s" results-fpath)
-              (def command (string/join
-                             [(dyn :executable "janet")
-                              "-e"
-                              (string "'(os/cd \"" judge-root "\")'")
-                              "-e"
-                              (string "'"
-                                      "(do "
-                                      "  (setdyn :judge-gen/test-out "
-                                      "          \"" results-fpath "\") "
-                                      "  (dofile \"" fpath "\") "
-                                      ")"
-                                      "'")] # avoid `main`
-                             " "))
-              # XXX
-              #(eprintf "command: %s" command)
-              (let [output (try
-                             (jpm/pslurp command)
-                             ([err]
-                               (eprint err)
-                               (errorf "command failed: %s" command)))]
-                (when (not= output "")
-                  (spit (path/join results-dir
-                                   (string "stdout-" count "-" path ".txt"))
-                        output)))
-              (def marshalled-results
-                (try
-                  (slurp results-fpath)
-                  ([err]
-                    (eprint err)
-                    (errorf "failed to read in marshalled results from: %s"
-                            results-fpath))))
-              (def results-for-path
-                (try
-                  (unmarshal (buffer marshalled-results))
-                  ([err]
-                    (eprintf err)
-                    (errorf "failed to unmarshal content from: %s"
-                            results-fpath))))
-              (put results
-                   fpath results-for-path)
-              (++ count)))))
+  #
+  (each [full-path path] file-paths
+    (print "  " path)
+    (def results-fpath
+      (make-results-fpath path count))
+    # XXX
+    #(eprintf "results path: %s" results-fpath)
+    (def command (string/join
+                   [(dyn :executable "janet")
+                    "-e"
+                    (string "'(os/cd \"" judge-root "\")'")
+                    "-e"
+                    (string "'"
+                            "(do "
+                            "  (setdyn :judge-gen/test-out "
+                            "          \"" results-fpath "\") "
+                            "  (dofile \"" full-path "\") "
+                            ")"
+                            "'")] # avoid `main`
+                   " "))
+    # XXX
+    #(eprintf "command: %s" command)
+    (let [output (try
+                   (jpm/pslurp command)
+                   ([err]
+                     (eprint err)
+                     (errorf "command failed: %s" command)))]
+      (when (not= output "")
+        (spit (path/join results-dir
+                         (string "stdout-" count "-" path ".txt"))
+              output)))
+    (def marshalled-results
+      (try
+        (slurp results-fpath)
+        ([err]
+          (eprint err)
+          (errorf "failed to read in marshalled results from: %s"
+                  results-fpath))))
+    (def results-for-path
+      (try
+        (unmarshal (buffer marshalled-results))
+        ([err]
+          (eprintf err)
+          (errorf "failed to unmarshal content from: %s"
+                  results-fpath))))
+    (put results
+         full-path results-for-path)
+    (++ count)))
 
 (defn jg-runner/summarize
   [results]
