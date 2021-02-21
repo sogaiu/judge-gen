@@ -283,8 +283,9 @@
 
 (defn jpm/copy
   "Copy a file or directory recursively from one location to another."
-  [src dest]
-  (print "copying " src " to " dest "...")
+  [src dest &opt quiet]
+  (when (not quiet)
+    (print "copying " src " to " dest "..."))
   (if jpm/is-win
     (let [end (last (peg/match jpm/path-splitter src))
           isdir (= (os/stat src :mode) :directory)]
@@ -1870,7 +1871,7 @@
       (def full-path (path/join dir path))
       (case (os/stat full-path :mode)
         :directory
-        (jg-runner/find-judge-files full-path judge-file-prefix file-paths)
+        (helper full-path judge-file-prefix file-paths)
         #
         :file
         (when (and (string/has-prefix? judge-file-prefix path)
@@ -2037,18 +2038,26 @@
   (def judge-root
     (path/join proj-root judge-dir-name))
   # remove old judge directory
-  (print (string "cleaning out: " judge-root))
+  (prin "cleaning out: " judge-root " ... ")
   (jpm/rm judge-root)
-  # XXX
-  (print "removed judge dir")
-  # copy source files
-  (jpm/copy src-root judge-root)
-  (utils/print-dashes)
+  # make a fresh judge directory
+  (os/mkdir judge-root)
+  (print "done")
+  # copy source files -- each item needs to be done separately for windows
+  (prin "copying source files... ")
+  (each item (os/dir src-root)
+    (def full-path (path/join src-root item))
+    (jpm/copy full-path judge-root true))
+  (print "done")
   # create judge files
+  (prin "creating tests files... ")
   (jg-runner/make-judges src-root judge-root judge-file-prefix)
+  (print "done")
+  #
+  (utils/print-dashes)
   # judge
   (print "judging...")
-  (def results 
+  (def results
     (jg-runner/judge judge-root judge-file-prefix))
   (utils/print-dashes)
   (print)
@@ -2071,7 +2080,6 @@
                          :src-root src-root})
 
   )
-
 
 # from the perspective of `jpm test`
 (def proj-root
