@@ -54,6 +54,9 @@
 #   * reminder that things may work better if each src-dir-name
 #     refers to a direct subdirectory of project directory
 #
+# * consider a method of building the single file version that works on
+#   windows as well.  possibly a janet script?
+#
 # * possibly provide some linting / diagnostic mode to check configuration
 #   and file / directory structure.  collect gotchas, issues, etc. together
 #   for consideration of potential things to check for.
@@ -86,6 +89,8 @@
 #   * sort by other criteria
 #   * random
 #   * custom order
+#
+# * consider reporting number of tests per file
 #
 # * consider different reporting modes for jg.  concrete examples:
 #
@@ -164,10 +169,11 @@
 # * some existing repositories use an older version of judge-gen, enumerate
 #   these and consider migration to newer version.  some things that might
 #   need to be done:
+#   * count number of tests using old version of judge-gen
 #   * ensure tests only use simplified syntax
+#   * compare number of tests between old and new versions
 #   * edit project.janet to remove stale phony targets
 #   * add runner to test directory
-#   * possibly add configuration file
 #
 # * the structure and content of the judge directory is not spelled out so
 #   well.  consider spelling this out.
