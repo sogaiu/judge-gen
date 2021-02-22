@@ -16,9 +16,6 @@
 
 # POSSIBILITIES:
 #
-# * consider whether launching build script via a phony target in
-#   project.janet is worthwhile -- e.g. `jpm build`
-#
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
 #   has at least the following important properties:
