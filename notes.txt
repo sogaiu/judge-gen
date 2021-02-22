@@ -9,9 +9,6 @@
 #   running a subsequent set of tests will erase old results and generated
 #   tests
 #
-# * doesn't handle edge case of two comments lines in a row that
-#   look like expected value lines
-#
 # * updating an existing judge-gen installation has the downside of
 #   potentially erasing previous configuration information.
 #
