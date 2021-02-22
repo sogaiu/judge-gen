@@ -1246,20 +1246,30 @@
   # parse the comment block and rewrite some parts
   (let [parsed (pegs/parse-comment-block blk-str)]
     (when (rewrite/has-tests parsed)
+      (var just-saw-ev false)
       (each cmt-or-frm parsed
         (when (not= cmt-or-frm "")
           (if (empty? rewritten-forms)
             (array/push rewritten-forms cmt-or-frm)
             # is `cmt-or-frm` an expected value
             (if (= (type cmt-or-frm) :tuple)
-              # looks like an expected value, handle rewriting as test
+              # looks like an expected value, may be rewrite as test
               (let [last-form (array/pop rewritten-forms)
                     rewritten (rewrite/rewrite-tagged cmt-or-frm
                                                       last-form offset)]
-                (assert rewritten (string "match failed for: " cmt-or-frm))
+                (assert (not just-saw-ev)
+                        (string/format
+                          "unexpected expected value comment beyond line: %d"
+                          offset))
+                (assert rewritten
+                        (string "failed to rewrite expected value: "
+                                cmt-or-frm))
+                (set just-saw-ev true)
                 (array/push rewritten-forms rewritten))
               # not an expected value, continue
-              (array/push rewritten-forms cmt-or-frm)))))))
+              (do
+                (set just-saw-ev false)
+                (array/push rewritten-forms cmt-or-frm))))))))
   rewritten-forms)
 
 (comment
