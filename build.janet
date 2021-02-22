@@ -1,3 +1,5 @@
+# execute this from judge-gen's project directory to build judge-gen.janet
+
 (def src-root
   "judge-gen")
 
