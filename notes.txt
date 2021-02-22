@@ -19,7 +19,9 @@
 
 # POSSIBILITIES:
 #
-# * redo README as .adoc
+# * consider a method of building the single file version that works on
+#   windows as well.  possibly something that can be launched via
+#   a phony target in project.janet.
 #
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
@@ -53,9 +55,6 @@
 #     there might be problems of other runners not running
 #   * reminder that things may work better if each src-dir-name
 #     refers to a direct subdirectory of project directory
-#
-# * consider a method of building the single file version that works on
-#   windows as well.  possibly a janet script?
 #
 # * possibly provide some linting / diagnostic mode to check configuration
 #   and file / directory structure.  collect gotchas, issues, etc. together
