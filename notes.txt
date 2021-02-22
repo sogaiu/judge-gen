@@ -5,7 +5,9 @@
 #   configuration information at direct subdirectories of project
 #   directory.
 #
-# * doesn't clean up temporary files and directories automatically
+# * doesn't clean up temporary files and directories automatically, though
+#   running a subsequent set of tests will erase old results and generated
+#   tests
 #
 # * doesn't handle edge case of two comments lines in a row that
 #   look like expected value lines
@@ -17,35 +19,7 @@
 
 # POSSIBILITIES:
 #
-# * configuration ideas
-#   * don't make a configuration file for the moment, try to collect
-#     usage scenarios.  in the mean time, just use the name of the runner
-#     as a way to indicate which direct subdirectory of the project
-#     directory to use as a source of tests.
-#     * still it should be possible to finely configure the runner based
-#       on values in the runner (e.g. judge-root)
-#     * can put runner in a subdirectory of test if there are name
-#       collision issues
-#   * motivation for configuration via external file
-#     * current method risks losing configuration information upon upgrade
-#     * current method leads to likelihood of having to edit
-#       test/judge-gen.janet on each upgrade (tedious and error-prone?)
-#     * current method risks breaking test/judge-gen.janet because a user
-#       typically has to edit it at least once
-#   * each runner in test should have a unique name that can be used
-#     to look up configuration info in jg.jdn.  if there is no jg.jdn, then
-#     the name of the file specifies a subdirectory of the project directory.
-#     this last bit helps make it possible for the config file is optional
-#     for some cases.
-#   * can use one judge-gen.janet per directory of source files, but that
-#     would lead to multiple judge-gen.janet files.  perhaps an alternative
-#     is to have a single configuration file that could "drive" judge-gen.janet
-#     to be used for multple directories.  need to consider multiple
-#     judge directories to prevent collisions?
-#   * location of config file
-#     * project root - e.g. `jg.jdn`
-#     * directory with runner - e.g. `test/jg.jdn`, `test/fun/jg.jdn`
-#     * could do some kind of search order - e.g. runner dir first, up, etc.
+# * redo README as .adoc
 #
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
@@ -146,6 +120,37 @@
 # * "compilation" process involved a lot of rewriting source
 #   could this be avoided / reduced by using `:export true` in
 #   some fashion?
+#
+# * configuration ideas
+#   * don't make a configuration file for the moment, try to collect
+#     usage scenarios, then revisit.
+#   * currently, using the name of the runner as a way to indicate which
+#     direct subdirectory of the project directory to use as a source of
+#     tests.  this can be overriden via configuration in the runner.
+#     * still it should be possible to finely configure the runner based
+#       on values in the runner (e.g. judge-root)
+#     * can put runner in a subdirectory of test if there are name
+#       collision issues
+#   * motivation for configuration via external file
+#     * current method risks losing configuration information upon upgrade
+#     * current method leads to likelihood of having to edit
+#       test/judge-gen.janet on each upgrade (tedious and error-prone?)
+#     * current method risks breaking test/judge-gen.janet because a user
+#       typically has to edit it at least once
+#   * each runner in test should have a unique name that can be used
+#     to look up configuration info in jg.jdn.  if there is no jg.jdn, then
+#     the name of the file specifies a subdirectory of the project directory.
+#     this last bit helps make it possible for the config file is optional
+#     for some cases.
+#   * can use one judge-gen.janet per directory of source files, but that
+#     would lead to multiple judge-gen.janet files.  perhaps an alternative
+#     is to have a single configuration file that could "drive" judge-gen.janet
+#     to be used for multple directories.  need to consider multiple
+#     judge directories to prevent collisions?
+#   * location of config file
+#     * project root - e.g. `jg.jdn`
+#     * directory with runner - e.g. `test/jg.jdn`, `test/fun/jg.jdn`
+#     * could do some kind of search order - e.g. runner dir first, up, etc.
 
 # ISSUES:
 #
