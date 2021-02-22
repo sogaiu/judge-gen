@@ -1,0 +1,78 @@
+= judge-gen - Generate and Run Tests from Usage Examples
+:toc:
+
+== Aims
+
+* Make simple testing low-cost and automatable especially during
+  exploratory coding when using Janet.
+
+* Encourage the creation of illustrative examples to help potential users
+  form appropriate mental models.
+
+== Status and Warnings
+
+This is an early stage project.  The author uses it in a number of
+projects though.  Be sure to examine the link:doc/warning.adoc[fine print].
+
+== How
+
+* Within `comment` blocks, put expressions / forms to be tested along
+  with brief records of expected values:
++
+[source,janet]
+----
+(comment
+
+  (- 1 1)
+  # => 0
+
+)
+----
++
+Note the use of a single line comment and `=>` to express an
+expected return value.
++
+One might call the form + expected value comment a "comment block
+test".
++
+See link:doc/tips-and-tweaking.adoc[Tips and Tweaking] for more details.
+
+* Once some setup steps are followed, tests can be run by: `jpm test`
+
+== Setup
+
+0. Decide on a name for the directory to hold comment block tests,
+   e.g. `examples`.
+1. Copy the file `test/judge-gen.janet` from this repository to the
+   target project's `test` subdirectory and rename it to
+   `test/examples.janet`.
+3. If it doesn't exist already, create a direct subdirectory of the project
+   root directory named `examples` to house comment block tests.
+4. If the `examples` directory doesn't have at least one file with a comment
+   block test in it, do something about that :)
+
+== Usage
+
+To run the tests and get a report: `jpm test`
+
+Add more tests / examples by creating more comment block tests in
+files that live in an appropriate directory.
+
+== Sample Configurations
+
+This repository can serve as an example, but
+https://gitlab.com/sogaiu/margaret[margaret] is another example.
+
+== Notes
+
+There are some link:notes.txt[notes].
+
+== Acknowledgments
+
+* andrewchambers - suggestion and explanation
+* bakpakin - janet, jpm, etc.
+* pepe - discussion, One-Shot Power Util Solver ™ motivation, and naming
+* pyrmont - discussion and exploration
+* rduplain - bringing to light customization of `jpm test`
+* Saikyun - discussion
+* srnb@gitlab - suggestion
