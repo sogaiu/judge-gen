@@ -1,8 +1,8 @@
 # configuration
 
-# highly likely will want to tweak this
+# this takes precendence over the file name if non-empty
 (def src-dir-name
-  "examples")
+  "")
 
 # only tweak if trying to prevent collision with existing dir
 (def judge-dir-name
