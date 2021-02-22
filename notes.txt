@@ -16,9 +16,8 @@
 
 # POSSIBILITIES:
 #
-# * consider a method of building the single file version that works on
-#   windows as well.  possibly something that can be launched via
-#   a phony target in project.janet.
+# * consider whether launching build script via a phony target in
+#   project.janet is worthwhile -- e.g. `jpm build`
 #
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
