@@ -3,7 +3,7 @@
 # * tends to work for direct subdirectories of the project directory.
 #   files can be in deeper directories, but for least hassle, point
 #   configuration information at direct subdirectories of project
-#   directory.
+#   directory.  see details below for more in-depth explanation.
 #
 # * doesn't clean up temporary files and directories automatically, though
 #   running a subsequent set of tests will erase old results and generated
@@ -15,6 +15,11 @@
 # * likely only works with utf-8
 
 # POSSIBILITIES:
+#
+# * consider what might be done to improve error handling and messages
+#   * track and log actual instances
+#   * in jg/handle_one, instead of `(break false)`, perhaps different
+#     values could be returned to indicate different types of errors
 #
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
@@ -57,9 +62,6 @@
 #   * use of stdout vs stderr (e.g. prin* vs eprin*)
 #   * prefer break over assert in many places?
 #   * break without argument
-#
-# * in jg/handle_one, instead of `(break false)`, perhaps different
-#   values could be returned to indicate different types of errors
 #
 # * _verify/dump-results uses "%p" in a branch.  determine if this could
 #   be a problem but also whether this branch is ever used.
@@ -114,9 +116,13 @@
 #   * possibly easier to determine line / column info for tests?
 #   * examine alc.x-as-tests for hints
 #
-# * "compilation" process involved a lot of rewriting source
-#   could this be avoided / reduced by using `:export true` in
-#   some fashion?
+# * preparing the individual source files so that they could be concatenated
+#   together in a relatively problem-free manner involved a lot of
+#   rewriting source.  could this be avoided / reduced somehow?
+#   * is `:export true` somehow applicable here?
+#   * analyzing imports and doing some identifier rewriting seems
+#     like it could help a fair bit, but that would probably not been
+#     enough for path.janet
 #
 # * configuration ideas
 #   * don't make a configuration file for the moment, try to collect
