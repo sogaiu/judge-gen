@@ -73,7 +73,7 @@ NOT be executed.
 
 === Fine Tuning Configuration
 
-* By default, the directory housing the tests has a name of `judge`
+* By default, the directory housing the tests is named `.judge`
   and lives within one's project directory.  If that name is a problem
   (e.g. your project is already using it or wants to use it), there is
   a way to select a different name.
