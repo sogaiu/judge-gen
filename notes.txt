@@ -18,6 +18,12 @@
 
 # POSSIBILITIES:
 #
+# * improve linting behavior
+#   * janet-uri doesn't survive linting so other stuff might not either
+#   * make linting off by default
+#   * consider just checking whether source can be parse by peg
+#     as an alternative to linting
+#
 # * consider idea of the "judge" directory being ".judge_<name-of-config>"
 #   * easier to have multiple "installations" of judge-gen in a single
 #     project?
@@ -26,6 +32,8 @@
 #     * may be acceptable trade-off?
 #     * have runner check for this condition before starting to process
 #       tests?  if detected, just exit?
+#
+# * consider user customization of reporting output.
 #
 # * `(dyn :args)` gives access to some command line parameters but
 #   it appears `jpm test <something>` will always fail.  ask for a change?
