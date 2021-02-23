@@ -10,7 +10,9 @@
 #   tests
 #
 # * updating an existing judge-gen installation has the downside of
-#   potentially erasing previous configuration information.
+#   potentially erasing previous configuration information because this
+#   mostly lives in the runner file itself (with the exception of the
+#   name of the file which is used as configuration information)
 #
 # * likely only works with utf-8
 
@@ -68,6 +70,8 @@
 #
 # * _verify/dump-results uses "%p" in a branch.  determine if this could
 #   be a problem but also whether this branch is ever used.
+#
+# * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
 # * consider various "rewriting" targets, e.g. testament, helper.janet
 #   for "transition" / exporting purposes
@@ -160,12 +164,11 @@
 
 # ISSUES:
 #
-# * how to handle rather large return values -- load from external file?
+# * how / whether to handle rather large return values -- load from external
+#   file?
 #
 # * how / whether to try to test output (such as from `print`) -- see
 #   spork's `capture-stdout` for an idea
-#
-# * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
 # * some existing repositories use an older version of judge-gen, enumerate
 #   these and consider migration to newer version.  some things that might
@@ -176,8 +179,8 @@
 #   * edit project.janet to remove stale phony targets
 #   * add runner to test directory
 #
-# * the structure and content of the judge directory is not spelled out so
-#   well.  consider spelling this out.
+# * the structure and content of the .judge directory is not spelled out so
+#   well.  consider remedying.
 #   * timing of creation
 #   * content
 #     * test files
