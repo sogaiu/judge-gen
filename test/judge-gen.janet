@@ -1702,6 +1702,8 @@
           (array/push fails test-result)))
       (when (not (empty? fails))
         (put failures fpath fails))))
+  (when (pos? (length failures))
+    (print))
   (eachp [fpath failed-tests] failures
     (print fpath)
     (each fail failed-tests
@@ -1710,35 +1712,42 @@
             :name test-name
             :passed test-passed
             :test-form test-form} fail)
-      (utils/print-color "  failed" :red)
-      (print ": " test-name)
-      (utils/print-color "    form" :red)
-      (printf ": %M" test-form)
-      (utils/print-color "expected" :red)
+      (print)
+      (utils/print-color (string "  failed: " test-name) :red)
+      (print)
+      (printf "    form: %M" test-form)
+      (prin "expected")
       # XXX: this could use some work...
       (if (< 30 (length (describe expected-value)))
         (print ":")
         (prin ": "))
-      (printf "%M" expected-value)
-      (utils/print-color "  actual" :red)
+      (printf "%m" expected-value)
+      (prin "  actual")
       # XXX: this could use some work...
       (if (< 30 (length (describe test-value)))
         (print ":")
         (prin ": "))
-      (printf "%M" test-value)))
+      (utils/print-color (string/format "%m" test-value) :blue)
+      (print)))
+  (when (zero? (length failures))
+    (print)
+    (print "No tests failed."))
+  (print)
+  (utils/print-dashes)
   (when (= 0 total-tests)
     (print "No tests found, so no judgements made.")
     (break nil))
   (if (not= total-passed total-tests)
-    (do
-      (utils/print-dashes)
-      (utils/print-color total-passed :red))
+    (utils/print-color total-passed :red)
     (utils/print-color total-passed :green))
   (prin " of ")
   (utils/print-color total-tests :green)
   (print " passed")
   (utils/print-dashes)
-  (print "all judgements made.")
+  (print)
+  (print "judge-gen is done, `jpm test` continues below line.")
+  (print)
+  (utils/print-dashes)
   (= total-passed total-tests))
 
 # XXX: since there are no tests in this comment block, nothing will execute
@@ -1758,6 +1767,11 @@
     (path/join proj-root judge-dir-name))
   (try
     (do
+      (utils/print-dashes)
+      (print)
+      (print "judge-gen is starting...")
+      (print)
+      (utils/print-dashes)
       # remove old judge directory
       (prin "cleaning out: " judge-root " ... ")
       (jpm/rm judge-root)
@@ -1778,13 +1792,13 @@
       (jg-runner/make-judges src-root judge-root judge-file-prefix)
       (print "done")
       #
-      (utils/print-dashes)
+      #(utils/print-dashes)
       # judge
       (print "judging...")
       (def results
         (jg-runner/judge judge-root judge-file-prefix))
       (utils/print-dashes)
-      (print)
+      #(print)
       # summarize results
       (jg-runner/summarize results))
     #
