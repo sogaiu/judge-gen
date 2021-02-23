@@ -4,7 +4,7 @@
 (import ./path :prefix "")
 
 (defn jg-runner/make-judges
-  [src-root judge-root judge-file-prefix]
+  [src-root judge-root judge-file-prefix lint]
   (def subdirs @[])
   (defn helper
     [src-root subdirs judge-root judge-file-prefix]
@@ -20,7 +20,7 @@
         :file
         (when (string/has-suffix? ".janet" fpath)
           (jg/handle-one {:input fpath
-                          :lint true # XXX: make optional?
+                          :lint lint
                           :output (path/join judge-root
                                              ;subdirs
                                              (string
@@ -43,7 +43,7 @@
 
   (os/mkdir judge-root)
 
-  (jg-runner/make-judges src-root judge-root "judge-")
+  (jg-runner/make-judges src-root judge-root "judge-" true)
 
   )
 
@@ -222,6 +222,7 @@
   [opts]
   (def {:judge-dir-name judge-dir-name
         :judge-file-prefix judge-file-prefix
+        :lint-source lint-source
         :proj-root proj-root
         :src-root src-root} opts)
   (def judge-root
@@ -250,7 +251,8 @@
       (print "done")
       # create judge files
       (prin "creating tests files... ")
-      (jg-runner/make-judges src-root judge-root judge-file-prefix)
+      (jg-runner/make-judges src-root judge-root judge-file-prefix
+                             lint-source)
       (print "done")
       # judge
       (print "judging...")
