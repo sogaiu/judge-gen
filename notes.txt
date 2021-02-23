@@ -21,8 +21,14 @@
 # * improve linting behavior
 #   * janet-uri doesn't survive linting so other stuff might not either
 #   * make linting off by default
-#   * consider just checking whether source can be parse by peg
-#     as an alternative to linting
+#   * consider just checking whether source can be parsed by an
+#     appropriate peg as an alternative to linting, or using janet's
+#     `parse`
+#
+# * customize behavior if runner is launched via `janet test/runner.janet`.
+#   unlike when launched via `jpm test`, arguments will be available via
+#   `(dyn :args)`, so things like `janet test/runner.janet --lint`
+#   should be doable?
 #
 # * consider idea of the "judge" directory being ".judge_<name-of-config>"
 #   * easier to have multiple "installations" of judge-gen in a single
@@ -34,9 +40,6 @@
 #       tests?  if detected, just exit?
 #
 # * consider user customization of reporting output.
-#
-# * `(dyn :args)` gives access to some command line parameters but
-#   it appears `jpm test <something>` will always fail.  ask for a change?
 #
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
