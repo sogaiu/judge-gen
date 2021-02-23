@@ -18,6 +18,15 @@
 
 # POSSIBILITIES:
 #
+# * consider idea of the "judge" directory being ".judge_<name-of-config>"
+#   * easier to have multiple "installations" of judge-gen in a single
+#     project?
+#   * not quite safe as `test/dir-a/config.janet` and
+#     `test/dir-b/config.janet` end up with the same <name-of-config>
+#     * may be acceptable trade-off?
+#     * have runner check for this condition before starting to process
+#       tests?  if detected, just exit?
+#
 # * `(dyn :args)` gives access to some command line parameters but
 #   it appears `jpm test <something>` will always fail.  ask for a change?
 #
