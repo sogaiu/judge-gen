@@ -16,6 +16,9 @@
 
 # POSSIBILITIES:
 #
+# * `(dyn :args)` gives access to some command line parameters but
+#   it appears `jpm test <something>` will always fail.  ask for a change?
+#
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
 #   * in jg/handle_one, instead of `(break false)`, perhaps different
