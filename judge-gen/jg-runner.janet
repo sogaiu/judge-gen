@@ -19,11 +19,15 @@
         #
         :file
         (when (string/has-suffix? ".janet" fpath)
-          (jg/handle-one {:input fpath
-                          :output (path/join judge-root
-                                             ;subdirs
-                                             (string
-                                               judge-file-prefix path))})))))
+          (unless (jg/handle-one
+                    {:input fpath
+                     :output (path/join judge-root
+                                        ;subdirs
+                                        (string
+                                          judge-file-prefix path))})
+            (eprintf "Test generation failed for: %s" fpath)
+            (eprintf "Please confirm validity of source file: %s" fpath)
+            (error "Exiting judge-gen"))))))
   #
   (helper src-root subdirs judge-root judge-file-prefix))
 
