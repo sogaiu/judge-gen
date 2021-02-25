@@ -214,10 +214,6 @@
   (utils/print-color total-tests :green)
   (print " passed")
   (utils/print-dashes)
-  (print)
-  (print "judge-gen is done, `jpm test` continues below line.")
-  (print)
-  (utils/print-dashes)
   (= total-passed total-tests))
 
 # XXX: since there are no tests in this comment block, nothing will execute
@@ -268,7 +264,15 @@
         (jg-runner/judge judge-root judge-file-prefix))
       (utils/print-dashes)
       # summarize results
-      (jg-runner/summarize results))
+      (def all-passed
+        (jg-runner/summarize results))
+      (print)
+      # XXX: if detecting that being run via `jpm test` is possible,
+      #      may be can show following only when run from `jpm test`
+      (print "judge-gen is done, later output may be from `jpm test`")
+      (print)
+      (utils/print-dashes)
+      all-passed)
     #
     ([err]
       (eprint "Runner stopped")
