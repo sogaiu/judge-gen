@@ -19,8 +19,6 @@
 # POSSIBILITIES:
 #
 # * try to "finish" judge-gen and not add anything as much as possible
-#   * report error when transformation fails and suggest checking that
-#     program executes
 #   * be able to launch in debug mode (via `:args`) for additional output?
 #   * consider an extension mechanism where some extensions are only
 #     run via direct execution of the runner:
@@ -30,8 +28,10 @@
 #     * some ideas
 #       * possible to provide config file / directory via extension?
 #       * linting source files via extension?
-#       * diagnostic mode might be done to check sanity of configuration
-#         via extension?
+#       * diagnostic mode might be done to check sanity of configuration,
+#         file / directory structure, etc. via extension? collect gotchas,
+#         issues, etc. together for consideration of potential things to
+#         check for.
 #       * trying to run all test files to determine every file that leads
 #         to failure (cf. `jpm test` fail early behavior gives an incomplete
 #         picture) via extension?
@@ -92,10 +92,6 @@
 #     there might be problems of other runners not running
 #   * reminder that things may work better if each src-dir-name
 #     refers to a direct subdirectory of project directory
-#
-# * possibly provide some linting / diagnostic mode to check configuration
-#   and file / directory structure.  collect gotchas, issues, etc. together
-#   for consideration of potential things to check for.
 #
 # * audit / review code for:
 #   * use of stdout vs stderr (e.g. prin* vs eprin*)
