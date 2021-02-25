@@ -114,6 +114,7 @@
                      (string "stdout-" count "-" path ".txt"))]
       (try
         (with [f (file/open out-path :w)]
+          # XXX: what about :err?
           (os/execute command :px {:out f})
           (file/flush f))
         ([err]
