@@ -705,6 +705,32 @@
   # => @["# => 2\n"]
 
   )
+(defn validate/valid-bytes?
+  [form-bytes]
+  (let [p (parser/new)
+        p-len (parser/consume p form-bytes)]
+    (when (parser/error p)
+      (break false))
+    (let [_ (parser/eof p)
+          p-err (parser/error p)]
+      (and (= (length form-bytes) p-len)
+           (nil? p-err)))))
+
+(comment
+
+  (validate/valid-bytes? "true")
+  # => true
+
+  (validate/valid-bytes? "(")
+  # => false
+
+  (validate/valid-bytes? "()")
+  # => true
+
+  (validate/valid-bytes? "(]")
+  # => false
+
+  )
 
 # XXX: any way to avoid this?
 (var- pegs/in-comment 0)
@@ -744,14 +770,9 @@
                                 (any (if-not (choice "\n" -1) 1))
                                 (any "\n"))))
                    ,|(if (zero? pegs/in-comment)
-                       (let [p (parser/new)
-                             ev-form (string/trim $1)
-                             p-len (parser/consume p ev-form)
-                             _ (parser/eof p)
-                             p-err (parser/error p)
+                       (let [ev-form (string/trim $1)
                              line $0]
-                         (assert (and (= (length ev-form) p-len)
-                                      (nil? p-err))
+                         (assert (validate/valid-bytes? ev-form)
                                  {:ev-form ev-form
                                   :line line})
                          # record expected value form and line
@@ -1464,15 +1485,10 @@
     (eprint "Failed to read input for: " input)
     (break false))
   # light sanity check
-  (let [p (parser/new)
-        p-len (parser/consume p buf)
-        _ (parser/eof p)
-        p-err (parser/error p)]
-    (when (or (not= (length buf) p-len)
-              p-err)
-      (eprint)
-      (eprint "Failed to parse input: " input)
-      (break false)))
+  (when (not (validate/valid-bytes? buf))
+    (eprint)
+    (eprint "Failed to parse input as valid Janet code: " input)
+    (break false))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)
@@ -1489,7 +1505,7 @@
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content
   (let [rewritten (try
-                    (rewrite/rewrite-with-verify comment-blocks) 
+                    (rewrite/rewrite-with-verify comment-blocks)
                     ([err]
                       (def {:ev-form ev-form
                             :line line
@@ -1835,7 +1851,7 @@
       (jg-runner/summarize results))
     #
     ([err]
-      (eprint "Runner failed")
+      (eprint "Runner stopped")
       (eprint err)
       nil)))
 
