@@ -733,25 +733,37 @@
                                     :root
                                     (choice ")" (error "")))))
     # classify certain comments
-    (put :comment ~(sequence
-                     (any :ws)
-                     (choice
-                       (cmt (sequence
-                              (line)
-                              "#" (any :ws) "=>"
-                              (capture (sequence
-                                         (any (if-not (choice "\n" -1) 1))
-                                         (any "\n"))))
-                            ,|(if (zero? pegs/in-comment)
-                                # record value and line
-                                [:returns (string/trim $1) $0]
-                                ""))
-                       (cmt (capture (sequence
-                                       "#"
-                                       (any (if-not (+ "\n" -1) 1))
-                                       (any "\n")))
-                            ,|(identity $))
-                       (any :ws))))
+    (put :comment
+         ~(sequence
+            (any :ws)
+            (choice
+              (cmt (sequence
+                     (line)
+                     "#" (any :ws) "=>"
+                     (capture (sequence
+                                (any (if-not (choice "\n" -1) 1))
+                                (any "\n"))))
+                   ,|(if (zero? pegs/in-comment)
+                       (let [p (parser/new)
+                             ev-form (string/trim $1)
+                             p-len (parser/consume p ev-form)
+                             _ (parser/eof p)
+                             p-err (parser/error p)
+                             line $0]
+                         (assert (and (= (length ev-form) p-len)
+                                      (nil? p-err))
+                                 {:ev-form ev-form
+                                  :line line})
+                         # record expected value form and line
+                         [:returns ev-form line])
+                       # XXX: is this right?
+                       ""))
+              (cmt (capture (sequence
+                              "#"
+                              (any (if-not (+ "\n" -1) 1))
+                              (any "\n")))
+                   ,|(identity $))
+              (any :ws))))
     # tried using a table with a peg but had a problem, so use a struct
     table/to-struct))
 
@@ -1259,7 +1271,10 @@
   (def {:value blk-str
         :s-line offset} blk)
   # parse the comment block and rewrite some parts
-  (let [parsed (pegs/parse-comment-block blk-str)]
+  (let [parsed (try
+                 (pegs/parse-comment-block blk-str)
+                 ([err]
+                   (error (merge err {:offset offset}))))]
     (when (rewrite/has-tests parsed)
       (var just-saw-ev false)
       (each cmt-or-frm parsed
@@ -1449,11 +1464,15 @@
     (eprint "Failed to read input for: " input)
     (break false))
   # light sanity check
-  (when (not= (parser/consume (parser/new) buf)
-              (length buf))
-    (eprint)
-    (eprint "Failed to parse input: " input)
-    (break false))
+  (let [p (parser/new)
+        p-len (parser/consume p buf)
+        _ (parser/eof p)
+        p-err (parser/error p)]
+    (when (or (not= (length buf) p-len)
+              p-err)
+      (eprint)
+      (eprint "Failed to parse input: " input)
+      (break false)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)
@@ -1469,7 +1488,21 @@
   (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content
-  (buffer/blit buf (rewrite/rewrite-with-verify comment-blocks) -1)
+  (let [rewritten (try
+                    (rewrite/rewrite-with-verify comment-blocks) 
+                    ([err]
+                      (def {:ev-form ev-form
+                            :line line
+                            :offset offset} err)
+                      (eprint)
+                      (eprintf "Mal-formed value: `%s` in: `%s` line: %d"
+                               ev-form
+                               input
+                               (dec (+ line offset)))
+                      nil))]
+    (when (nil? rewritten)
+      (break false))
+    (buffer/blit buf rewritten -1))
   (if (not= "" output)
     (spit output buf)
     (print buf))
