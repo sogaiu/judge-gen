@@ -108,14 +108,19 @@
                           ")")])
     # XXX
     #(eprintf "command: %p" command)
-    (let [out-path
+    (let [err-path
+          (path/join results-dir
+                     (string "stderr-" count "-" path ".txt"))
+          out-path
           (path/join results-dir
                      (string "stdout-" count "-" path ".txt"))]
       (try
-        (with [f (file/open out-path :w)]
-          # XXX: what about :err?
-          (os/execute command :px {:out f})
-          (file/flush f))
+        (with [ef (file/open err-path :w)]
+          (with [of (file/open out-path :w)]
+            (os/execute command :px {:err ef
+                                     :out of})
+            (file/flush ef)
+            (file/flush of)))
         ([err]
           (eprint err)
           (errorf "command failed: %p" command))))
