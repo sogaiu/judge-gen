@@ -23,7 +23,7 @@
   (when (empty? comment-blocks)
     (when (dyn :debug)
       (eprint "no comment blocks found"))
-    (break false))
+    (break true))
   (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
   # output rewritten content
