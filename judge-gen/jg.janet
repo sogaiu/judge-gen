@@ -13,11 +13,15 @@
     (eprint "Failed to read input for: " input)
     (break false))
   # light sanity check
-  (when (not= (parser/consume (parser/new) buf)
-              (length buf))
-    (eprint)
-    (eprint "Failed to parse input: " input)
-    (break false))
+  (let [p (parser/new)
+        p-len (parser/consume p buf)
+        _ (parser/eof p)
+        p-err (parser/error p)]
+    (when (or (not= (length buf) p-len)
+              p-err)
+      (eprint)
+      (eprint "Failed to parse input: " input)
+      (break false)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)
