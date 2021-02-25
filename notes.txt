@@ -23,6 +23,18 @@
 #
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
+#     * during "Judging..." when executing a "judge-" file via `dofile`
+#       output like:
+#
+#       command file with non-zero exit code 1
+#       Runner failed
+#       Command failed: ("janet" "-k" ...)
+#
+#       has the path to the "judge-" file in it along with the path to
+#       "<n>-judge-<something>.janet" file.  examining the corresponding
+#       "stderr-*" file might give clues about the encountered problem.
+#       the "stderr-*" file should be in the same directory as the
+#       "<n>-judge-<something>.janet" file.
 #   * in jg/handle_one, instead of `(break false)`, perhaps different
 #     values could be returned to indicate different types of errors
 #   * use `file/flush` appropriately to get messages to show up in proper
