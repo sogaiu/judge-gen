@@ -3,7 +3,14 @@
 
 == Tips
 
-* Use `[]` instead of `()` in some places to express return values, e.g.
+* Use `'()` or `[]` instead of `()` in some places to express return
+  values, e.g.
++
+[source,janet]
+----
+# => '(:hi 1)
+----
+or:
 +
 [source,janet]
 ----
