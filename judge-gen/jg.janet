@@ -12,6 +12,12 @@
     (eprint)
     (eprint "Failed to read input for: " input)
     (break false))
+  # light sanity check
+  (when (not= (parser/consume (parser/new) buf)
+              (length buf))
+    (eprint)
+    (eprint "Failed to parse input: " input)
+    (break false))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)
