@@ -18,9 +18,6 @@
 
 # POSSIBILITIES:
 #
-# * mention the use of quotes instead of open left parens or rather
-#   putting a single quote in front of certain expected values
-#
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
 #     * during "Judging..." when executing a "judge-" file via `dofile`
