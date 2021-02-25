@@ -34,8 +34,8 @@
 #       "<n>-judge-<something>.janet" file.
 #   * in jg/handle_one, instead of `(break false)`, perhaps different
 #     values could be returned to indicate different types of errors
-#   * use `file/flush` appropriately to get messages to show up in proper
-#     order
+#   * use `file/flush` and friends (e.g. `eflush`) appropriately to get
+#     messages to show up in proper order
 #
 # * try to "finish" judge-gen and not add anything as much as possible
 #   * be able to launch in debug mode (via `:args`) for additional output?
