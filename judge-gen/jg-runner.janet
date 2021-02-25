@@ -255,7 +255,7 @@
       (print "done")
       # create judge files
       (prin "Creating tests files... ")
-      (file/flush stdout)
+      (flush)
       (jg-runner/make-judges src-root judge-root judge-file-prefix)
       (print "done")
       # judge
