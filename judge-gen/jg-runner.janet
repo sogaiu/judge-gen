@@ -86,7 +86,7 @@
       (try
         (jpm/create-dirs fpath)
         ([err]
-          (errorf "failed to create dir for path: " fpath)))
+          (errorf "Failed to create dir for path: " fpath)))
       fpath))
   #
   (each [full-path path] file-paths
@@ -123,20 +123,20 @@
             (file/flush of)))
         ([err]
           (eprint err)
-          (errorf "command failed: %p" command))))
+          (errorf "Command failed: %p" command))))
     (def marshalled-results
       (try
         (slurp results-fpath)
         ([err]
           (eprint err)
-          (errorf "failed to read in marshalled results from: %s"
+          (errorf "Failed to read in marshalled results from: %s"
                   results-fpath))))
     (def results-for-path
       (try
         (unmarshal (buffer marshalled-results))
         ([err]
           (eprintf err)
-          (errorf "failed to unmarshal content from: %s"
+          (errorf "Failed to unmarshal content from: %s"
                   results-fpath))))
     (put results
          full-path results-for-path)
@@ -239,13 +239,13 @@
       (print)
       (utils/print-dashes)
       # remove old judge directory
-      (prin "cleaning out: " judge-root " ... ")
+      (prin "Cleaning out: " judge-root " ... ")
       (jpm/rm judge-root)
       # make a fresh judge directory
       (os/mkdir judge-root)
       (print "done")
       # copy source files
-      (prin "copying source files... ")
+      (prin "Copying source files... ")
       # shhhhh
       (with-dyns [:out @""]
         # each item copied separately for platform consistency
@@ -254,11 +254,12 @@
           (jpm/copy full-path judge-root)))
       (print "done")
       # create judge files
-      (prin "creating tests files... ")
+      (prin "Creating tests files... ")
+      (file/flush stdout)
       (jg-runner/make-judges src-root judge-root judge-file-prefix)
       (print "done")
       # judge
-      (print "judging...")
+      (print "Judging...")
       (def results
         (jg-runner/judge judge-root judge-file-prefix))
       (utils/print-dashes)
@@ -266,7 +267,7 @@
       (jg-runner/summarize results))
     #
     ([err]
-      (eprint "judge-gen runner failed")
+      (eprint "Runner failed")
       (eprint err)
       nil)))
 
