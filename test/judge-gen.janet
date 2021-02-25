@@ -10,12 +10,6 @@
 (def src-dir-name
   "")
 
-# If true, janet's built-in linting will be attempted before trying to
-# transform source files into test files.  Unfortunately, some valid
-# source can fail to lint.
-(def lint-source
-  false)
-
 # Only change if trying to prevent collision with an existing direct
 # subdirectory of the project directory.
 (def judge-dir-name
@@ -1447,30 +1441,12 @@
 (defn jg/handle-one
   [opts]
   (def {:input input
-        :lint lint
         :output output} opts)
   # read in the code
   (def buf (input/slurp-input input))
   (when (not buf)
     (eprint "Failed to read input for:" input)
     (break false))
-  # lint if requested
-  (when lint
-    (def lint-res @"")
-    (if (os/stat input)
-      (do
-        (with-dyns [:err lint-res]
-          (flycheck input)))
-      (do
-        (with [f (file/temp)]
-          (file/write f buf)
-          (file/flush f) # XXX: needed?
-          (file/seek f :set 0)
-          (with-dyns [:err lint-res]
-            (flycheck f)))))
-    (when (pos? (length lint-res))
-      (eprint "linting failed:\n" lint-res)
-      (break false)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)
@@ -1551,7 +1527,7 @@
   )
 
 (defn jg-runner/make-judges
-  [src-root judge-root judge-file-prefix lint]
+  [src-root judge-root judge-file-prefix]
   (def subdirs @[])
   (defn helper
     [src-root subdirs judge-root judge-file-prefix]
@@ -1567,7 +1543,6 @@
         :file
         (when (string/has-suffix? ".janet" fpath)
           (jg/handle-one {:input fpath
-                          :lint lint
                           :output (path/join judge-root
                                              ;subdirs
                                              (string
@@ -1770,7 +1745,6 @@
   [opts]
   (def {:judge-dir-name judge-dir-name
         :judge-file-prefix judge-file-prefix
-        :lint-source lint-source
         :proj-root proj-root
         :src-root src-root} opts)
   (def judge-root
@@ -1799,8 +1773,7 @@
       (print "done")
       # create judge files
       (prin "creating tests files... ")
-      (jg-runner/make-judges src-root judge-root judge-file-prefix
-                             lint-source)
+      (jg-runner/make-judges src-root judge-root judge-file-prefix)
       (print "done")
       # judge
       (print "judging...")
@@ -1866,7 +1839,6 @@
       (jg-runner/handle-one
         {:judge-dir-name judge-dir-name
          :judge-file-prefix judge-file-prefix
-         :lint-source lint-source
          :proj-root proj-root
          :src-root (deduce-src-root src-dir-name)})]
   (when (not all-passed)
