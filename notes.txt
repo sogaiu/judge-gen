@@ -21,27 +21,30 @@
 # * try to "finish" judge-gen and not add anything as much as possible
 #   * report error when transformation fails and suggest checking that
 #     program executes
-#   * also seriously consider some config file / directory
 #   * be able to launch in debug mode (via `:args`) for additional output?
-#   * consider an extension mechanism -- possibly a different project.
-#     possibly the extensions are only run via direct execution of
-#     the runner: `janet test/runner.janet --extension` (cf. `(dyn :args)`)
-#     * through extensions may be linting source files might be done
-#     * through extensions may be a diagnostic mode might be done to
-#       check sanity of configuration
-#     * through extensions trying to run all test files to determine
-#       every file that leads to failure (cf. `jpm test` fail early
-#       behavior gives an incomplete picture)
-#     * through extensions, customizing reporting might be implemented
-#     * a mode of operation to work on stuff outside a comment block?
+#   * consider an extension mechanism where some extensions are only
+#     run via direct execution of the runner:
+#     `janet test/runner.janet --extension` (cf. `(dyn :args)`)
+#     * may be it's good to have hook "points" in the existing code
+#       where extensions can be called from.
+#     * some ideas
+#       * possible to provide config file / directory via extension?
+#       * linting source files via extension?
+#       * diagnostic mode might be done to check sanity of configuration
+#         via extension?
+#       * trying to run all test files to determine every file that leads
+#         to failure (cf. `jpm test` fail early behavior gives an incomplete
+#         picture) via extension?
+#       * customizing reporting might be implemented via extension?
+#       * a mode of operation to work on stuff outside a comment block?
 #
-#       so for example the following at the top-level:
+#         so for example the following at the top-level:
 #
-#         (def a 1)
-#         # => 1
+#           (def a 1)
+#           # => 1
 #
-#      ought to work as input to jg's transformation process.
-#    * a mode of operation to apply runner to a single file
+#        ought to work as input to jg's transformation process.
+#      * a mode of operation to apply runner to a single file
 #
 # * consider idea of the "judge" directory being ".judge_<name-of-config>"
 #   * easier to have multiple "installations" of judge-gen in a single
