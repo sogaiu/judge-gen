@@ -91,7 +91,10 @@
   (def {:value blk-str
         :s-line offset} blk)
   # parse the comment block and rewrite some parts
-  (let [parsed (pegs/parse-comment-block blk-str)]
+  (let [parsed (try
+                 (pegs/parse-comment-block blk-str)
+                 ([err]
+                   (error (merge err {:offset offset}))))]
     (when (rewrite/has-tests parsed)
       (var just-saw-ev false)
       (each cmt-or-frm parsed

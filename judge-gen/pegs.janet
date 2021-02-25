@@ -27,25 +27,37 @@
                                     :root
                                     (choice ")" (error "")))))
     # classify certain comments
-    (put :comment ~(sequence
-                     (any :ws)
-                     (choice
-                       (cmt (sequence
-                              (line)
-                              "#" (any :ws) "=>"
-                              (capture (sequence
-                                         (any (if-not (choice "\n" -1) 1))
-                                         (any "\n"))))
-                            ,|(if (zero? pegs/in-comment)
-                                # record value and line
-                                [:returns (string/trim $1) $0]
-                                ""))
-                       (cmt (capture (sequence
-                                       "#"
-                                       (any (if-not (+ "\n" -1) 1))
-                                       (any "\n")))
-                            ,|(identity $))
-                       (any :ws))))
+    (put :comment
+         ~(sequence
+            (any :ws)
+            (choice
+              (cmt (sequence
+                     (line)
+                     "#" (any :ws) "=>"
+                     (capture (sequence
+                                (any (if-not (choice "\n" -1) 1))
+                                (any "\n"))))
+                   ,|(if (zero? pegs/in-comment)
+                       (let [p (parser/new)
+                             ev-form (string/trim $1)
+                             p-len (parser/consume p ev-form)
+                             _ (parser/eof p)
+                             p-err (parser/error p)
+                             line $0]
+                         (assert (and (= (length ev-form) p-len)
+                                      (nil? p-err))
+                                 {:ev-form ev-form
+                                  :line line})
+                         # record expected value form and line
+                         [:returns ev-form line])
+                       # XXX: is this right?
+                       ""))
+              (cmt (capture (sequence
+                              "#"
+                              (any (if-not (+ "\n" -1) 1))
+                              (any "\n")))
+                   ,|(identity $))
+              (any :ws))))
     # tried using a table with a peg but had a problem, so use a struct
     table/to-struct))
 
