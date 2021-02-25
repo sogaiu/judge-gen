@@ -5,30 +5,12 @@
 (defn jg/handle-one
   [opts]
   (def {:input input
-        :lint lint
         :output output} opts)
   # read in the code
   (def buf (input/slurp-input input))
   (when (not buf)
     (eprint "Failed to read input for:" input)
     (break false))
-  # lint if requested
-  (when lint
-    (def lint-res @"")
-    (if (os/stat input)
-      (do
-        (with-dyns [:err lint-res]
-          (flycheck input)))
-      (do
-        (with [f (file/temp)]
-          (file/write f buf)
-          (file/flush f) # XXX: needed?
-          (file/seek f :set 0)
-          (with-dyns [:err lint-res]
-            (flycheck f)))))
-    (when (pos? (length lint-res))
-      (eprint "linting failed:\n" lint-res)
-      (break false)))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)

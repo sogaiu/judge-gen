@@ -36,7 +36,6 @@
       (jg-runner/handle-one
         {:judge-dir-name judge-dir-name
          :judge-file-prefix judge-file-prefix
-         :lint-source lint-source
          :proj-root proj-root
          :src-root (deduce-src-root src-dir-name)})]
   (when (not all-passed)

@@ -10,12 +10,6 @@
 (def src-dir-name
   "")
 
-# If true, janet's built-in linting will be attempted before trying to
-# transform source files into test files.  Unfortunately, some valid
-# source can fail to lint.
-(def lint-source
-  false)
-
 # Only change if trying to prevent collision with an existing direct
 # subdirectory of the project directory.
 (def judge-dir-name
