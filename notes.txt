@@ -18,17 +18,30 @@
 
 # POSSIBILITIES:
 #
-# * improve linting behavior
-#   * janet-uri doesn't survive linting so other stuff might not either
-#   * make linting off by default
-#   * consider just checking whether source can be parsed by an
-#     appropriate peg as an alternative to linting, or using janet's
-#     `parse`
+# * try to "finish" judge-gen and not add anything as much as possible
+#   * report error when transformation fails and suggest checking that
+#     program executes
+#   * also seriously consider some config file / directory
+#   * be able to launch in debug mode (via `:args`) for additional output?
+#   * consider an extension mechanism -- possibly a different project.
+#     possibly the extensions are only run via direct execution of
+#     the runner: `janet test/runner.janet --extension` (cf. `(dyn :args)`)
+#     * through extensions may be linting source files might be done
+#     * through extensions may be a diagnostic mode might be done to
+#       check sanity of configuration
+#     * through extensions trying to run all test files to determine
+#       every file that leads to failure (cf. `jpm test` fail early
+#       behavior gives an incomplete picture)
+#     * through extensions, customizing reporting might be implemented
+#     * a mode of operation to work on stuff outside a comment block?
 #
-# * customize behavior if runner is launched via `janet test/runner.janet`.
-#   unlike when launched via `jpm test`, arguments will be available via
-#   `(dyn :args)`, so things like `janet test/runner.janet --lint`
-#   should be doable?
+#       so for example the following at the top-level:
+#
+#         (def a 1)
+#         # => 1
+#
+#      ought to work as input to jg's transformation process.
+#    * a mode of operation to apply runner to a single file
 #
 # * consider idea of the "judge" directory being ".judge_<name-of-config>"
 #   * easier to have multiple "installations" of judge-gen in a single
@@ -38,8 +51,6 @@
 #     * may be acceptable trade-off?
 #     * have runner check for this condition before starting to process
 #       tests?  if detected, just exit?
-#
-# * consider user customization of reporting output.
 #
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
@@ -127,15 +138,6 @@
 # * produce code with comment blocks unwrapped inline -- test context is
 #   is more likely to be correct than just appending tests after original
 #   code
-#
-# * consider a mode of operation to work on stuff outside a comment block?
-#
-#   so for example the following at the top-level:
-#
-#     (def a 1)
-#     # => 1
-#
-#   ought to work as input to jg's transformation process.
 #
 # * would using recent janet-peg for parsing as well as rewriting
 #   source be any better than the current approach?
