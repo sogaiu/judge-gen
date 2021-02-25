@@ -18,6 +18,16 @@
 
 # POSSIBILITIES:
 #
+# * mention the use of quotes instead of open left parens or rather
+#   putting a single quote in front of certain expected values
+#
+# * consider what might be done to improve error handling and messages
+#   * track and log actual instances
+#   * in jg/handle_one, instead of `(break false)`, perhaps different
+#     values could be returned to indicate different types of errors
+#   * use `file/flush` appropriately to get messages to show up in proper
+#     order
+#
 # * try to "finish" judge-gen and not add anything as much as possible
 #   * be able to launch in debug mode (via `:args`) for additional output?
 #   * consider an extension mechanism where some extensions are only
@@ -36,6 +46,8 @@
 #         to failure (cf. `jpm test` fail early behavior gives an incomplete
 #         picture) via extension?
 #       * customizing reporting might be implemented via extension?
+#       * various "rewriting" targets, e.g. testament, helper.janet
+#         for "transition" / exporting purposes
 #       * a mode of operation to work on stuff outside a comment block?
 #
 #         so for example the following at the top-level:
@@ -45,6 +57,13 @@
 #
 #        ought to work as input to jg's transformation process.
 #      * a mode of operation to apply runner to a single file
+#      * consider different reporting modes for jg.  concrete examples:
+#        * for earliest / quickest feedback, have _verify output info as soon
+#          as it is available
+#        * for slower feedback, have _verify just pass back all test
+#          results at the end when they are all ready
+#        different receivers might be set up for handling test results, but
+#        this may be getting too elaborate at this stage :)
 #
 # * consider idea of the "judge" directory being ".judge_<name-of-config>"
 #   * easier to have multiple "installations" of judge-gen in a single
@@ -54,11 +73,6 @@
 #     * may be acceptable trade-off?
 #     * have runner check for this condition before starting to process
 #       tests?  if detected, just exit?
-#
-# * consider what might be done to improve error handling and messages
-#   * track and log actual instances
-#   * in jg/handle_one, instead of `(break false)`, perhaps different
-#     values could be returned to indicate different types of errors
 #
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
@@ -103,9 +117,6 @@
 #
 # * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
-# * consider various "rewriting" targets, e.g. testament, helper.janet
-#   for "transition" / exporting purposes
-#
 # * downside of using `(deep= A B)` with expected value of true is
 #   when the test fails, there's not a whole lot of useful information
 #   apart from the failure.  is this just a trade-off that has to be
@@ -122,17 +133,6 @@
 #   * custom order
 #
 # * consider reporting number of tests per file
-#
-# * consider different reporting modes for jg.  concrete examples:
-#
-#   * for earliest / quickest feedback, have _verify output info as soon
-#     as it is available
-#
-#   * for slower feedback, have _verify just pass back all test
-#     results at the end when they are all ready
-#
-#   different receivers might be set up for handling test results, but
-#   this may be getting too elaborate at this stage :)
 #
 # * produce code with comment blocks unwrapped inline -- test context is
 #   is more likely to be correct than just appending tests after original
