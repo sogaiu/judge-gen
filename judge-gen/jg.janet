@@ -37,6 +37,8 @@
   # find comment blocks
   (def comment-blocks (segments/find-comment-blocks segments))
   (when (empty? comment-blocks)
+    (when (dyn :debug)
+      (eprint "no comment blocks found"))
     (break false))
   (when (dyn :debug)
     (eprint "first comment block found was: " (first comment-blocks)))
