@@ -1,6 +1,7 @@
 (import ./input :prefix "")
 (import ./rewrite :prefix "")
 (import ./segments :prefix "")
+(import ./validate :prefix "")
 
 (defn jg/handle-one
   [opts]
@@ -13,15 +14,10 @@
     (eprint "Failed to read input for: " input)
     (break false))
   # light sanity check
-  (let [p (parser/new)
-        p-len (parser/consume p buf)
-        _ (parser/eof p)
-        p-err (parser/error p)]
-    (when (or (not= (length buf) p-len)
-              p-err)
-      (eprint)
-      (eprint "Failed to parse input: " input)
-      (break false)))
+  (when (not (validate/valid-bytes? buf))
+    (eprint)
+    (eprint "Failed to parse input as valid Janet code: " input)
+    (break false))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)

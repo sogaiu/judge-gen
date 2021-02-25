@@ -8,6 +8,7 @@
    "path.janet"
    "jpm.janet"
    "grammar.janet"
+   "validate.janet"
    "pegs.janet"
    "segments.janet"
    "rewrite.janet"

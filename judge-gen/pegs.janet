@@ -1,4 +1,5 @@
 (import ./grammar :prefix "")
+(import ./validate :prefix "")
 
 # XXX: any way to avoid this?
 (var- pegs/in-comment 0)
@@ -38,14 +39,9 @@
                                 (any (if-not (choice "\n" -1) 1))
                                 (any "\n"))))
                    ,|(if (zero? pegs/in-comment)
-                       (let [p (parser/new)
-                             ev-form (string/trim $1)
-                             p-len (parser/consume p ev-form)
-                             _ (parser/eof p)
-                             p-err (parser/error p)
+                       (let [ev-form (string/trim $1)
                              line $0]
-                         (assert (and (= (length ev-form) p-len)
-                                      (nil? p-err))
+                         (assert (validate/valid-bytes? ev-form)
                                  {:ev-form ev-form
                                   :line line})
                          # record expected value form and line
