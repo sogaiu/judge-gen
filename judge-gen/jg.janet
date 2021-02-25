@@ -9,12 +9,14 @@
   # read in the code
   (def buf (input/slurp-input input))
   (when (not buf)
-    (eprint "Failed to read input for:" input)
+    (eprint)
+    (eprint "Failed to read input for: " input)
     (break false))
   # slice the code up into segments
   (def segments (segments/parse-buffer buf))
   (when (not segments)
-    (eprint "Failed to parse input:" input)
+    (eprint)
+    (eprint "Failed to find segments: " input)
     (break false))
   # find comment blocks
   (def comment-blocks (segments/find-comment-blocks segments))
