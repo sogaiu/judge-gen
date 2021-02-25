@@ -73,7 +73,7 @@
   [judge-root judge-file-prefix]
   (def results @{})
   (def file-paths
-    (jg-runner/find-judge-files judge-root judge-file-prefix))
+    (sort (jg-runner/find-judge-files judge-root judge-file-prefix)))
   (var count 0)
   (def results-dir
     # XXX: what about windows...
