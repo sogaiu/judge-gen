@@ -271,7 +271,7 @@
       (jg-runner/summarize results))
     #
     ([err]
-      (eprint "Runner failed")
+      (eprint "Runner stopped")
       (eprint err)
       nil)))
 
