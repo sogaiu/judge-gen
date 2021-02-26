@@ -27,7 +27,7 @@
                                           judge-file-prefix path))})
             (eprintf "Test generation failed for: %s" fpath)
             (eprintf "Please confirm validity of source file: %s" fpath)
-            (error "Exiting judge-gen"))))))
+            (error nil))))))
   #
   (helper src-root subdirs judge-root judge-file-prefix))
 
@@ -275,8 +275,10 @@
       all-passed)
     #
     ([err]
+      (when err
+        (eprint "Unexpected error:\n")
+        (eprintf "\n%p" err))
       (eprint "Runner stopped")
-      (eprint err)
       nil)))
 
 # XXX: since there are no tests in this comment block, nothing will execute
