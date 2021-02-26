@@ -1607,7 +1607,7 @@
                                           judge-file-prefix path))})
             (eprintf "Test generation failed for: %s" fpath)
             (eprintf "Please confirm validity of source file: %s" fpath)
-            (error "Exiting judge-gen"))))))
+            (error nil))))))
   #
   (helper src-root subdirs judge-root judge-file-prefix))
 
@@ -1649,81 +1649,127 @@
   #
   (helper dir judge-file-prefix file-paths))
 
+(defn jg-runner/execute-command
+  [opts]
+  (def {:command command
+        :count count
+        :judge-file-rel-path jf-rel-path
+        :results-dir results-dir
+        :results-full-path results-full-path} opts)
+  (when (dyn :debug)
+    (eprintf "command: %p" command))
+  (let [err-path
+        (path/join results-dir
+                   (string "stderr-" count "-" jf-rel-path ".txt"))
+        out-path
+        (path/join results-dir
+                   (string "stdout-" count "-" jf-rel-path ".txt"))]
+    (try
+      (with [ef (file/open err-path :w)]
+        (with [of (file/open out-path :w)]
+          (os/execute command :px {:err ef
+                                   :out of})
+          (file/flush ef)
+          (file/flush of)))
+      ([_]
+        (error {:out-path out-path
+                :err-path err-path
+                :type :command-failed}))))
+  (def marshalled-results
+    (try
+      (slurp results-full-path)
+      ([err]
+        (eprintf "Failed to read in marshalled results from: %s"
+                 results-full-path)
+        (error nil))))
+  # resurrect the results
+  (try
+    (unmarshal (buffer marshalled-results))
+    ([err]
+      (eprintf "Failed to unmarshal content from: %s"
+               results-full-path)
+      (error nil))))
+
+(defn jg-runner/make-results-dir-path
+  [judge-root]
+  # XXX: what about windows...
+  (path/join judge-root
+             (string "." (os/time) "-"
+                     (utils/rand-string 8) "-"
+                     "judge-gen"))) 
+
+(comment
+
+  (peg/match ~(sequence (choice "/" "\\")
+                        "."
+                        (some :d)
+                        "-"
+                        (some :h)
+                        "-"
+                        "judge-gen")
+    (jg-runner/make-results-dir-path ""))
+  # => @[]
+
+  )
+
+(defn jg-runner/ensure-results-full-path
+  [results-dir fname i]
+  (let [fpath (path/join results-dir (string i "-" fname))]
+    # note: create-dirs expects a path ending in a filename
+    (jpm/create-dirs fpath)
+    (unless (os/stat results-dir)
+      (eprintf "Failed to create dir for path: %s" fpath)
+      (error nil))
+    fpath))
+
 (defn jg-runner/judge
   [judge-root judge-file-prefix]
   (def results @{})
   (def file-paths
-    (jg-runner/find-judge-files judge-root judge-file-prefix))
+    (sort (jg-runner/find-judge-files judge-root judge-file-prefix)))
   (var count 0)
-  (def results-dir
-    # XXX: what about windows...
-    (path/join judge-root
-               (string "."
-                       (os/time) "-"
-                       (utils/rand-string 8) "-"
-                       "judge-gen")))
-  (defn make-results-fpath
-    [fname i]
-    (let [fpath (path/join results-dir
-                           (string i "-" fname))]
-      # note: create-dirs expects a path ending in a filename
-      (try
-        (jpm/create-dirs fpath)
-        ([err]
-          (errorf "Failed to create dir for path: " fpath)))
-      fpath))
+  (def results-dir (jg-runner/make-results-dir-path judge-root))
   #
-  (each [full-path path] file-paths
-    (print "  " path)
-    (def results-fpath
-      (make-results-fpath path count))
-    # XXX
-    #(eprintf "results path: %s" results-fpath)
-    # using backticks below seemed to help make things work on multiple
-    # platforms
+  (each [jf-full-path jf-rel-path] file-paths
+    (print "  " jf-rel-path)
+    (def results-full-path
+      (jg-runner/ensure-results-full-path results-dir jf-rel-path count))
+    (when (dyn :debug)
+      (eprintf "results path: %s" results-full-path))
+    # backticks below for cross platform compatibility
     (def command [(dyn :executable "janet")
-                  "-e"
-                  (string "(os/cd `" judge-root "`)")
-                  "-e"
-                  (string "(do "
-                          "  (setdyn :judge-gen/test-out "
-                          "          `" results-fpath "`) "
-                          "  (dofile `" full-path "`) "
-                          ")")])
-    # XXX
-    #(eprintf "command: %p" command)
-    (let [err-path
-          (path/join results-dir
-                     (string "stderr-" count "-" path ".txt"))
-          out-path
-          (path/join results-dir
-                     (string "stdout-" count "-" path ".txt"))]
-      (try
-        (with [ef (file/open err-path :w)]
-          (with [of (file/open out-path :w)]
-            (os/execute command :px {:err ef
-                                     :out of})
-            (file/flush ef)
-            (file/flush of)))
-        ([err]
-          (eprint err)
-          (errorf "Command failed: %p" command))))
-    (def marshalled-results
-      (try
-        (slurp results-fpath)
-        ([err]
-          (eprint err)
-          (errorf "Failed to read in marshalled results from: %s"
-                  results-fpath))))
+                  "-e" (string "(os/cd `" judge-root "`)")
+                  "-e" (string "(do "
+                               "  (setdyn :judge-gen/test-out "
+                               "          `" results-full-path "`) "
+                               "  (dofile `" jf-full-path "`) "
+                               ")")])
+    (when (dyn :debug)
+      (eprintf "command: %p" command))
     (def results-for-path
       (try
-        (unmarshal (buffer marshalled-results))
+        (jg-runner/execute-command
+          {:command command
+           :count count
+           :judge-file-rel-path jf-rel-path
+           :results-dir results-dir
+           :results-full-path results-full-path})
         ([err]
-          (eprintf err)
-          (errorf "Failed to unmarshal content from: %s"
-                  results-fpath))))
+          (when err
+            (if-let [err-type (err :type)]
+              # XXX: if more errors need to be handled, check err-type
+              (let [{:out-path out-path
+                     :err-path err-path} err]
+                (eprintf "Command failed:\n  %p" command)
+                (eprint "Potentially relevant paths:")
+                (eprintf "  %s" results-full-path)
+                (eprintf "  %s" out-path)
+                (eprintf "  %s" err-path)
+                (eprintf "  %s" jf-full-path))
+              (eprintf "Unknown error:\n %p" err)))
+          (error nil))))
     (put results
-         full-path results-for-path)
+         jf-full-path results-for-path)
     (++ count))
   results)
 
@@ -1794,10 +1840,6 @@
   (utils/print-color total-tests :green)
   (print " passed")
   (utils/print-dashes)
-  (print)
-  (print "judge-gen is done, `jpm test` continues below line.")
-  (print)
-  (utils/print-dashes)
   (= total-passed total-tests))
 
 # XXX: since there are no tests in this comment block, nothing will execute
@@ -1839,7 +1881,7 @@
       (print "done")
       # create judge files
       (prin "Creating tests files... ")
-      (file/flush stdout)
+      (flush)
       (jg-runner/make-judges src-root judge-root judge-file-prefix)
       (print "done")
       # judge
@@ -1848,11 +1890,21 @@
         (jg-runner/judge judge-root judge-file-prefix))
       (utils/print-dashes)
       # summarize results
-      (jg-runner/summarize results))
+      (def all-passed
+        (jg-runner/summarize results))
+      (print)
+      # XXX: if detecting that being run via `jpm test` is possible,
+      #      may be can show following only when run from `jpm test`
+      (print "judge-gen is done, later output may be from `jpm test`")
+      (print)
+      (utils/print-dashes)
+      all-passed)
     #
     ([err]
+      (when err
+        (eprint "Unexpected error:\n")
+        (eprintf "\n%p" err))
       (eprint "Runner stopped")
-      (eprint err)
       nil)))
 
 # XXX: since there are no tests in this comment block, nothing will execute
