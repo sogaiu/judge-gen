@@ -1696,7 +1696,7 @@
   (path/join judge-root
              (string "." (os/time) "-"
                      (utils/rand-string 8) "-"
-                     "judge-gen"))) 
+                     "judge-gen")))
 
 (comment
 
@@ -1776,9 +1776,8 @@
 (defn jg-runner/summarize
   [results]
   (when (empty? results)
-    # XXX: somehow messes things up?
-    #(print "No test results")
-    (break nil))
+    (eprint "No test results")
+    (break true))
   (var total-tests 0)
   (var total-passed 0)
   (def failures @{})
@@ -1832,7 +1831,7 @@
   (utils/print-dashes)
   (when (= 0 total-tests)
     (print "No tests found, so no judgements made.")
-    (break nil))
+    (break true))
   (if (not= total-passed total-tests)
     (utils/print-color total-passed :red)
     (utils/print-color total-passed :green))
