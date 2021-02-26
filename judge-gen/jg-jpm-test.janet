@@ -1,6 +1,6 @@
-(import ./path :prefix "")
-(import ./jg-runner :prefix "")
 (import ./config :prefix "")
+(import ./jg-runner :prefix "")
+(import ./path :prefix "")
 
 # from the perspective of `jpm test`
 (def proj-root

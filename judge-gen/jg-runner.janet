@@ -1,7 +1,7 @@
-(import ./utils :prefix "")
 (import ./jg :prefix "")
 (import ./jpm :prefix "")
 (import ./path :prefix "")
+(import ./utils :prefix "")
 
 (defn jg-runner/make-judges
   [src-root judge-root judge-file-prefix]
