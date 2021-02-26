@@ -16,39 +16,43 @@
 #
 # * likely only works with utf-8
 
-# POSSIBILITIES:
+# PERIODIC:
 #
 # * go through code looking for longish functions and consider whether
 #   breaking into pieces is a good idea
+#
+# * go through code looking for XXX and collect here
+#
+# * audit / review code for:
+#   * use of stdout vs stderr (e.g. prin* vs eprin*)
+#   * prefer break over assert in many places?
+#   * break without argument
+#   * once error-handling approach is settled on, try to follow it
+
+# POSSIBILITIES:
 #
 # * consider controlling behavior via env vars -- e.g. disable running.
 #   perhaps env vars can be used instead of a config file.  then each
 #   user is free to make multiple launch scripts that set env vars
 #   before executing `jpm test`
 #
-# * semantics and unwrapping comment blocks in place
+# * consider issue of semantics and unwrapping comment blocks in place
 #
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
-#     * during "Judging..." when executing a "judge-" file via `dofile`
-#       output like:
-#
-#       command file with non-zero exit code 1
-#       Runner stopped
-#       Command failed: ("janet" "-k" ...)
-#
-#       has the path to the "judge-" file in it along with the path to
-#       "<n>-judge-<something>.janet" file.  examining the corresponding
-#       "stderr-*" file might give clues about the encountered problem.
-#       the "stderr-*" file should be in the same directory as the
-#       "<n>-judge-<something>.janet" file.
-#   * in jg/handle_one, instead of `(break false)`, perhaps different
-#     values could be returned to indicate different types of errors
 #   * use `file/flush` and friends (e.g. `eflush`) appropriately to get
 #     messages to show up in proper order
 #   * use convention of capitalizing first word of ordinary stderr output
 #     and lowercase first word of `(dyn :debug)` messages?
 #     alternatively, prefix debug output with something like "[debug]"
+#   * consider whether the following approach is sensible:
+#     * use `(error nil)` when producing output is no longer neceesary
+#       (i.e. already done), but it's still an error.
+#     * use `(error {...})` to pass info back "up" to eventually have
+#       the info used in an appropriate message
+#     * compare with idea:
+#       * in jg/handle_one, instead of `(break false)`, perhaps different
+#         values could be returned to indicate different types of errors
 #
 # * try to "finish" judge-gen and not add anything as much as possible
 #   * be able to launch in debug mode (via `:args`) for additional output?
@@ -128,11 +132,6 @@
 #     there might be problems of other runners not running
 #   * reminder that things may work better if each src-dir-name
 #     refers to a direct subdirectory of project directory
-#
-# * audit / review code for:
-#   * use of stdout vs stderr (e.g. prin* vs eprin*)
-#   * prefer break over assert in many places?
-#   * break without argument
 #
 # * _verify/dump-results uses "%p" in a branch.  determine if this could
 #   be a problem but also whether this branch is ever used.
