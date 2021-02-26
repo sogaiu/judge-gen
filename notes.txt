@@ -18,13 +18,23 @@
 
 # POSSIBILITIES:
 #
+# * go through code looking for longish functions and consider whether
+#   breaking into pieces is a good idea
+#
+# * consider controlling behavior via env vars -- e.g. disable running.
+#   perhaps env vars can be used instead of a config file.  then each
+#   user is free to make multiple launch scripts that set env vars
+#   before executing `jpm test`
+#
+# * semantics and unwrapping comment blocks in place
+#
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
 #     * during "Judging..." when executing a "judge-" file via `dofile`
 #       output like:
 #
 #       command file with non-zero exit code 1
-#       Runner failed
+#       Runner stopped
 #       Command failed: ("janet" "-k" ...)
 #
 #       has the path to the "judge-" file in it along with the path to
@@ -36,6 +46,9 @@
 #     values could be returned to indicate different types of errors
 #   * use `file/flush` and friends (e.g. `eflush`) appropriately to get
 #     messages to show up in proper order
+#   * use convention of capitalizing first word of ordinary stderr output
+#     and lowercase first word of `(dyn :debug)` messages?
+#     alternatively, prefix debug output with something like "[debug]"
 #
 # * try to "finish" judge-gen and not add anything as much as possible
 #   * be able to launch in debug mode (via `:args`) for additional output?
@@ -132,7 +145,8 @@
 #   made with the current approach?  there is a way to write things
 #   that avoids this, but that method requires writing a `def` before
 #   the expression to be evaluated and then using the name of the
-#   `def` as the expected value.
+#   `def` as the expected value.  might be good to add this type of info
+#   to documentation.
 #
 # * consider if there is any benefit in allowing some control over
 #   test file execution order, e.g.
