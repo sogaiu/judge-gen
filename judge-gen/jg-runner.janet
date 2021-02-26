@@ -78,27 +78,26 @@
   (def results-dir
     # XXX: what about windows...
     (path/join judge-root
-               (string "."
-                       (os/time) "-"
+               (string "." (os/time) "-"
                        (utils/rand-string 8) "-"
                        "judge-gen")))
-  (defn make-results-fpath
-    [fname i]
+  (defn ensure-results-full-path
+    [fname]
     (let [fpath (path/join results-dir
-                           (string i "-" fname))]
+                           (string count "-" fname))]
       # note: create-dirs expects a path ending in a filename
-      (try
-        (jpm/create-dirs fpath)
-        ([err]
-          (errorf "Failed to create dir for path: " fpath)))
+      (jpm/create-dirs fpath)
+      (unless (os/stat results-dir)
+        (eprintf "Failed to create dir for path: %s" fpath)
+        (error nil))
       fpath))
   #
-  (each [full-path path] file-paths
-    (print "  " path)
-    (def results-fpath
-      (make-results-fpath path count))
-    # XXX
-    #(eprintf "results path: %s" results-fpath)
+  (each [jf-full-path jf-short-path] file-paths
+    (print "  " jf-short-path)
+    (def results-full-path
+      (ensure-results-full-path jf-short-path))
+    (when (dyn :debug)
+      (eprintf "results path: %s" results-full-path))
     # using backticks below seemed to help make things work on multiple
     # platforms
     (def command [(dyn :executable "janet")
@@ -107,17 +106,17 @@
                   "-e"
                   (string "(do "
                           "  (setdyn :judge-gen/test-out "
-                          "          `" results-fpath "`) "
-                          "  (dofile `" full-path "`) "
+                          "          `" results-full-path "`) "
+                          "  (dofile `" jf-full-path "`) "
                           ")")])
-    # XXX
-    #(eprintf "command: %p" command)
+    (when (dyn :debug)
+      (eprintf "command: %p" command))
     (let [err-path
           (path/join results-dir
-                     (string "stderr-" count "-" path ".txt"))
+                     (string "stderr-" count "-" jf-short-path ".txt"))
           out-path
           (path/join results-dir
-                     (string "stdout-" count "-" path ".txt"))]
+                     (string "stdout-" count "-" jf-short-path ".txt"))]
       (try
         (with [ef (file/open err-path :w)]
           (with [of (file/open out-path :w)]
@@ -125,25 +124,30 @@
                                      :out of})
             (file/flush ef)
             (file/flush of)))
-        ([err]
-          (eprint err)
-          (errorf "Command failed: %p" command))))
+        ([_]
+          (eprintf "Command failed:\n  %p" command)
+          (eprint "Potentially relevant paths:")
+          (eprintf "  %s" results-full-path)
+          (eprintf "  %s" out-path)
+          (eprintf "  %s" err-path)
+          (eprintf "  %s" jf-full-path)
+          (error nil))))
     (def marshalled-results
       (try
-        (slurp results-fpath)
+        (slurp results-full-path)
         ([err]
-          (eprint err)
-          (errorf "Failed to read in marshalled results from: %s"
-                  results-fpath))))
+          (eprintf "Failed to read in marshalled results from: %s"
+                   results-full-path)
+          (error nil))))
     (def results-for-path
       (try
         (unmarshal (buffer marshalled-results))
         ([err]
-          (eprintf err)
-          (errorf "Failed to unmarshal content from: %s"
-                  results-fpath))))
+          (eprintf "Failed to unmarshal content from: %s"
+                   results-full-path)
+          (error nil))))
     (put results
-         full-path results-for-path)
+         jf-full-path results-for-path)
     (++ count))
   results)
 
