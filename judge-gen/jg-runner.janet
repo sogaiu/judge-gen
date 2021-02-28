@@ -39,7 +39,7 @@
                "src" "judge-gen"))
 
   (def judge-root
-    (path/join proj-root "judge"))
+    (path/join proj-root ".judge"))
 
   (def src-root
     (path/join proj-root "judge-gen"))
@@ -336,7 +336,7 @@
   (def src-root
     (path/join proj-root "judge-gen"))
 
-  (jg-runner/handle-one {:judge-dir-name "judge"
+  (jg-runner/handle-one {:judge-dir-name ".judge"
                          :judge-file-prefix "judge-"
                          :proj-root proj-root
                          :src-root src-root})

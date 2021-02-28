@@ -60,12 +60,10 @@
 
   # output to stdout
   (jg/handle-one {:input file-path
-                  :output ""
-                  :single true})
+                  :output ""})
 
   # output to file
   (jg/handle-one {:input file-path
-                  :output "/tmp/judge-gen-test-output.txt"
-                  :single true})
+                  :output "/tmp/judge-gen-test-output.txt"})
 
   )
