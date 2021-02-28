@@ -77,6 +77,12 @@
 #     to the same direct subdirectory of the project directory.  is this
 #     actually useful?  if each runner can be configured separately, then
 #     yes, it can be.
+#   * caveats...note that if src-dir-name is specified in the runner script,
+#     the above scheme can lead to collisions.  setting judge-dir-name in
+#     the runner script should allow a user to force a certain name to be
+#     used in .judge_<name>, so there is a manual escape hatch.  but now
+#     it's up to the user to make sure various configurations play well
+#     with each other.
 #
 # * multiple runner considerations
 #   * use separate judge roots -- use .judge_<name> idea described
