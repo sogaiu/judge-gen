@@ -81,9 +81,6 @@
 # * multiple runner considerations
 #   * use separate judge roots -- use .judge_<name> idea described
 #     elsewhere.
-#   * pay attention to silence-jpm-test value -- if even one is true,
-#     there might be problems of other runners not running.  possibly it's
-#     overall better to just not allow this to be configured.
 #   * reminder that things may work better if each src-dir-name
 #     refers to a direct subdirectory of project directory
 #

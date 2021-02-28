@@ -39,6 +39,4 @@
          :proj-root proj-root
          :src-root (deduce-src-root src-dir-name)})]
   (when (not all-passed)
-    (os/exit 1))
-  (when silence-jpm-test
     (os/exit 1)))

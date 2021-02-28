@@ -96,6 +96,5 @@ appropriately.
 
 === Using judge-gen With Other Testing Methods
 
-If other test files are also to be triggered by `jpm test`, ensure
-that the `silence-jpm-test` setting in the runner file is set to `nil`
-or `false`.
+Co-existence with other testing methods is something the author has an
+interest in.  Please report any encountered issues along these lines.

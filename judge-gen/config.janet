@@ -20,16 +20,5 @@
 (def judge-file-prefix
   "judge-")
 
-# Only change if you really know what you are doing.
-#
-# Disable "All tests passed." message from `jpm test` if true.  This is
-# achieved by making this test runner exit with error code 1.  That
-# communicates to `jpm test` that the runner itself has failed.  It is a hack.
-#
-# Changing this to true may cause some tests in the `test` directory (e.g.
-# non-judge-gen tests) to not execute.
-(def silence-jpm-test
-  false)
-
 # End of Configuration
 
