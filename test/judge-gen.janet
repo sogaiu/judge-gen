@@ -20,17 +20,6 @@
 (def judge-file-prefix
   "judge-")
 
-# Only change if you really know what you are doing.
-#
-# Disable "All tests passed." message from `jpm test` if true.  This is
-# achieved by making this test runner exit with error code 1.  That
-# communicates to `jpm test` that the runner itself has failed.  It is a hack.
-#
-# Changing this to true may cause some tests in the `test` directory (e.g.
-# non-judge-gen tests) to not execute.
-(def silence-jpm-test
-  false)
-
 # End of Configuration
 
 (defn input/slurp-input
@@ -1231,13 +1220,11 @@
 
   # output to stdout
   (jg/handle-one {:input file-path
-                  :output ""
-                  :single true})
+                  :output ""})
 
   # output to file
   (jg/handle-one {:input file-path
-                  :output "/tmp/judge-gen-test-output.txt"
-                  :single true})
+                  :output "/tmp/judge-gen-test-output.txt"})
 
   )
 # XXX: useful bits from jpm
@@ -1608,7 +1595,7 @@
                "src" "judge-gen"))
 
   (def judge-root
-    (path/join proj-root "judge"))
+    (path/join proj-root ".judge"))
 
   (def src-root
     (path/join proj-root "judge-gen"))
@@ -1905,7 +1892,7 @@
   (def src-root
     (path/join proj-root "judge-gen"))
 
-  (jg-runner/handle-one {:judge-dir-name "judge"
+  (jg-runner/handle-one {:judge-dir-name ".judge"
                          :judge-file-prefix "judge-"
                          :proj-root proj-root
                          :src-root src-root})
@@ -1949,6 +1936,4 @@
          :proj-root proj-root
          :src-root (deduce-src-root src-dir-name)})]
   (when (not all-passed)
-    (os/exit 1))
-  (when silence-jpm-test
     (os/exit 1)))
