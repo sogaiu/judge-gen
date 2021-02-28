@@ -31,12 +31,80 @@
 
 # POSSIBILITIES:
 #
+# * try to figure out a way to have two (or more) instances of the runner
+#   able to coexist in one codebase.
+#   * one issue is the potential collisions that might arise because of the
+#     use of the same .judge directory.
+#   * one idea is to not have a .judge directory but rather a .judge_<name>
+#     directory where <name> is taken from the source-of-tests directory
+#     associated with a runner.
+#   * is it possible that two or more <name>s could collide?  it is
+#     conceivable that there are runners with the same name living under
+#     different descendant directories of `test`. is this something to be
+#     concerned about?  possibly it's not our job to prevent this from
+#     happening?
+#   * possibly there is some way to encode the path from `test` to the runner
+#     into the name that is chosen to be appended to `.judge_`.  it seems
+#     like some kind of escaping might be necessary to get this to work to
+#     avoid using slash or backslash in the name.
+#   * try the following idea...suppose there are two judge-gen runner
+#     files in `test`:
+#     * `test/a/examples.janet` and
+#     * `test/b/examples.janet`
+#     their corresponding `.judge_*` directory names are then:
+#     * `.judge_a,examples` and
+#     * `.judge_b,examples`
+#     in the case that a judge-gen runner has a comma in its name, e.g.:
+#     * `test/a/examples,1.janet`
+#     the corresponding `.judge_*` directory name is:
+#     * `.judge_a,examples,,1`
+#     in the case that a judge-gen runner has two successive commas in its
+#     name, e.g.:
+#     * `test/a/examples,,x.janet`
+#     the corresponding `.judge_*` directory name is:
+#     * `.judge_a,examples,,,,x`
+#     so a single comma is replaced by two commas (escaped)
+#   * so it seems workable to have multiple judge-gen instances that refer
+#     to the same direct subdirectory of the project directory.  is this
+#     actually useful?  if each runner can be configured separately, then
+#     yes, it can be.
+#
+# * multiple runner considerations
+#   * use separate judge roots -- use .judge_<name> idea described
+#     elsewhere.
+#   * pay attention to silence-jpm-test value -- if even one is true,
+#     there might be problems of other runners not running.  possibly it's
+#     overall better to just not allow this to be configured.
+#   * reminder that things may work better if each src-dir-name
+#     refers to a direct subdirectory of project directory
+#
 # * consider controlling behavior via env vars -- e.g. disable running.
 #   perhaps env vars can be used instead of a config file.  then each
 #   user is free to make multiple launch scripts that set env vars
 #   before executing `jpm test`
+#   * lauching via a script has another potential benefit which is
+#     that additional command line options can be meaningfully
+#     specified as `jpm test` doesn't allow for passing additional
+#     command line arguments.
+#   * benefit over command line arguments here is two-fold:
+#     * works with `jpm test`
+#     * don't have to think about names for subcommands, options, etc.
+#   * a drawback might be security-related -- if there is no way to
+#     indicate ignoring env vars
 #
-# * consider issue of semantics and unwrapping comment blocks in place
+# * would using recent janet-peg for parsing as well as rewriting
+#   source be any better than the current approach?
+#   * possibly easier to transform and output (assuming something like
+#     janet-zip or similar exists?)
+#     * semantics of "judge-" file may more closely match intent if
+#       comment blocks are unwrapped "inline", though it's also possible
+#       that people might not have considered the impacts of evaluating
+#       the content of one comment block vs another (e.g. use of the same
+#       names)
+#     * alternative output formats of tests (e.g. helper.janet, testament,
+#       etc.) / conversion might be easier with this approach?
+#   * possibly easier to determine line / column info for tests?
+#   * examine alc.x-as-tests for hints
 #
 # * consider what might be done to improve error handling and messages
 #   * track and log actual instances
@@ -91,15 +159,6 @@
 #        different receivers might be set up for handling test results, but
 #        this may be getting too elaborate at this stage :)
 #
-# * consider idea of the "judge" directory being ".judge_<name-of-config>"
-#   * easier to have multiple "installations" of judge-gen in a single
-#     project?
-#   * not quite safe as `test/dir-a/config.janet` and
-#     `test/dir-b/config.janet` end up with the same <name-of-config>
-#     * may be acceptable trade-off?
-#     * have runner check for this condition before starting to process
-#       tests?  if detected, just exit?
-#
 # * document the limitation about direct subdirectories of the project
 #   directory and the "why".  a direct subdirectory of the project directory
 #   has at least the following important properties:
@@ -125,18 +184,8 @@
 #   that one can use a non-direct subdirectory of the project directory
 #   (i.e. a "deeper" subdirectory) in the configuration of judge-gen.
 #
-# * document potential issues with using multiple runners
-#   * likely less problematic to use separate judge roots -- use different
-#     values for judge-dir-name
-#   * pay attention to silence-jpm-test value -- if even one is true,
-#     there might be problems of other runners not running
-#   * reminder that things may work better if each src-dir-name
-#     refers to a direct subdirectory of project directory
-#
 # * _verify/dump-results uses "%p" in a branch.  determine if this could
 #   be a problem but also whether this branch is ever used.
-#
-# * consider using :s instead of :ws in pegs, also in janet-peg-grammar
 #
 # * downside of using `(deep= A B)` with expected value of true is
 #   when the test fails, there's not a whole lot of useful information
@@ -155,24 +204,6 @@
 #   * custom order
 #
 # * consider reporting number of tests per file
-#
-# * produce code with comment blocks unwrapped inline -- test context is
-#   is more likely to be correct than just appending tests after original
-#   code
-#
-# * would using recent janet-peg for parsing as well as rewriting
-#   source be any better than the current approach?
-#   * possibly easier to transform and output?
-#   * possibly easier to determine line / column info for tests?
-#   * examine alc.x-as-tests for hints
-#
-# * preparing the individual source files so that they could be concatenated
-#   together in a relatively problem-free manner involved a lot of
-#   rewriting source.  could this be avoided / reduced somehow?
-#   * is `:export true` somehow applicable here?
-#   * analyzing imports and doing some identifier rewriting seems
-#     like it could help a fair bit, but that would probably not been
-#     enough for path.janet
 #
 # * configuration ideas
 #   * don't make a configuration file for the moment, try to collect
@@ -228,4 +259,13 @@
 #   * content
 #     * test files
 #     * source files
-#     * test results (report + stdout output)
+#     * test results (report + stdout and stderr output)
+
+# USAGE PATTERNS:
+#
+# * exploratory tests for one's project
+# * examples for one's project
+# * standalone repository of examples for another project
+# * standalone repository of tests for some project -- by default do not
+#   include tests in one's project, but rather have them be in a separate
+#   project
