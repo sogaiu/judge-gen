@@ -40,6 +40,9 @@
 
 # POSSIBILITIES:
 #
+# * consider whether `judge-` is sufficiently unlikely as a prefix for a
+#   janet file.
+#
 # * try to figure out a way to have two (or more) instances of the runner
 #   able to coexist in one codebase.
 #   * one issue is the potential collisions that might arise because of the
