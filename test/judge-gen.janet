@@ -33,295 +33,26 @@
 
 # End of Configuration
 
-### path.janet
-###
-### A library for path manipulation.
-###
-### Copyright 2019 © Calvin Rose
-
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-#
-# Common
-#
-
-(def- path/ext-peg
-  (peg/compile ~{:back (> -1 (+ (* ($) (set "\\/.")) :back))
-                 :main :back}))
-
-(defn path/ext
-  "Get the file extension for a path."
-  [path]
-  (if-let [m (peg/match path/ext-peg path (length path))]
-    (let [i (m 0)]
-      (if (= (path i) 46)
-        (string/slice path (m 0) -1)))))
-
-(defn- path/redef
-  "Redef a value, keeping all metadata."
-  [from to]
-  (setdyn (symbol to) (dyn (symbol from))))
-
-#
-# Generating Macros
-#
-
-(defmacro- path/decl-sep [pre sep] ~(def ,(symbol pre "/sep") ,sep))
-(defmacro- path/decl-delim [pre d] ~(def ,(symbol pre "/delim") ,d))
-
-(defmacro- path/decl-last-sep
-  [pre sep]
-  ~(def- ,(symbol pre "/last-sep-peg")
-    (peg/compile '{:back (> -1 (+ (* ,sep ($)) :back))
-                   :main (+ :back (constant 0))})))
-
-(defmacro- path/decl-dirname
-  [pre]
-  ~(defn ,(symbol pre "/dirname")
-     "Gets the directory name of a path."
-     [path]
-     (if-let [m (peg/match
-                  ,(symbol pre "/last-sep-peg")
-                  path
-                  (length path))]
-       (let [[p] m]
-         (if (zero? p) "./" (string/slice path 0 p)))
-       path)))
-
-(defmacro- path/decl-basename
-  [pre]
-  ~(defn ,(symbol pre "/basename")
-     "Gets the base file name of a path."
-     [path]
-     (if-let [m (peg/match
-                  ,(symbol pre "/last-sep-peg")
-                  path
-                  (length path))]
-       (let [[p] m]
-         (string/slice path p -1))
-       path)))
-
-(defmacro- path/decl-parts
-  [pre sep]
-  ~(defn ,(symbol pre "/parts")
-     "Split a path into its parts."
-     [path]
-     (string/split ,sep path)))
-
-(defmacro- path/decl-normalize
-  [pre sep sep-pattern lead]
-  (defn capture-lead
-    [& xs]
-    [:lead (xs 0)])
-  (def grammar
-    ~{:span (some (if-not ,sep-pattern 1))
-      :sep (some ,sep-pattern)
-      :main (* (? (* (replace ',lead ,capture-lead) (any ,sep-pattern)))
-               (? ':span)
-               (any (* :sep ':span))
-               (? (* :sep (constant ""))))})
-  (def peg (peg/compile grammar))
-  ~(defn ,(symbol pre "/normalize")
-     "Normalize a path. This removes . and .. in the
-     path, as well as empty path elements."
-     [path]
-     (def accum @[])
-     (def parts (peg/match ,peg path))
-     (var seen 0)
-     (var lead nil)
-     (each x parts
-       (match x
-         [:lead what] (set lead what)
-         "." nil
-         ".." (if (= 0 seen)
-                (array/push accum x)
-                (do (-- seen) (array/pop accum)))
-         (do (++ seen) (array/push accum x))))
-     (def ret (string (or lead "") (string/join accum ,sep)))
-     (if (= "" ret) "." ret)))
-
-(defmacro- path/decl-join
-  [pre sep]
-  ~(defn ,(symbol pre "/join")
-     "Join path elements together."
-     [& els]
-     (,(symbol pre "/normalize") (string/join els ,sep))))
-
-(defmacro- path/decl-abspath
-  [pre]
-  ~(defn ,(symbol pre "/abspath")
-     "Coerce a path to be absolute."
-     [path]
-     (if (,(symbol pre "/abspath?") path)
-       (,(symbol pre "/normalize") path)
-       (,(symbol pre "/join") (or (dyn :path-cwd) (os/cwd)) path))))
-
-#
-# Posix
-#
-
-(defn path/posix/abspath?
-  "Check if a path is absolute."
-  [path]
-  (string/has-prefix? "/" path))
-
-(path/redef "path/ext" "path/posix/ext")
-(path/decl-sep "path/posix" "/")
-(path/decl-delim "path/posix" ":")
-(path/decl-last-sep "path/posix" "/")
-(path/decl-basename "path/posix")
-(path/decl-dirname "path/posix")
-(path/decl-parts "path/posix" "/")
-(path/decl-normalize "path/posix" "/" "/" "/")
-(path/decl-join "path/posix" "/")
-(path/decl-abspath "path/posix")
-
-#
-# Windows
-#
-
-(def- path/abs-pat '(* (? (* (range "AZ" "az") `:`)) `\`))
-(def- path/abs-peg (peg/compile path/abs-pat))
-(defn path/win32/abspath?
-  "Check if a path is absolute."
-  [path]
-  (not (not (peg/match path/abs-peg path))))
-
-(path/redef "path/ext" "path/win32/ext")
-(path/decl-sep "path/win32" "\\")
-(path/decl-delim "path/win32" ";")
-(path/decl-last-sep "path/win32" "\\")
-(path/decl-basename "path/win32")
-(path/decl-dirname "path/win32")
-(path/decl-parts "path/win32" "\\")
-(path/decl-normalize "path/win32" `\` (set `\/`) (* (? (* (range "AZ" "az") `:`)) `\`))
-(path/decl-join "path/win32" "\\")
-(path/decl-abspath "path/win32")
-
-#
-# Satisfy linter
-#
-
-(defn path/sep [pre sep] nil)
-(defn path/delim [pre d] nil)
-(defn path/dirname [pre] nil)
-(defn path/basename [pre] nil)
-(defn path/parts [pre sep] nil)
-(defn path/normalize [pre sep sep-pattern lead] nil)
-(defn path/join [pre sep] nil)
-(defn path/abspath [pre] nil)
-(defn path/abspath? [path] nil)
-
-#
-# Specialize for current OS
-#
-
-(def- path/syms
-  ["ext"
-   "sep"
-   "delim"
-   "basename"
-   "dirname"
-   "abspath?"
-   "abspath"
-   "parts"
-   "normalize"
-   "join"])
-(let [pre (if (= :windows (os/which)) "path/win32" "path/posix")]
-  (each sym path/syms
-    (path/redef (string pre "/" sym) (string "path/" sym))))
-
-# XXX: useful bits from jpm
-
-### Copyright 2019 © Calvin Rose
-
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-(def- jpm/is-win (= (os/which) :windows))
-(def- jpm/is-mac (= (os/which) :macos))
-(def- jpm/sep (if jpm/is-win "\\" "/"))
-
-(defn jpm/rm
-  "Remove a directory and all sub directories."
-  [path]
-  (case (os/lstat path :mode)
-    :directory (do
-      (each subpath (os/dir path)
-        (jpm/rm (string path jpm/sep subpath)))
-      (os/rmdir path))
-    nil nil # do nothing if file does not exist
-    # Default, try to remove
-    (os/rm path)))
-
-(def- jpm/path-splitter
-  "split paths on / and \\."
-  (peg/compile ~(any (* '(any (if-not (set `\/`) 1)) (+ (set `\/`) -1)))))
-
-(defn jpm/shell
-  "Do a shell command"
-  [& args]
-  (if (dyn :verbose)
-    (print ;(interpose " " args)))
-  (os/execute args :px))
-
-(defn jpm/copy
-  "Copy a file or directory recursively from one location to another."
-  [src dest]
-  (print "copying " src " to " dest "...")
-  (if jpm/is-win
-    (let [end (last (peg/match jpm/path-splitter src))
-          isdir (= (os/stat src :mode) :directory)]
-      (jpm/shell "C:\\Windows\\System32\\xcopy.exe"
-                 (string/replace "/" "\\" src)
-                 (string/replace "/" "\\" (if isdir (string dest "\\" end) dest))
-                 "/y" "/s" "/e" "/i"))
-    (jpm/shell "cp" "-rf" src dest)))
-
-(defn jpm/pslurp
-  [cmd]
-  (string/trim (with [f (file/popen cmd)]
-                     (:read f :all))))
-
-(defn jpm/create-dirs
-  "Create all directories needed for a file (mkdir -p)."
-  [dest]
-  (def segs (peg/match jpm/path-splitter dest))
-  (for i 1 (length segs)
-    (def path (string/join (slice segs 0 i) jpm/sep))
-    (unless (empty? path) (os/mkdir path))))
-
+(defn input/slurp-input
+  [input]
+  (var f nil)
+  (try
+    (if (= input "-")
+      (set f stdin)
+      (if (os/stat input)
+        (set f (file/open input :rb))
+        (do
+          (eprint "path not found: " input)
+          (break nil))))
+    ([err]
+      (eprintf "slurp-input failed")
+      (error err)))
+  #
+  (var buf nil)
+  (defer (file/close f)
+    (set buf @"")
+    (file/read f :all buf))
+  buf)
 # adapted from:
 #   https://janet-lang.org/docs/syntax.html
 
@@ -1098,109 +829,6 @@
 
   )
 
-(defn segments/parse-buffer
-  [buf]
-  (var segments @[])
-  (var from 0)
-  (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
-    (when (dyn :debug)
-      (eprintf "parsed: %j" parsed))
-    (when (not parsed)
-      (break nil))
-    (def segment (first parsed))
-    (when (not segment)
-      (eprint "Unexpectedly did not find segment in: " parsed)
-      (break nil))
-    (array/push segments segment)
-    (set from (segment :end)))
-  segments)
-
-(comment
-
-  (def code-buf
-    @``
-    (def a 1)
-
-    (comment
-
-      (+ a 1)
-      # => 2
-
-      (def b 3)
-
-      (- b a)
-      # => 2
-
-    )
-    ``)
-
-  (deep=
-    (segments/parse-buffer code-buf)
-    #
-    @[{:value "    (def a 1)\n\n    "
-       :s-line 1
-       :type :value
-       :end 19}
-      {:value (string "(comment\n\n      "
-                      "(+ a 1)\n      "
-                      "# => 2\n\n      "
-                      "(def b 3)\n\n      "
-                      "(- b a)\n      "
-                      "# => 2\n\n    "
-                      ")\n    ")
-       :s-line 3
-       :type :value
-       :end 112}]
-    ) # => true
-
-  )
-
-(defn segments/find-comment-blocks
-  [segments]
-  (var comment-blocks @[])
-  (loop [i :range [0 (length segments)]]
-    (def segment (get segments i))
-    (def {:value code-str} segment)
-    (when (peg/match pegs/comment-block-maybe code-str)
-      (array/push comment-blocks segment)))
-  comment-blocks)
-
-(comment
-
-  (def segments
-    @[{:value "    (def a 1)\n\n    "
-       :s-line 1
-       :type :value
-       :end 19}
-      {:value (string "(comment\n\n      "
-                      "(+ a 1)\n      "
-                      "# => 2\n\n      "
-                      "(def b 3)\n\n      "
-                      "(- b a)\n      "
-                      "# => 2\n\n    "
-                      ")\n    ")
-       :s-line 3
-       :type :value
-       :end 112}])
-
-  (deep=
-    (segments/find-comment-blocks segments)
-    #
-    @[{:value (string "(comment\n\n      "
-                      "(+ a 1)\n      "
-                      "# => 2\n\n      "
-                      "(def b 3)\n\n      "
-                      "(- b a)\n      "
-                      "# => 2\n\n    "
-                      ")\n    ")
-       :s-line 3
-       :type :value
-       :end 112}]
-    )
-  # => true
-
-  )
-
 # XXX: simplify?
 (defn rewrite/rewrite-tagged
   [tagged-item last-form offset]
@@ -1453,26 +1081,109 @@
                                 :s-line 1}])
 
   )
-(defn input/slurp-input
-  [input]
-  (var f nil)
-  (try
-    (if (= input "-")
-      (set f stdin)
-      (if (os/stat input)
-        (set f (file/open input :rb))
-        (do
-          (eprint "path not found: " input)
-          (break nil))))
-    ([err]
-      (eprintf "slurp-input failed")
-      (error err)))
-  #
-  (var buf nil)
-  (defer (file/close f)
-    (set buf @"")
-    (file/read f :all buf))
-  buf)
+
+(defn segments/parse-buffer
+  [buf]
+  (var segments @[])
+  (var from 0)
+  (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
+    (when (dyn :debug)
+      (eprintf "parsed: %j" parsed))
+    (when (not parsed)
+      (break nil))
+    (def segment (first parsed))
+    (when (not segment)
+      (eprint "Unexpectedly did not find segment in: " parsed)
+      (break nil))
+    (array/push segments segment)
+    (set from (segment :end)))
+  segments)
+
+(comment
+
+  (def code-buf
+    @``
+    (def a 1)
+
+    (comment
+
+      (+ a 1)
+      # => 2
+
+      (def b 3)
+
+      (- b a)
+      # => 2
+
+    )
+    ``)
+
+  (deep=
+    (segments/parse-buffer code-buf)
+    #
+    @[{:value "    (def a 1)\n\n    "
+       :s-line 1
+       :type :value
+       :end 19}
+      {:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :s-line 3
+       :type :value
+       :end 112}]
+    ) # => true
+
+  )
+
+(defn segments/find-comment-blocks
+  [segments]
+  (var comment-blocks @[])
+  (loop [i :range [0 (length segments)]]
+    (def segment (get segments i))
+    (def {:value code-str} segment)
+    (when (peg/match pegs/comment-block-maybe code-str)
+      (array/push comment-blocks segment)))
+  comment-blocks)
+
+(comment
+
+  (def segments
+    @[{:value "    (def a 1)\n\n    "
+       :s-line 1
+       :type :value
+       :end 19}
+      {:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :s-line 3
+       :type :value
+       :end 112}])
+
+  (deep=
+    (segments/find-comment-blocks segments)
+    #
+    @[{:value (string "(comment\n\n      "
+                      "(+ a 1)\n      "
+                      "# => 2\n\n      "
+                      "(def b 3)\n\n      "
+                      "(- b a)\n      "
+                      "# => 2\n\n    "
+                      ")\n    ")
+       :s-line 3
+       :type :value
+       :end 112}]
+    )
+  # => true
+
+  )
 
 (defn jg/handle-one
   [opts]
@@ -1540,6 +1251,295 @@
                   :single true})
 
   )
+# XXX: useful bits from jpm
+
+### Copyright 2019 © Calvin Rose
+
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+(def- jpm/is-win (= (os/which) :windows))
+(def- jpm/is-mac (= (os/which) :macos))
+(def- jpm/sep (if jpm/is-win "\\" "/"))
+
+(defn jpm/rm
+  "Remove a directory and all sub directories."
+  [path]
+  (case (os/lstat path :mode)
+    :directory (do
+      (each subpath (os/dir path)
+        (jpm/rm (string path jpm/sep subpath)))
+      (os/rmdir path))
+    nil nil # do nothing if file does not exist
+    # Default, try to remove
+    (os/rm path)))
+
+(def- jpm/path-splitter
+  "split paths on / and \\."
+  (peg/compile ~(any (* '(any (if-not (set `\/`) 1)) (+ (set `\/`) -1)))))
+
+(defn jpm/shell
+  "Do a shell command"
+  [& args]
+  (if (dyn :verbose)
+    (print ;(interpose " " args)))
+  (os/execute args :px))
+
+(defn jpm/copy
+  "Copy a file or directory recursively from one location to another."
+  [src dest]
+  (print "copying " src " to " dest "...")
+  (if jpm/is-win
+    (let [end (last (peg/match jpm/path-splitter src))
+          isdir (= (os/stat src :mode) :directory)]
+      (jpm/shell "C:\\Windows\\System32\\xcopy.exe"
+                 (string/replace "/" "\\" src)
+                 (string/replace "/" "\\" (if isdir (string dest "\\" end) dest))
+                 "/y" "/s" "/e" "/i"))
+    (jpm/shell "cp" "-rf" src dest)))
+
+(defn jpm/pslurp
+  [cmd]
+  (string/trim (with [f (file/popen cmd)]
+                     (:read f :all))))
+
+(defn jpm/create-dirs
+  "Create all directories needed for a file (mkdir -p)."
+  [dest]
+  (def segs (peg/match jpm/path-splitter dest))
+  (for i 1 (length segs)
+    (def path (string/join (slice segs 0 i) jpm/sep))
+    (unless (empty? path) (os/mkdir path))))
+
+### path.janet
+###
+### A library for path manipulation.
+###
+### Copyright 2019 © Calvin Rose
+
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+#
+# Common
+#
+
+(def- path/ext-peg
+  (peg/compile ~{:back (> -1 (+ (* ($) (set "\\/.")) :back))
+                 :main :back}))
+
+(defn path/ext
+  "Get the file extension for a path."
+  [path]
+  (if-let [m (peg/match path/ext-peg path (length path))]
+    (let [i (m 0)]
+      (if (= (path i) 46)
+        (string/slice path (m 0) -1)))))
+
+(defn- path/redef
+  "Redef a value, keeping all metadata."
+  [from to]
+  (setdyn (symbol to) (dyn (symbol from))))
+
+#
+# Generating Macros
+#
+
+(defmacro- path/decl-sep [pre sep] ~(def ,(symbol pre "/sep") ,sep))
+(defmacro- path/decl-delim [pre d] ~(def ,(symbol pre "/delim") ,d))
+
+(defmacro- path/decl-last-sep
+  [pre sep]
+  ~(def- ,(symbol pre "/last-sep-peg")
+    (peg/compile '{:back (> -1 (+ (* ,sep ($)) :back))
+                   :main (+ :back (constant 0))})))
+
+(defmacro- path/decl-dirname
+  [pre]
+  ~(defn ,(symbol pre "/dirname")
+     "Gets the directory name of a path."
+     [path]
+     (if-let [m (peg/match
+                  ,(symbol pre "/last-sep-peg")
+                  path
+                  (length path))]
+       (let [[p] m]
+         (if (zero? p) "./" (string/slice path 0 p)))
+       path)))
+
+(defmacro- path/decl-basename
+  [pre]
+  ~(defn ,(symbol pre "/basename")
+     "Gets the base file name of a path."
+     [path]
+     (if-let [m (peg/match
+                  ,(symbol pre "/last-sep-peg")
+                  path
+                  (length path))]
+       (let [[p] m]
+         (string/slice path p -1))
+       path)))
+
+(defmacro- path/decl-parts
+  [pre sep]
+  ~(defn ,(symbol pre "/parts")
+     "Split a path into its parts."
+     [path]
+     (string/split ,sep path)))
+
+(defmacro- path/decl-normalize
+  [pre sep sep-pattern lead]
+  (defn capture-lead
+    [& xs]
+    [:lead (xs 0)])
+  (def grammar
+    ~{:span (some (if-not ,sep-pattern 1))
+      :sep (some ,sep-pattern)
+      :main (* (? (* (replace ',lead ,capture-lead) (any ,sep-pattern)))
+               (? ':span)
+               (any (* :sep ':span))
+               (? (* :sep (constant ""))))})
+  (def peg (peg/compile grammar))
+  ~(defn ,(symbol pre "/normalize")
+     "Normalize a path. This removes . and .. in the
+     path, as well as empty path elements."
+     [path]
+     (def accum @[])
+     (def parts (peg/match ,peg path))
+     (var seen 0)
+     (var lead nil)
+     (each x parts
+       (match x
+         [:lead what] (set lead what)
+         "." nil
+         ".." (if (= 0 seen)
+                (array/push accum x)
+                (do (-- seen) (array/pop accum)))
+         (do (++ seen) (array/push accum x))))
+     (def ret (string (or lead "") (string/join accum ,sep)))
+     (if (= "" ret) "." ret)))
+
+(defmacro- path/decl-join
+  [pre sep]
+  ~(defn ,(symbol pre "/join")
+     "Join path elements together."
+     [& els]
+     (,(symbol pre "/normalize") (string/join els ,sep))))
+
+(defmacro- path/decl-abspath
+  [pre]
+  ~(defn ,(symbol pre "/abspath")
+     "Coerce a path to be absolute."
+     [path]
+     (if (,(symbol pre "/abspath?") path)
+       (,(symbol pre "/normalize") path)
+       (,(symbol pre "/join") (or (dyn :path-cwd) (os/cwd)) path))))
+
+#
+# Posix
+#
+
+(defn path/posix/abspath?
+  "Check if a path is absolute."
+  [path]
+  (string/has-prefix? "/" path))
+
+(path/redef "path/ext" "path/posix/ext")
+(path/decl-sep "path/posix" "/")
+(path/decl-delim "path/posix" ":")
+(path/decl-last-sep "path/posix" "/")
+(path/decl-basename "path/posix")
+(path/decl-dirname "path/posix")
+(path/decl-parts "path/posix" "/")
+(path/decl-normalize "path/posix" "/" "/" "/")
+(path/decl-join "path/posix" "/")
+(path/decl-abspath "path/posix")
+
+#
+# Windows
+#
+
+(def- path/abs-pat '(* (? (* (range "AZ" "az") `:`)) `\`))
+(def- path/abs-peg (peg/compile path/abs-pat))
+(defn path/win32/abspath?
+  "Check if a path is absolute."
+  [path]
+  (not (not (peg/match path/abs-peg path))))
+
+(path/redef "path/ext" "path/win32/ext")
+(path/decl-sep "path/win32" "\\")
+(path/decl-delim "path/win32" ";")
+(path/decl-last-sep "path/win32" "\\")
+(path/decl-basename "path/win32")
+(path/decl-dirname "path/win32")
+(path/decl-parts "path/win32" "\\")
+(path/decl-normalize "path/win32" `\` (set `\/`) (* (? (* (range "AZ" "az") `:`)) `\`))
+(path/decl-join "path/win32" "\\")
+(path/decl-abspath "path/win32")
+
+#
+# Satisfy linter
+#
+
+(defn path/sep [pre sep] nil)
+(defn path/delim [pre d] nil)
+(defn path/dirname [pre] nil)
+(defn path/basename [pre] nil)
+(defn path/parts [pre sep] nil)
+(defn path/normalize [pre sep sep-pattern lead] nil)
+(defn path/join [pre sep] nil)
+(defn path/abspath [pre] nil)
+(defn path/abspath? [path] nil)
+
+#
+# Specialize for current OS
+#
+
+(def- path/syms
+  ["ext"
+   "sep"
+   "delim"
+   "basename"
+   "dirname"
+   "abspath?"
+   "abspath"
+   "parts"
+   "normalize"
+   "join"])
+(let [pre (if (= :windows (os/which)) "path/win32" "path/posix")]
+  (each sym path/syms
+    (path/redef (string pre "/" sym) (string "path/" sym))))
+
 (defn utils/print-color
   [msg color]
   (let [color-num (match color
