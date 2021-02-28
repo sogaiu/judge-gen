@@ -1,4 +1,8 @@
 (import ./common)
 
 # relative to the project root
-(os/rm (string "./" common/out-path))
+(def out-path
+  (string "./" common/out-path))
+
+(when (os/stat out-path)
+  (os/rm out-path))
