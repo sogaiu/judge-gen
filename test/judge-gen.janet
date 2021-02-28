@@ -65,11 +65,9 @@
     :root0 (choice :value :comment)
     #
     :value (sequence
-            (any (choice :ws :readermac))
+            (any (choice :s :readermac))
             :raw-value
-            (any :ws))
-    #
-    :ws (set " \0\f\n\r\t\v")
+            (any :s))
     #
     :readermac (set "',;|~")
     #
@@ -82,10 +80,10 @@
                 :ptuple :btuple
                 :struct :table)
     #
-    :comment (sequence (any :ws)
+    :comment (sequence (any :s)
                        "#"
                        (any (if-not (choice "\n" -1) 1))
-                       (any :ws))
+                       (any :s))
     #
     :constant (choice "false" "nil" "true")
     #
@@ -475,7 +473,7 @@
     #
     (put :comment-block ~(sequence
                            "("
-                           (any :ws)
+                           (any :s)
                            (drop (cmt (capture "comment")
                                       ,|(do
                                           (++ pegs/in-comment)
@@ -492,11 +490,11 @@
     # classify certain comments
     (put :comment
          ~(sequence
-            (any :ws)
+            (any :s)
             (choice
               (cmt (sequence
                      (line)
-                     "#" (any :ws) "=>"
+                     "#" (any :s) "=>"
                      (capture (sequence
                                 (any (if-not (choice "\n" -1) 1))
                                 (any "\n"))))
@@ -515,24 +513,18 @@
                               (any (if-not (+ "\n" -1) 1))
                               (any "\n")))
                    ,|(identity $))
-              (any :ws))))
+              (any :s))))
     # tried using a table with a peg but had a problem, so use a struct
     table/to-struct))
 
 (def pegs/inner-forms
-  ~{:main :inner-forms
-    #
-    :inner-forms (sequence
-                   "("
-                   (any :ws)
-                   "comment"
-                   (any :ws)
-                   (any (choice :ws ,pegs/jg-comments))
-                   (any :ws)
-                   ")")
-    #
-    :ws (set " \0\f\n\r\t\v")
-    })
+  ~(sequence "("
+             (any :s)
+             "comment"
+             (any :s)
+             (any (choice :s ,pegs/jg-comments))
+             (any :s)
+             ")"))
 
 (comment
 
@@ -794,14 +786,11 @@
   )
 
 (def pegs/comment-block-maybe
-  ~{:main (sequence
-            (any :ws)
-            "("
-            (any :ws)
-            "comment"
-            (any :ws))
-    #
-    :ws (set " \0\f\n\r\t\v")})
+  ~(sequence (any :s)
+             "("
+             (any :s)
+             "comment"
+             (any :s)))
 
 (comment
 
