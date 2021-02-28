@@ -10,11 +10,9 @@
     :root0 (choice :value :comment)
     #
     :value (sequence
-            (any (choice :ws :readermac))
+            (any (choice :s :readermac))
             :raw-value
-            (any :ws))
-    #
-    :ws (set " \0\f\n\r\t\v")
+            (any :s))
     #
     :readermac (set "',;|~")
     #
@@ -27,10 +25,10 @@
                 :ptuple :btuple
                 :struct :table)
     #
-    :comment (sequence (any :ws)
+    :comment (sequence (any :s)
                        "#"
                        (any (if-not (choice "\n" -1) 1))
-                       (any :ws))
+                       (any :s))
     #
     :constant (choice "false" "nil" "true")
     #
