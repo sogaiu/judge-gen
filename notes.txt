@@ -1,3 +1,12 @@
+# USAGE PATTERNS:
+#
+# * exploratory tests for one's project
+# * examples for one's project
+# * standalone repository of examples for another project
+# * standalone repository of tests for some project -- idea of not
+#   including tests in one's project, but rather have them be in a dedicated
+#   project for testing
+
 # LIMITS:
 #
 # * tends to work for direct subdirectories of the project directory.
@@ -49,10 +58,10 @@
 #     avoid using slash or backslash in the name.
 #   * try the following idea...suppose there are two judge-gen runner
 #     files in `test`:
-#     * `test/a/examples.janet` and
+#     * `test/a/examples.janet`
 #     * `test/b/examples.janet`
 #     their corresponding `.judge_*` directory names are then:
-#     * `.judge_a,examples` and
+#     * `.judge_a,examples`
 #     * `.judge_b,examples`
 #     in the case that a judge-gen runner has a comma in its name, e.g.:
 #     * `test/a/examples,1.janet`
@@ -77,6 +86,14 @@
 #     overall better to just not allow this to be configured.
 #   * reminder that things may work better if each src-dir-name
 #     refers to a direct subdirectory of project directory
+#
+# * the structure and content of the .judge directory is not spelled out so
+#   well.  consider remedying.  also mention it should be safe to delete.
+#   * timing of creation
+#   * content
+#     * test files
+#     * source files
+#     * test results (report + stdout and stderr output)
 #
 # * consider controlling behavior via env vars -- e.g. disable running.
 #   perhaps env vars can be used instead of a config file.  then each
@@ -252,20 +269,3 @@
 #   * compare number of tests between old and new versions
 #   * edit project.janet to remove stale phony targets
 #   * add runner to test directory
-#
-# * the structure and content of the .judge directory is not spelled out so
-#   well.  consider remedying.
-#   * timing of creation
-#   * content
-#     * test files
-#     * source files
-#     * test results (report + stdout and stderr output)
-
-# USAGE PATTERNS:
-#
-# * exploratory tests for one's project
-# * examples for one's project
-# * standalone repository of examples for another project
-# * standalone repository of tests for some project -- by default do not
-#   include tests in one's project, but rather have them be in a separate
-#   project
