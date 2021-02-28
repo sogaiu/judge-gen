@@ -80,10 +80,33 @@ NOT be executed.
 
 === Fine Tuning Configuration
 
-* By default, the directory housing the tests is named `.judge`
-  and lives within one's project directory.  If that name is a problem
-  (e.g. your project is already using it or wants to use it), there is
-  a way to select a different name.
+Although currently there is no configuration file apart from the
+runner script itself, effort has been put into not having to edit the
+runner script and still be able to perform some configuration.  Please
+try the route of changing the name and/or location of the runner
+script to see if that works for you.  The following provides some
+related details.
+
+* By default, the runner script's name (without the file extension) is
+  used to identify the direct subdirectory of the project directory
+  that the files used to generate tests live in.  In the Setup
+  instructions in the README, the name `examples` corresponds to this.
+  So if the runner script's name is `examples.janet`, then the project
+  directory should have a direct subdirectory named `examples`.  When
+  `jpm test` is invokved, the content of the `examples` directory is
+  used to generate test files in another directory (typically named
+  `.judge_<name>`, see following point for details) and the generated
+  tests are subsequently executed.
+
+* By default, the directory housing the generated tests is named
+  `.judge_<name>` and lives within one's project directory.  `<name>`
+  is determined based on the runner script's name as well as where it
+  lives under `test`.  This directory and its contents are regenerated
+  each time the runner is executed.  (There is a way to select a
+  different `<name>`, but if that is done by editing the runner script
+  and if you happen to want to use multiple runner scripts, it is up
+  to you to ensure collisions of names as well as files and
+  directories do not occur.)
 
 * By default, the generated test files all start with the prefix
   `judge-`.  A file that starts with that prefix is treated as a test
