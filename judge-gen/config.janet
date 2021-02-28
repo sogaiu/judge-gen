@@ -12,8 +12,8 @@
 
 # Only change if trying to prevent collision with an existing direct
 # subdirectory of the project directory.
-(def judge-dir-name
-  ".judge")
+(def judge-dir-suffix
+  "")
 
 # Only change if trying to prevent collision with source files that have
 # names that begin with "judge-".
