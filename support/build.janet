@@ -15,15 +15,19 @@
 #
 #       these limitations exist to make the "compilation" process easier.
 
+(import ./common)
+
+# expressed relative to project root
 (def src-root
   "judge-gen")
 
+# expressed relatitve to src-root
 (def start-path
   "./jg-jpm-test.janet")
 
 # expressed relative to src-root
 (def out-path
-  "../judge-gen.janet")
+  (string "../" common/out-path))
 
 # XXX: a hack -- could reuse parts of a better peg
 (def import-grammar

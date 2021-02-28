@@ -8,9 +8,9 @@
 (put (dyn :rules) "build" nil)
 (phony "build" []
        (os/execute ["janet"
-                    "build.janet"] :p))
+                    "support/build.janet"] :p))
 
 (put (dyn :rules) "clean" nil)
 (phony "clean" []
        (os/execute ["janet"
-                    "clean.janet"] :p))
+                    "support/clean.janet"] :p))
