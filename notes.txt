@@ -263,6 +263,18 @@
 #   need to be done:
 #   * count number of tests using old version of judge-gen
 #   * ensure tests only use simplified syntax
-#   * compare number of tests between old and new versions
 #   * edit project.janet to remove stale phony targets
 #   * add runner to test directory
+#   * compare number of tests between old and new versions
+#   * possibly remove jg and jg-verdict binaries
+#   repositories known to use judge-gen:
+#   * clojure-peg
+#   * detect-clj-ns
+#   * forcett
+#   * janet-bits
+#   * janet-peg
+#   * janet-xmlish
+#   * janet-zip
+#   * judge-gen
+#   * mal-peg
+#   * margaret
