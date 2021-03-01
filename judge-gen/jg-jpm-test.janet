@@ -1,14 +1,9 @@
-(import ./config :prefix "")
 (import ./jg-runner :prefix "")
 (import ./path :prefix "")
 
 # from the perspective of `jpm test`
 (def proj-root
   (path/abspath "."))
-
-(defn src-root
-  [src-dir-name]
-  (path/join proj-root src-dir-name))
 
 (defn no-ext
   [file-path]
@@ -40,12 +35,10 @@
   )
 
 (defn deduce-src-root
-  [src-dir-name]
-  (when (not= src-dir-name "")
-    (break src-dir-name))
+  []
   (let [current-file (dyn :current-file)]
     (assert current-file
-            "src-dir-name is empty but :current-file is nil")
+            ":current-file is nil")
     (let [cand-name (base-no-ext current-file)]
       (assert (and cand-name
                    (not= cand-name ""))
@@ -71,12 +64,10 @@
     all-escaped))
 
 (defn deduce-judge-dir-name
-  [judge-dir-suffix]
-  (when (not= judge-dir-suffix "")
-    (break (string ".judge_" judge-dir-suffix)))
+  []
   (let [current-file (dyn :current-file)]
     (assert current-file
-            "judge-dir-suffix is empty but :current-file is nil")
+            ":current-file is nil")
     (let [suffix (suffix-for-judge-dir-name current-file)]
       (assert suffix
               (string "failed to determine suffix for: "
@@ -87,8 +78,8 @@
 (when (nil? (dyn :judge-gen/test-out))
   (let [all-passed
         (jg-runner/handle-one
-          {:judge-dir-name (deduce-judge-dir-name judge-dir-suffix)
+          {:judge-dir-name (deduce-judge-dir-name)
            :proj-root proj-root
-           :src-root (deduce-src-root src-dir-name)})]
+           :src-root (deduce-src-root)})]
     (when (not all-passed)
       (os/exit 1))))
