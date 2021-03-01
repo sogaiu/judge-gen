@@ -88,7 +88,6 @@
   (let [all-passed
         (jg-runner/handle-one
           {:judge-dir-name (deduce-judge-dir-name judge-dir-suffix)
-           :judge-file-prefix judge-file-prefix
            :proj-root proj-root
            :src-root (deduce-src-root src-dir-name)})]
     (when (not all-passed)

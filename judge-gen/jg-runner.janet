@@ -4,32 +4,39 @@
 (import ./utils :prefix "")
 
 (defn jg-runner/make-judges
-  [src-root judge-root judge-file-prefix]
+  [src-root judge-root]
   (def subdirs @[])
+  (defn no-ext
+    [file-path]
+    (when file-path
+      (when-let [rev (string/reverse file-path)
+                 dot (string/find "." rev)]
+        (string/reverse (string/slice rev (inc dot))))))
   (defn helper
-    [src-root subdirs judge-root judge-file-prefix]
+    [src-root subdirs judge-root]
     (each path (os/dir src-root)
       (def fpath (path/join src-root path))
       (case (os/stat fpath :mode)
         :directory
         (do
           (helper fpath (array/push subdirs path)
-                  judge-root judge-file-prefix)
+                  judge-root)
           (array/pop subdirs))
         #
         :file
         (when (string/has-suffix? ".janet" fpath)
+          (def judge-file-name
+            (string (no-ext path) ".judge"))
           (unless (jg/handle-one
                     {:input fpath
                      :output (path/join judge-root
                                         ;subdirs
-                                        (string
-                                          judge-file-prefix path))})
+                                        judge-file-name)})
             (eprintf "Test generation failed for: %s" fpath)
             (eprintf "Please confirm validity of source file: %s" fpath)
             (error nil))))))
   #
-  (helper src-root subdirs judge-root judge-file-prefix))
+  (helper src-root subdirs judge-root))
 
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
@@ -46,28 +53,27 @@
 
   (os/mkdir judge-root)
 
-  (jg-runner/make-judges src-root judge-root "judge-" true)
+  (jg-runner/make-judges src-root judge-root true)
 
   )
 
 (defn jg-runner/find-judge-files
-  [dir judge-file-prefix]
+  [dir]
   (def file-paths @[])
   (defn helper
-    [dir judge-file-prefix file-paths]
+    [dir file-paths]
     (each path (os/dir dir)
       (def full-path (path/join dir path))
       (case (os/stat full-path :mode)
         :directory
-        (helper full-path judge-file-prefix file-paths)
+        (helper full-path file-paths)
         #
         :file
-        (when (and (string/has-prefix? judge-file-prefix path)
-                   (string/has-suffix? ".janet" path))
+        (when (string/has-suffix? ".judge" path)
           (array/push file-paths [full-path path]))))
     file-paths)
   #
-  (helper dir judge-file-prefix file-paths))
+  (helper dir file-paths))
 
 (defn jg-runner/execute-command
   [opts]
@@ -143,10 +149,10 @@
     fpath))
 
 (defn jg-runner/judge
-  [judge-root judge-file-prefix]
+  [judge-root]
   (def results @{})
   (def file-paths
-    (sort (jg-runner/find-judge-files judge-root judge-file-prefix)))
+    (sort (jg-runner/find-judge-files judge-root)))
   (var count 0)
   (def results-dir (jg-runner/make-results-dir-path judge-root))
   #
@@ -271,7 +277,6 @@
 (defn jg-runner/handle-one
   [opts]
   (def {:judge-dir-name judge-dir-name
-        :judge-file-prefix judge-file-prefix
         :proj-root proj-root
         :src-root src-root} opts)
   (def judge-root
@@ -301,12 +306,12 @@
       # create judge files
       (prin "Creating tests files... ")
       (flush)
-      (jg-runner/make-judges src-root judge-root judge-file-prefix)
+      (jg-runner/make-judges src-root judge-root)
       (print "done")
       # judge
       (print "Judging...")
       (def results
-        (jg-runner/judge judge-root judge-file-prefix))
+        (jg-runner/judge judge-root))
       (utils/print-dashes)
       # summarize results
       (def all-passed
@@ -337,7 +342,6 @@
     (path/join proj-root "judge-gen"))
 
   (jg-runner/handle-one {:judge-dir-name ".judge"
-                         :judge-file-prefix "judge-"
                          :proj-root proj-root
                          :src-root src-root})
 
