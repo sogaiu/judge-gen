@@ -58,10 +58,18 @@ To run the tests and get a report: `jpm test`
 Add more tests / examples by creating more comment block tests in
 files that live in an appropriate directory.
 
-== Sample Configurations
+== Sample Repositories
 
-This repository can serve as an example, but
-https://gitlab.com/sogaiu/margaret[margaret] is another example.
+This repository can serve as an example, but here are some others:
+
+* https://github.com/sogaiu/clojure-peg[clojure-peg]
+* https://github.com/sogaiu/detect-clj-ns[detect-clj-ns]
+* https://github.com/sogaiu/janet-bits[janet-bits]
+* https://github.com/sogaiu/janet-peg[janet-peg]
+* https://github.com/sogaiu/janet-xmlish[janet-xmlish]
+* https://github.com/sogaiu/janet-zip[janet-zip]
+* https://github.com/sogaiu/mal-peg[mal-peg]
+* https://gitlab.com/sogaiu/margaret[margaret]
 
 == Notes
 
@@ -70,7 +78,7 @@ There are some link:notes.txt[notes].
 == Acknowledgments
 
 * andrewchambers - suggestion and explanation
-* bakpakin - janet, jpm, etc.
+* bakpakin - janet, jpm, helper.janet, etc.
 * pepe - discussion, One-Shot Power Util Solver ™ motivation, and naming
 * pyrmont - discussion and exploration
 * rduplain - bringing to light customization of `jpm test`
