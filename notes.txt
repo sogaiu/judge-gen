@@ -10,18 +10,12 @@
 # LIMITS:
 #
 # * tends to work for direct subdirectories of the project directory.
-#   files can be in deeper directories, but for least hassle, point
-#   configuration information at direct subdirectories of project
-#   directory.  see details below for more in-depth explanation.
+#   files can be in deeper directories.  see details below for more
+#   in-depth explanation.
 #
 # * doesn't clean up temporary files and directories automatically, though
 #   running a subsequent set of tests will erase old results and generated
 #   tests
-#
-# * updating an existing judge-gen installation has the downside of
-#   potentially erasing previous configuration information because this
-#   mostly lives in the runner file itself (with the exception of the
-#   name of the file which is used as configuration information)
 #
 # * likely only works with utf-8
 
@@ -78,8 +72,8 @@
 #   * could jpm's quickbin result be renamed to have `.janet` file
 #     extension?
 #   both of the above options would close off the ability to edit the
-#   runner to configure it.  presumably it would still be possible to
-#   rebuild a new runner after editing `config.janet`.
+#   runner.  presumably it would still be possible to rebuild a new runner
+#   after editing source.
 #
 # * try to figure out a way to have two (or more) instances of the runner
 #   able to coexist in one codebase.
@@ -116,14 +110,8 @@
 #     so a single comma is replaced by two commas (escaped)
 #   * so it seems workable to have multiple judge-gen instances that refer
 #     to the same direct subdirectory of the project directory.  is this
-#     actually useful?  if each runner can be configured separately, then
+#     actually useful?  if each runner can be made to behave differently, then
 #     yes, it can be.
-#   * caveats...note that if src-dir-name is specified in the runner script,
-#     the above scheme can lead to collisions.  setting judge-dir-name in
-#     the runner script should allow a user to force a certain name to be
-#     used in .judge_<name>, so there is a manual escape hatch.  but now
-#     it's up to the user to make sure various configurations play well
-#     with each other.
 #
 # * multiple runner considerations
 #   * use separate judge roots -- use .judge_<name> idea described
@@ -140,8 +128,7 @@
 #     * test results (report + stdout and stderr output)
 #
 # * consider controlling behavior via env vars -- e.g. disable running.
-#   perhaps env vars can be used instead of a config file.  then each
-#   user is free to make multiple launch scripts that set env vars
+#   then each user is free to make multiple launch scripts that set env vars
 #   before executing `jpm test`
 #   * lauching via a script has another potential benefit which is
 #     that additional command line options can be meaningfully
@@ -193,10 +180,9 @@
 #     * some ideas
 #       * possible to provide config file / directory via extension?
 #       * linting source files via extension?
-#       * diagnostic mode might be done to check sanity of configuration,
-#         file / directory structure, etc. via extension? collect gotchas,
-#         issues, etc. together for consideration of potential things to
-#         check for.
+#       * diagnostic mode might be done to check sanity of file / directory
+#         structure, etc. via extension? collect gotchas, issues, etc.
+#         together for consideration of potential things to check for.
 #       * trying to run all test files to determine every file that leads
 #         to failure (cf. `jpm test` fail early behavior gives an incomplete
 #         picture) via extension?
@@ -212,7 +198,7 @@
 #
 #        ought to work as input to jg's transformation process.
 #      * a mode of operation to apply runner to a single file
-#      * consider different reporting modes for jg.  concrete examples:
+#      * consider different reporting modes.  concrete examples:
 #        * for earliest / quickest feedback, have _verify output info as soon
 #          as it is available
 #        * for slower feedback, have _verify just pass back all test
@@ -242,8 +228,9 @@
 #     non-direct subdirectory of the project directory), and judge-gen's
 #     copying scheme would fail for this case.
 #   if these two points are not issues for one's use case, it may be
-#   that one can use a non-direct subdirectory of the project directory
-#   (i.e. a "deeper" subdirectory) in the configuration of judge-gen.
+#   that one could use a non-direct subdirectory of the project directory
+#   (i.e. a "deeper" subdirectory) without issues.  however, at present it
+#   is likely to require source-level changes.
 #
 # * _verify/dump-results uses "%p" in a branch.  determine if this could
 #   be a problem but also whether this branch is ever used.
@@ -265,37 +252,6 @@
 #   * custom order
 #
 # * consider reporting number of tests per file
-#
-# * configuration ideas
-#   * don't make a configuration file for the moment, try to collect
-#     usage scenarios, then revisit.
-#   * currently, using the name of the runner as a way to indicate which
-#     direct subdirectory of the project directory to use as a source of
-#     tests.  this can be overriden via configuration in the runner.
-#     * still it should be possible to finely configure the runner based
-#       on values in the runner (e.g. judge-root)
-#     * can put runner in a subdirectory of test if there are name
-#       collision issues
-#   * motivation for configuration via external file
-#     * current method risks losing configuration information upon upgrade
-#     * current method leads to likelihood of having to edit
-#       test/judge-gen.janet on each upgrade (tedious and error-prone?)
-#     * current method risks breaking test/judge-gen.janet because a user
-#       typically has to edit it at least once
-#   * each runner in test should have a unique name that can be used
-#     to look up configuration info in jg.jdn.  if there is no jg.jdn, then
-#     the name of the file specifies a subdirectory of the project directory.
-#     this last bit helps make it possible for the config file is optional
-#     for some cases.
-#   * can use one judge-gen.janet per directory of source files, but that
-#     would lead to multiple judge-gen.janet files.  perhaps an alternative
-#     is to have a single configuration file that could "drive" judge-gen.janet
-#     to be used for multple directories.  need to consider multiple
-#     judge directories to prevent collisions?
-#   * location of config file
-#     * project root - e.g. `jg.jdn`
-#     * directory with runner - e.g. `test/jg.jdn`, `test/fun/jg.jdn`
-#     * could do some kind of search order - e.g. runner dir first, up, etc.
 
 # ISSUES:
 #
