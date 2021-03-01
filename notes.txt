@@ -75,50 +75,6 @@
 #   runner.  presumably it would still be possible to rebuild a new runner
 #   after editing source.
 #
-# * try to figure out a way to have two (or more) instances of the runner
-#   able to coexist in one codebase.
-#   * one issue is the potential collisions that might arise because of the
-#     use of the same .judge directory.
-#   * one idea is to not have a .judge directory but rather a .judge_<name>
-#     directory where <name> is taken from the source-of-tests directory
-#     associated with a runner.
-#   * is it possible that two or more <name>s could collide?  it is
-#     conceivable that there are runners with the same name living under
-#     different descendant directories of `test`. is this something to be
-#     concerned about?  possibly it's not our job to prevent this from
-#     happening?
-#   * possibly there is some way to encode the path from `test` to the runner
-#     into the name that is chosen to be appended to `.judge_`.  it seems
-#     like some kind of escaping might be necessary to get this to work to
-#     avoid using slash or backslash in the name.
-#   * try the following idea...suppose there are two judge-gen runner
-#     files in `test`:
-#     * `test/a/examples.janet`
-#     * `test/b/examples.janet`
-#     their corresponding `.judge_*` directory names are then:
-#     * `.judge_a,examples`
-#     * `.judge_b,examples`
-#     in the case that a judge-gen runner has a comma in its name, e.g.:
-#     * `test/a/examples,1.janet`
-#     the corresponding `.judge_*` directory name is:
-#     * `.judge_a,examples,,1`
-#     in the case that a judge-gen runner has two successive commas in its
-#     name, e.g.:
-#     * `test/a/examples,,x.janet`
-#     the corresponding `.judge_*` directory name is:
-#     * `.judge_a,examples,,,,x`
-#     so a single comma is replaced by two commas (escaped)
-#   * so it seems workable to have multiple judge-gen instances that refer
-#     to the same direct subdirectory of the project directory.  is this
-#     actually useful?  if each runner can be made to behave differently, then
-#     yes, it can be.
-#
-# * multiple runner considerations
-#   * use separate judge roots -- use .judge_<name> idea described
-#     elsewhere.
-#   * reminder that things may work better if each src-dir-name
-#     refers to a direct subdirectory of project directory
-#
 # * the structure and content of the .judge directory is not spelled out so
 #   well.  consider remedying.  also mention it should be safe to delete.
 #   * timing of creation
