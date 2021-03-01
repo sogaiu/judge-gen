@@ -76,48 +76,68 @@ two tests will be created and executed.
 since there are no expected values indicated, `(print "hi")` will
 NOT be executed.
 
-== Tweaking
+== Underlying Details
 
-=== Fine Tuning Configuration
+=== Basics
 
-Although currently there is no configuration file apart from the
-runner script itself, effort has been put into not having to edit the
-runner script and still be able to perform some configuration.  Please
-try the route of changing the name and/or location of the runner
-script to see if that works for you.  The following provides some
-related details.
+* The name of the runner script is used to deduce the name of a
+  directory containing source files to use for generating tests.  If
+  the runner script's name is `examples.janet`, then the corresponding
+  directory is `examples` (a direct subdirectory of the project
+  directory).
 
-* By default, the runner script's name (without the file extension) is
-  used to identify the direct subdirectory of the project directory
-  that the files used to generate tests live in.  In the Setup
-  instructions in the README, the name `examples` corresponds to this.
-  So if the runner script's name is `examples.janet`, then the project
-  directory should have a direct subdirectory named `examples`.  When
-  `jpm test` is invokved, the content of the `examples` directory is
-  used to generate test files in another directory (typically named
-  `.judge_<name>`, see following point for details) and the generated
-  tests are subsequently executed.
+* The directory housing the generated tests is named `.judge_<name>`
+  and lives within one's project directory.  `<name>` is determined
+  based on the runner script's name as well as where it lives under
+  `test`.  This directory and its contents are regenerated each time
+  the runner is executed, typically via `jpm test`.
 
-* By default, the directory housing the generated tests is named
-  `.judge_<name>` and lives within one's project directory.  `<name>`
-  is determined based on the runner script's name as well as where it
-  lives under `test`.  This directory and its contents are regenerated
-  each time the runner is executed.  (There is a way to select a
-  different `<name>`, but if that is done by editing the runner script
-  and if you happen to want to use multiple runner scripts, it is up
-  to you to ensure collisions of names as well as files and
-  directories do not occur.)
+* Test results and output (stdout and stderr) are stored in a
+  subdirectory of `.judge_<name>`.  The name of this subdirectory is
+  generated each time and it should be very unlikely to lead to
+  collisions.
 
-* By default, the generated test files all start with the prefix
-  `judge-`.  A file that starts with that prefix is treated as a test
-  file.  The prefix may be configured to be something else though, so
-  if any of your source files uses that prefix, please choose a prefix
-  that is not used by any of your source files.
+=== Discussion
 
-These things can be configured by editing the runner file
-appropriately.
+* The generated directory will contain a copy of the source files from
+  which the generated tests are created.  The generated test files are
+  modified forms of the original source files and may contain `import`
+  forms referring to other source files.  In order for these `import`
+  forms to function properly, the original source is copied and thus
+  (most ordinary) relative imports should continue to function in the
+  context of the generated directory.
 
-=== Using judge-gen With Other Testing Methods
+* The generated test files use the suffix `.judge`.  This should be
+  sufficient to prevent collisions between the names of source files
+  (which should have extension `.janet`) and the names of generated
+  test files.
 
-Co-existence with other testing methods is something the author has an
-interest in.  Please report any encountered issues along these lines.
+* It should be possible to place a runner script within a subdirectory
+  of `test`, e.g. a runner script can live in the directory `test/a`.
+
+* It should be possible to use multiple runner scripts, e.g.
+  `test/examples.janet` and `test/src.janet`.  Even having both
+  `test/a/fun.janet` and `test/b/fun.janet` should work.
+
+* The `<name>` in `.judge_<name>` reflects both the name of the runner
+  script as well as the path relative to the `test` directory.
+
+* If the runner script is `test/a/runner.janet`, then the
+  corresponding `.judge_<name>` is `.judge_a,example` (note the
+  comma).
+
+* If for some reason the path to the runner script has a comma in it,
+  it is escaped in the `.judge_<name>` by "doubling".  So if the path
+  to the runner script is `test/do,not,use,a,comma,please.janet`, then
+  the `.judge_<name>` is `.judge_do,,not,,use,,a,,comma,,please`.
+
+* The use of a single comma in the above manner along with the comma
+  doubling / escaping should serve to prevent name collisions.  The
+  comma character was chosen based on not having seen it used that
+  often in typical source file names.  It is only used by judge-gen
+  for the names of directories that will be regenerated and which
+  should be safe to delete.
+
+* Co-existence with other testing methods is something the author has
+  an interest in.  Please report any encountered issues along these
+  lines.
