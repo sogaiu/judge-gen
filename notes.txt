@@ -40,8 +40,46 @@
 
 # POSSIBILITIES:
 #
-# * consider whether `judge-` is sufficiently unlikely as a prefix for a
-#   janet file.
+# * consider documenting the `:judge-gen/test-out` dynamic variable.  here
+#   are some ways it is involved in code:
+#   * when the runner executes a test file, it is set
+#   * _verify/dump-results checks it to decide how to outut results
+#   * it is checked in `jg-jpm-test.janet` to decide whether to execute
+#     the runner
+#   is it possible to use an environment variable (or multiple) appropriately
+#   instead of a dynamic variable?
+#
+# * try to spell out criteria for merging into master
+#   * better explanation of how the whole thing works
+#     * source transformation
+#     * copying existing files to appropriate locations
+#     * runner execution plus generating results
+#   * verify works correctly with:
+#     * clojure-peg
+#     * detect-clj-ns
+#     * forcett
+#     * janet-bits
+#     * janet-peg
+#     * janet-xmlish
+#     * janet-zip
+#     * judge-gen
+#     * mal-peg
+#     * margaret
+#
+# * document installation method of placing a symlink from some file in
+#   `test` to a single judge-gen.janet file elsewhere (e.g. in `support`).
+#   seems like this makes it possible to use a single underlying runner
+#   via multiple locations (i.e. use multiple symlinks to it).
+#
+# * consider other ways to end up with a single file which `jpm test`
+#   will execute:
+#   * investigate `.jimage` and janet's `-c` command line option.  could
+#     this somehow be another route to a single-file output?
+#   * could jpm's quickbin result be renamed to have `.janet` file
+#     extension?
+#   both of the above options would close off the ability to edit the
+#   runner to configure it.  presumably it would still be possible to
+#   rebuild a new runner after editing `config.janet`.
 #
 # * try to figure out a way to have two (or more) instances of the runner
 #   able to coexist in one codebase.
@@ -97,7 +135,7 @@
 #   well.  consider remedying.  also mention it should be safe to delete.
 #   * timing of creation
 #   * content
-#     * test files
+#     * test files (extension .judge)
 #     * source files
 #     * test results (report + stdout and stderr output)
 #
@@ -276,14 +314,3 @@
 #   * add runner to test directory
 #   * compare number of tests between old and new versions
 #   * possibly remove jg and jg-verdict binaries
-#   repositories known to use judge-gen:
-#   * clojure-peg
-#   * detect-clj-ns
-#   * forcett
-#   * janet-bits
-#   * janet-peg
-#   * janet-xmlish
-#   * janet-zip
-#   * judge-gen
-#   * mal-peg
-#   * margaret
