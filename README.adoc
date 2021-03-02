@@ -102,7 +102,7 @@ This repository can serve as an example, but here are some others:
 == Acknowledgments
 
 * andrewchambers - suggestion and explanation
-* bakpakin - janet, jpm, helper.janet, etc.
+* bakpakin - janet, jpm, helper.janet, path.janet, peg for janet, etc.
 * pepe - discussion, One-Shot Power Util Solver ™ motivation, and naming
 * pyrmont - discussion and exploration
 * rduplain - bringing to light customization of `jpm test`
