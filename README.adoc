@@ -46,7 +46,7 @@ Suppose there's a project directory like:
 ----
 .
 ├── my-src-dir
-│   └── fun.janet
+│   └── fun.janet
 ├── project.janet
 └── test
     └── test.janet
@@ -67,9 +67,9 @@ Now it should look something like:
 ----
 .
 ├── examples
-│   └── nice-samples.janet
+│   └── nice-samples.janet
 ├── my-src-dir
-│   └── fun.janet
+│   └── fun.janet
 ├── project.janet
 └── test
     ├── examples.janet

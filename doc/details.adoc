@@ -25,16 +25,16 @@
 ----
 .
 ├── .judge_examples
-│   ├── .1614677691-ef1494cce926da6b-judge-gen
-│   │   ├── 0-grammar.jimage
-│   │   ├── stderr-0-grammar.txt
-│   │   └── stdout-0-grammar.txt
-│   ├── grammar.janet
-│   └── grammar.judge
+│   ├── .1614677691-ef1494cce926da6b-judge-gen
+│   │   ├── 0-grammar.jimage
+│   │   ├── stderr-0-grammar.txt
+│   │   └── stdout-0-grammar.txt
+│   ├── grammar.janet
+│   └── grammar.judge
 ├── examples
-│   └── grammar.janet
+│   └── grammar.janet
 ├── my-src-dir
-│   └── fun.janet
+│   └── fun.janet
 ├── project.janet
 └── test
     └── examples.janet
