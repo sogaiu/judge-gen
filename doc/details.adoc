@@ -1,0 +1,105 @@
+= Details
+:toc:
+
+== Basics
+
+* The name of the runner script is used to deduce the name of a
+  directory containing source files to use for generating tests.  If
+  the runner script's name is `examples.janet`, then the corresponding
+  directory is `examples` (a direct subdirectory of the project
+  directory).
+
+* The directory housing the generated tests is named `.judge_<name>`
+  and lives within one's project directory.  `<name>` is determined
+  based on the runner script's name as well as where the script lives
+  under `test`.  This directory and its contents are regenerated each
+  time the runner is executed, typically via `jpm test`.
+
+* Test results and output (from stdout and stderr) are stored in
+  a subdirectory of `.judge_<name>`.  The name of this subdirectory is
+  generated each time and it should be very unlikely to lead to
+  collisions.
+
+== Concrete Example
+
+Suppose there is a runner script `test/examples.janet`.
+
+Since the name of the runner script is `examples.janet`, the directory
+from which source files are copied is named `examples` and is a direct
+subdirectory of the project directory.  At minimum, some of the
+expected files in this directory have the file extension `.janet`.  An
+example name is `grammar.janet`.
+
+Since the runner script lives directly under `test` and its name is
+`examples.janet`, the directory that contains the generated tests is
+named `.judge_examples`.  All of the files from `examples` should end
+up in `.judge_examples`.  Additionally, generated test files with file
+extension `.judge` are found here too.  An example name for a
+generated test file is `grammar.judge`.
+
+Once the tests have completed running, there should be a subdirectory
+in `.judge_examples` that contains test results and output.  The name
+of this subdirectory is highly likely to be different each time.  An
+example is `.1614677691-ef1494cce926da6b-judge-gen`.
+
+* Test results have a name like `<n>-<filename>.judge` where `<n>` is
+  a number and `<filename>` is obtained from a source file's name.  An
+  example is `0-grammar.judge`.
+
+* A test output file containing stdout output has a name like
+  `stdout-<n>-<filename>.judge.txt`.  An example is
+  `stdout-0-grammar.judge.txt`.
+
+* A test output file containing stderr output has a name like
+  `stderr-<n>-<filename>.judge.txt`.  An example is
+  `stderr-0-grammar.judge.txt`.
+
+== Discussion
+
+* The generated directory (e.g. `.judge_examples`) will contain a copy
+  of the source files from which the generated tests
+  (e.g. `grammar.judge`) are created.  The generated test files are
+  modified forms of the original source files (e.g. `grammar.janet`)
+  and may contain import forms referring to other source files.  In
+  order for these import forms to function properly, the original
+  source is copied and thus (most ordinary) relative imports should
+  continue to function in the context of the generated directory.
+
+* To clarify, the content of the source directory is recursively
+  copied to the generated tests directory.  As mentioned before, this
+  is for the purpose of import forms functioning correctly.
+
+* The generated test files use the suffix `.judge`.  This should be
+  sufficient to prevent collisions between the names of source files
+  (which should have extension `.janet`) and the names of generated
+  test files.
+
+* It should be possible to place a runner script within a subdirectory
+  of `test`, e.g. a runner script can live in the directory `test/a`.
+
+* It should be possible to use multiple runner scripts, e.g.
+  `test/examples.janet` and `test/src.janet`.  Even having both
+  `test/a/fun.janet` and `test/b/fun.janet` should work.
+
+* The `<name>` in `.judge_<name>` reflects both the name of the runner
+  script as well as the path relative to the `test` directory.
+
+* If the runner script is `test/a/runner.janet`, then the
+  corresponding `.judge_<name>` is `.judge_a,example` (note the
+  comma).
+
+* If for some reason the path to the runner script has a comma in it,
+  it is escaped in the `.judge_<name>` by "doubling".  So if the path
+  to the runner script is `test/do,not,use,a,comma,please.janet`, then
+  the `.judge_<name>` is `.judge_do,,not,,use,,a,,comma,,please`.
+
+* The use of a single comma in the above manner along with the comma
+  doubling / escaping should serve to prevent name collisions.  The
+  comma character was chosen based on not having seen it used that
+  often in typical source file names.  It is only used by judge-gen
+  for the names of directories that will be regenerated and which
+  should be safe to delete.
+
+* Co-existence with other testing methods is something the author has
+  an interest in.  Please report any encountered issues along these
+  lines.

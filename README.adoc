@@ -35,7 +35,7 @@ expected return value.
 One might call the form + expected value comment a "comment block
 test".
 +
-See link:doc/tips-and-tweaking.adoc[Tips and Tweaking] for more details.
+See link:doc/tips.adoc[Usage / Test Writing Tips] for more details.
 
 * Once some setup steps are followed, tests can be run by: `jpm test`
 
@@ -45,11 +45,14 @@ See link:doc/tips-and-tweaking.adoc[Tips and Tweaking] for more details.
    e.g. `examples`.
 1. Copy the file `test/judge-gen.janet` from this repository to the
    target project's `test` subdirectory and rename it to
-   `test/examples.janet`.
+   `examples.janet`.
 3. If it doesn't exist already, create a direct subdirectory of the project
    root directory named `examples` to house comment block tests.
 4. If the `examples` directory doesn't have at least one file with a comment
    block test in it, do something about that :)
+
+See link:doc/details.adoc[Details] for additional information regarding the
+various files and directories.
 
 == Usage
 
@@ -71,10 +74,6 @@ This repository can serve as an example, but here are some others:
 * https://github.com/sogaiu/mal-peg[mal-peg]
 * https://gitlab.com/sogaiu/margaret[margaret]
 
-== Notes
-
-There are some link:notes.txt[notes].
-
 == Acknowledgments
 
 * andrewchambers - suggestion and explanation
@@ -82,5 +81,5 @@ There are some link:notes.txt[notes].
 * pepe - discussion, One-Shot Power Util Solver ™ motivation, and naming
 * pyrmont - discussion and exploration
 * rduplain - bringing to light customization of `jpm test`
-* Saikyun - discussion
+* Saikyun - discussion and testing
 * srnb@gitlab - suggestion
