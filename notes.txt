@@ -61,6 +61,7 @@
 #
 # * try to spell out criteria for making a tagged release
 #   * up-to-date docs
+#   * ensure tests pass on the 3 common platforms
 #   * verify works correctly with existing repositories:
 #     * clojure-peg
 #     * detect-clj-ns
