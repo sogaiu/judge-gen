@@ -69,10 +69,25 @@
   (utils/print-dashes)
   (= total-passed total-tests))
 
-# XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
   (summary/summarize @{})
+  # => true
+
+  (def results
+    '@[{:expected-value "judge-gen"
+        :passed true
+        :name "line-20"
+        :test-form (base-no-ext "test/judge-gen.janet")
+        :type :is
+        :expected-form "judge-gen"
+        :test-value "judge-gen"}])
+
+  (let [buf @""]
+    (with-dyns [:out buf]
+      (summary/summarize @{"1-jg-jpm-test.jimage" results}))
+    (string/has-prefix? "\nNo tests failed." buf))
+  # => true
 
   )
 
