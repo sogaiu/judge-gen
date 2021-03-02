@@ -9,15 +9,13 @@
 
 # LIMITS:
 #
-# * tends to work for direct subdirectories of the project directory.
-#   files can be in deeper directories.  see details below for more
-#   in-depth explanation.
+# * designed to work using source / examples that live in direct
+#   subdirectories of the project directory.  files can be in deeper
+#   directories.  see details below for more in-depth explanation.
 #
 # * doesn't clean up temporary files and directories automatically, though
-#   running a subsequent set of tests will erase old results and generated
-#   tests
-#
-# * likely only works with utf-8
+#   running a subsequent set of tests usually erases old results and
+#   generated tests.
 
 # PERIODIC:
 #
@@ -61,12 +59,9 @@
 #   is it possible to use an environment variable (or multiple) appropriately
 #   instead of a dynamic variable?
 #
-# * try to spell out criteria for merging into master
-#   * better explanation of how the whole thing works
-#     * source transformation
-#     * copying existing files to appropriate locations
-#     * runner execution plus generating results
-#   * verify works correctly with:
+# * try to spell out criteria for tagging
+#   * up-to-date docs
+#   * verify works correctly with existing repositories:
 #     * clojure-peg
 #     * detect-clj-ns
 #     * forcett
@@ -92,14 +87,6 @@
 #   both of the above options would close off the ability to edit the
 #   runner.  presumably it would still be possible to rebuild a new runner
 #   after editing source.
-#
-# * the structure and content of the .judge directory is not spelled out so
-#   well.  consider remedying.  also mention it should be safe to delete.
-#   * timing of creation
-#   * content
-#     * test files (extension .judge)
-#     * source files
-#     * test results (report + stdout and stderr output)
 #
 # * consider controlling behavior via env vars -- e.g. disable running.
 #   then each user is free to make multiple launch scripts that set env vars
