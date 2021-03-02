@@ -59,7 +59,7 @@
 #   is it possible to use an environment variable (or multiple) appropriately
 #   instead of a dynamic variable?
 #
-# * try to spell out criteria for tagging
+# * try to spell out criteria for making a tagged release
 #   * up-to-date docs
 #   * verify works correctly with existing repositories:
 #     * clojure-peg
