@@ -34,6 +34,24 @@
 
 # POSSIBILITIES:
 #
+# * not having names for some things is turning out to be awkward.
+#   * come up with a name for the directory used as a source of info
+#     to generate tests (contains source)
+#   * come up with a name for the generated directory that contains
+#     a copy of the source files and directories as well as generated
+#     tests, and results + output
+#
+# * document one or more cases that show the problem of not choosing
+#   a direct subdirectory as a source for generating tests?
+#   one case is...suppose there is a direct subdirectory of the project
+#   directory named `src`.  suppose there are two subdirectories
+#   `src/a` and `src/b`.  suppose also that some source files in `src/a`
+#   refer to sources files in `src/b` using `import` with a relative path.
+#   if only the content of `src/a` were to be copied to be used by
+#   generated tests, the `import` forms that reference `src/b` files
+#   relatively would fail because those files would not exist at the
+#   appropriate locations within the destination directory.
+#
 # * consider documenting the `:judge-gen/test-out` dynamic variable.  here
 #   are some ways it is involved in code:
 #   * when the runner executes a test file, it is set
