@@ -57,10 +57,10 @@ Suppose there's a project directory like:
 1. Copy the file `test/judge-gen.janet` from this repository to the
    target project's `test` subdirectory and rename it to
    `examples.janet`.
-3. If it doesn't exist already, create a direct subdirectory of the project
-   root directory named `examples` to house comment block tests.
-4. If the `examples` directory doesn't have at least one file with a comment
-   block test in it, do something about that :)
+3. Create a direct subdirectory of the project root directory named
+   `examples` to house comment block tests.
+4. Within the `examples` directory, create at least one file with a
+   comment block test in it.
 
 Now it should look something like:
 
