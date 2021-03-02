@@ -1535,15 +1535,29 @@
 
   )
 
+(defn utils/no-ext
+  [file-path]
+  (when file-path
+    (when-let [rev (string/reverse file-path)
+               dot (string/find "." rev)]
+      (string/reverse (string/slice rev (inc dot))))))
+
+(comment
+
+  (utils/no-ext "fun.janet")
+  # => "fun"
+
+  (utils/no-ext "/etc/man_db.conf")
+  # => "/etc/man_db"
+
+  (utils/no-ext "test/judge-gen.janet")
+  # => "test/judge-gen"
+
+  )
+
 (defn jg-runner/make-judges
   [src-root judge-root]
   (def subdirs @[])
-  (defn no-ext
-    [file-path]
-    (when file-path
-      (when-let [rev (string/reverse file-path)
-                 dot (string/find "." rev)]
-        (string/reverse (string/slice rev (inc dot))))))
   (defn helper
     [src-root subdirs judge-root]
     (each path (os/dir src-root)
@@ -1558,7 +1572,7 @@
         :file
         (when (string/has-suffix? ".janet" fpath)
           (def judge-file-name
-            (string (no-ext path) ".judge"))
+            (string (utils/no-ext path) ".judge"))
           (unless (jg/handle-one
                     {:input fpath
                      :output (path/join judge-root
@@ -1578,14 +1592,14 @@
                "src" "judge-gen"))
 
   (def judge-root
-    (path/join proj-root ".judge"))
+    (path/join proj-root ".judge_judge-gen"))
 
   (def src-root
     (path/join proj-root "judge-gen"))
 
   (os/mkdir judge-root)
 
-  (jg-runner/make-judges src-root judge-root true)
+  (jg-runner/make-judges src-root judge-root)
 
   )
 
@@ -1616,12 +1630,13 @@
         :results-full-path results-full-path} opts)
   (when (dyn :debug)
     (eprintf "command: %p" command))
-  (let [err-path
+  (let [jf-rel-no-ext (utils/no-ext jf-rel-path)
+        err-path
         (path/join results-dir
-                   (string "stderr-" count "-" jf-rel-path ".txt"))
+                   (string "stderr-" count "-" jf-rel-no-ext ".txt"))
         out-path
         (path/join results-dir
-                   (string "stdout-" count "-" jf-rel-path ".txt"))]
+                   (string "stdout-" count "-" jf-rel-no-ext ".txt"))]
     (try
       (with [ef (file/open err-path :w)]
         (with [of (file/open out-path :w)]
@@ -1672,7 +1687,8 @@
 
 (defn jg-runner/ensure-results-full-path
   [results-dir fname i]
-  (let [fpath (path/join results-dir (string i "-" fname))]
+  (let [fpath (path/join results-dir
+                         (string i "-" (utils/no-ext fname) ".jimage"))]
     # note: create-dirs expects a path ending in a filename
     (jpm/create-dirs fpath)
     (unless (os/stat results-dir)
@@ -1873,7 +1889,7 @@
   (def src-root
     (path/join proj-root "judge-gen"))
 
-  (jg-runner/handle-one {:judge-dir-name ".judge"
+  (jg-runner/handle-one {:judge-dir-name ".judge_judge-gen"
                          :proj-root proj-root
                          :src-root src-root})
 
@@ -1882,20 +1898,6 @@
 # from the perspective of `jpm test`
 (def proj-root
   (path/abspath "."))
-
-(defn no-ext
-  [file-path]
-  (when file-path
-    (when-let [rev (string/reverse file-path)
-               dot (string/find "." rev)]
-      (string/reverse (string/slice rev (inc dot))))))
-
-(comment
-
-  (no-ext "test/judge-gen.janet")
-  # => "test/judge-gen"
-
-  )
 
 (defn base-no-ext
   [file-path]
@@ -1928,7 +1930,7 @@
   [runner-path]
   (assert (string/has-prefix? "test/" runner-path)
           (string "path must start with `test/`: " runner-path))
-  (let [path-no-ext (no-ext runner-path)]
+  (let [path-no-ext (utils/no-ext runner-path)]
     (assert (and path-no-ext
                  (not= path-no-ext ""))
             (string "failed to deduce name for: "
