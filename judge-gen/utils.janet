@@ -40,3 +40,23 @@
   # => true
 
   )
+
+(defn utils/no-ext
+  [file-path]
+  (when file-path
+    (when-let [rev (string/reverse file-path)
+               dot (string/find "." rev)]
+      (string/reverse (string/slice rev (inc dot))))))
+
+(comment
+
+  (utils/no-ext "fun.janet")
+  # => "fun"
+
+  (utils/no-ext "/etc/man_db.conf")
+  # => "/etc/man_db"
+
+  (utils/no-ext "test/judge-gen.janet")
+  # => "test/judge-gen"
+
+  )

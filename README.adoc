@@ -39,7 +39,18 @@ See link:doc/tips.adoc[Usage / Test Writing Tips] for more details.
 
 * Once some setup steps are followed, tests can be run by: `jpm test`
 
-== Setup
+== Example Setup
+
+Suppose there's a project directory like:
+
+----
+.
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+└── test
+    └── test.janet
+----
 
 0. Decide on a name for the directory to hold comment block tests,
    e.g. `examples`.
@@ -50,6 +61,20 @@ See link:doc/tips.adoc[Usage / Test Writing Tips] for more details.
    root directory named `examples` to house comment block tests.
 4. If the `examples` directory doesn't have at least one file with a comment
    block test in it, do something about that :)
+
+Now it should look something like:
+
+----
+.
+├── examples
+│   └── nice-samples.janet
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+└── test
+    ├── examples.janet
+    └── test.janet
+----
 
 See link:doc/details.adoc[Details] for additional information regarding the
 various files and directories.

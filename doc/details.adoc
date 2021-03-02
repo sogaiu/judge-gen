@@ -22,6 +22,24 @@
 
 == Concrete Example
 
+----
+.
+├── .judge_examples
+│   ├── .1614677691-ef1494cce926da6b-judge-gen
+│   │   ├── 0-grammar.jimage
+│   │   ├── stderr-0-grammar.txt
+│   │   └── stdout-0-grammar.txt
+│   ├── grammar.janet
+│   └── grammar.judge
+├── examples
+│   └── grammar.janet
+├── my-src-dir
+│   └── fun.janet
+├── project.janet
+└── test
+    └── examples.janet
+----
+
 Suppose there is a runner script `test/examples.janet`.
 
 Since the name of the runner script is `examples.janet`, the directory
@@ -32,8 +50,8 @@ example name is `grammar.janet`.
 
 Since the runner script lives directly under `test` and its name is
 `examples.janet`, the directory that contains the generated tests is
-named `.judge_examples`.  All of the files from `examples` should end
-up in `.judge_examples`.  Additionally, generated test files with file
+named `.judge_examples`.  All of the files from `examples` get copied
+to `.judge_examples`.  Generated test files which have the file
 extension `.judge` are found here too.  An example name for a
 generated test file is `grammar.judge`.
 
@@ -44,15 +62,13 @@ example is `.1614677691-ef1494cce926da6b-judge-gen`.
 
 * Test results have a name like `<n>-<filename>.judge` where `<n>` is
   a number and `<filename>` is obtained from a source file's name.  An
-  example is `0-grammar.judge`.
+  example is `0-grammar.jimage`.
 
 * A test output file containing stdout output has a name like
-  `stdout-<n>-<filename>.judge.txt`.  An example is
-  `stdout-0-grammar.judge.txt`.
+  `stdout-<n>-<filename>.txt`.  An example is `stdout-0-grammar.txt`.
 
 * A test output file containing stderr output has a name like
-  `stderr-<n>-<filename>.judge.txt`.  An example is
-  `stderr-0-grammar.judge.txt`.
+  `stderr-<n>-<filename>.txt`.  An example is `stderr-0-grammar.txt`.
 
 == Discussion
 

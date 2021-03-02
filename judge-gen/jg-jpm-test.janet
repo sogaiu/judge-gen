@@ -1,23 +1,10 @@
 (import ./jg-runner :prefix "")
 (import ./path :prefix "")
+(import ./utils :prefix "")
 
 # from the perspective of `jpm test`
 (def proj-root
   (path/abspath "."))
-
-(defn no-ext
-  [file-path]
-  (when file-path
-    (when-let [rev (string/reverse file-path)
-               dot (string/find "." rev)]
-      (string/reverse (string/slice rev (inc dot))))))
-
-(comment
-
-  (no-ext "test/judge-gen.janet")
-  # => "test/judge-gen"
-
-  )
 
 (defn base-no-ext
   [file-path]
@@ -50,7 +37,7 @@
   [runner-path]
   (assert (string/has-prefix? "test/" runner-path)
           (string "path must start with `test/`: " runner-path))
-  (let [path-no-ext (no-ext runner-path)]
+  (let [path-no-ext (utils/no-ext runner-path)]
     (assert (and path-no-ext
                  (not= path-no-ext ""))
             (string "failed to deduce name for: "
