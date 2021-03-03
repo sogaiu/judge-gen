@@ -6,27 +6,12 @@
 (def proj-root
   (path/abspath "."))
 
-(defn base-no-ext
-  [file-path]
-  (when file-path
-    (when-let [base (path/basename file-path)
-               rev (string/reverse base)
-               dot (string/find "." rev)]
-      (string/reverse (string/slice rev (inc dot))))))
-
-(comment
-
-  (base-no-ext "test/judge-gen.janet")
-  # => "judge-gen"
-
-  )
-
 (defn deduce-src-root
   []
   (let [current-file (dyn :current-file)]
     (assert current-file
             ":current-file is nil")
-    (let [cand-name (base-no-ext current-file)]
+    (let [cand-name (utils/no-ext (path/basename current-file))]
       (assert (and cand-name
                    (not= cand-name ""))
               (string "failed to deduce name for: "
