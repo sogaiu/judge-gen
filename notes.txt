@@ -45,8 +45,10 @@
 #     files and directories as well as generated tests, and results + output
 #   however, the unnecessary creation of new names increase clutter,
 #   time-to-comprehension, etc.  in this case we might choose to use
-#   the argument names of `jg-runner/make-judges`.  it might make sense
+#   the argument names of `judges/make-judges`.  it might make sense
 #   to change those names to make them more suitable for disucssion.
+#   atm they are `src-root` and `judge-root` (full-path versions).
+#   the name portion of `judge-root` is referred to as `judge-dir-name`.
 #
 # * document one or more cases that show the problem of not choosing
 #   a direct subdirectory as a source for generating tests?
@@ -137,7 +139,7 @@
 #     * use `(error {...})` to pass info back "up" to eventually have
 #       the info used in an appropriate message
 #     * compare with idea:
-#       * in jg/handle_one, instead of `(break false)`, perhaps different
+#       * in generate/handle_one, instead of `(break false)`, perhaps different
 #         values could be returned to indicate different types of errors
 #
 # * try to "finish" judge-gen and not add anything as much as possible
@@ -166,7 +168,7 @@
 #           (def a 1)
 #           # => 1
 #
-#        ought to work as input to jg's transformation process.
+#        ought to work as input to generate's transformation process.
 #      * a mode of operation to apply runner to a single file
 #      * consider different reporting modes.  concrete examples:
 #        * for earliest / quickest feedback, have _verify output info as soon
