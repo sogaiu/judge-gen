@@ -482,7 +482,7 @@
   # => @[]
 
  )
-(defn validate/valid-bytes?
+(defn validate/valid-code?
   [form-bytes]
   (let [p (parser/new)
         p-len (parser/consume p form-bytes)]
@@ -495,16 +495,16 @@
 
 (comment
 
-  (validate/valid-bytes? "true")
+  (validate/valid-code? "true")
   # => true
 
-  (validate/valid-bytes? "(")
+  (validate/valid-code? "(")
   # => false
 
-  (validate/valid-bytes? "()")
+  (validate/valid-code? "()")
   # => true
 
-  (validate/valid-bytes? "(]")
+  (validate/valid-code? "(]")
   # => false
 
   )
@@ -549,7 +549,7 @@
                    ,|(if (zero? pegs/in-comment)
                        (let [ev-form (string/trim $1)
                              line $0]
-                         (assert (validate/valid-bytes? ev-form)
+                         (assert (validate/valid-code? ev-form)
                                  {:ev-form ev-form
                                   :line line})
                          # record expected value form and line
@@ -697,10 +697,10 @@
 )
 
 # recognize next top-level form, returning a map
-# modify a copy of janet
+# modify a copy of grammar/janet
 (def pegs/top-level
   (->
-    # janet* from grammar are structs, need something mutable
+    # grammar/janet is a struct, need something mutable
     (table ;(kvs grammar/janet))
     # also record location and type information, instead of just recognizing
     (put :main ~(choice (cmt (sequence
@@ -833,6 +833,7 @@
 
   )
 
+# XXX: not quite right, but good enough?
 (def pegs/comment-block-maybe
   ~(sequence (any :s)
              "("
@@ -935,7 +936,7 @@
 
   ``)
 
-(defn rewrite/has-tests
+(defn rewrite/has-tests?
   [forms]
   (when forms
     (some |(tuple? $)
@@ -943,10 +944,10 @@
 
 (comment
 
-  (rewrite/has-tests @["(+ 1 1)\n  " [:returns "2" 1]])
+  (rewrite/has-tests? @["(+ 1 1)\n  " [:returns "2" 1]])
   # => true
 
-  (rewrite/has-tests @["(comment \"2\")\n  "])
+  (rewrite/has-tests? @["(comment \"2\")\n  "])
   # => nil
 
   )
@@ -961,7 +962,7 @@
                  (pegs/parse-comment-block blk-str)
                  ([err]
                    (error (merge err {:offset offset}))))]
-    (when (rewrite/has-tests parsed)
+    (when (rewrite/has-tests? parsed)
       (var just-saw-ev false)
       (each cmt-or-frm parsed
         (when (not= cmt-or-frm "")
@@ -1119,7 +1120,7 @@
 
   )
 
-(defn segments/parse-buffer
+(defn segments/parse
   [buf]
   (var segments @[])
   (var from 0)
@@ -1156,7 +1157,7 @@
     ``)
 
   (deep=
-    (segments/parse-buffer code-buf)
+    (segments/parse code-buf)
     #
     @[{:value "    (def a 1)\n\n    "
        :s-line 1
@@ -1233,12 +1234,12 @@
     (eprint "Failed to read input for: " input)
     (break false))
   # light sanity check
-  (when (not (validate/valid-bytes? buf))
+  (when (not (validate/valid-code? buf))
     (eprint)
     (eprint "Failed to parse input as valid Janet code: " input)
     (break false))
   # slice the code up into segments
-  (def segments (segments/parse-buffer buf))
+  (def segments (segments/parse buf))
   (when (not segments)
     (eprint)
     (eprint "Failed to find segments: " input)
@@ -1298,7 +1299,7 @@
         res (utils/rand-string len)]
     (truthy? (and (= (length res) (* 2 len))
                   # only uses hex
-                  (all |(peg/find '(range "09" "af" "AF")
+                  (all |(peg/find '(range "09" "af" "AF") # :h
                                   (string/from-bytes $))
                        res))))
   # => true
@@ -1517,7 +1518,7 @@
     (++ count))
   results)
 
-(defn summary/summarize
+(defn summary/report
   [results]
   (when (empty? results)
     (eprint "No test results")
@@ -1587,7 +1588,7 @@
 
 (comment
 
-  (summary/summarize @{})
+  (summary/report @{})
   # => true
 
   (def results
@@ -1601,7 +1602,7 @@
 
   (let [buf @""]
     (with-dyns [:out buf]
-      (summary/summarize @{"1-main.jimage" results}))
+      (summary/report @{"1-main.jimage" results}))
     (string/has-prefix? "\nNo tests failed." buf))
   # => true
 
@@ -1649,7 +1650,7 @@
       (display/print-dashes)
       # summarize results
       (def all-passed
-        (summary/summarize results))
+        (summary/report results))
       (print)
       # XXX: if detecting that being run via `jpm test` is possible,
       #      may be can show following only when run from `jpm test`
