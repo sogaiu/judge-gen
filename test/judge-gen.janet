@@ -1,3 +1,12 @@
+# judge-gen
+
+# includes various portions of (or inspiration from) bakpakin's:
+#
+# * helper.janet
+# * jpm
+# * path.janet
+# * peg for janet
+
 ### path.janet
 ###
 ### A library for path manipulation.
