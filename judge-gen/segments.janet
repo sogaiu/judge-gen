@@ -1,6 +1,6 @@
 (import ./pegs :prefix "")
 
-(defn segments/parse-buffer
+(defn segments/parse
   [buf]
   (var segments @[])
   (var from 0)
@@ -37,7 +37,7 @@
     ``)
 
   (deep=
-    (segments/parse-buffer code-buf)
+    (segments/parse code-buf)
     #
     @[{:value "    (def a 1)\n\n    "
        :s-line 1

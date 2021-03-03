@@ -14,12 +14,12 @@
     (eprint "Failed to read input for: " input)
     (break false))
   # light sanity check
-  (when (not (validate/valid-bytes? buf))
+  (when (not (validate/valid-code? buf))
     (eprint)
     (eprint "Failed to parse input as valid Janet code: " input)
     (break false))
   # slice the code up into segments
-  (def segments (segments/parse-buffer buf))
+  (def segments (segments/parse buf))
   (when (not segments)
     (eprint)
     (eprint "Failed to find segments: " input)

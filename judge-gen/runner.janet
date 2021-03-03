@@ -46,7 +46,7 @@
       (display/print-dashes)
       # summarize results
       (def all-passed
-        (summary/summarize results))
+        (summary/report results))
       (print)
       # XXX: if detecting that being run via `jpm test` is possible,
       #      may be can show following only when run from `jpm test`

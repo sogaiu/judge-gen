@@ -1,7 +1,7 @@
 (import ./path :prefix "")
 (import ./display :prefix "")
 
-(defn summary/summarize
+(defn summary/report
   [results]
   (when (empty? results)
     (eprint "No test results")
@@ -71,7 +71,7 @@
 
 (comment
 
-  (summary/summarize @{})
+  (summary/report @{})
   # => true
 
   (def results
@@ -85,7 +85,7 @@
 
   (let [buf @""]
     (with-dyns [:out buf]
-      (summary/summarize @{"1-main.jimage" results}))
+      (summary/report @{"1-main.jimage" results}))
     (string/has-prefix? "\nNo tests failed." buf))
   # => true
 

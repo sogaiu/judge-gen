@@ -41,7 +41,7 @@
                    ,|(if (zero? pegs/in-comment)
                        (let [ev-form (string/trim $1)
                              line $0]
-                         (assert (validate/valid-bytes? ev-form)
+                         (assert (validate/valid-code? ev-form)
                                  {:ev-form ev-form
                                   :line line})
                          # record expected value form and line
@@ -189,10 +189,10 @@
 )
 
 # recognize next top-level form, returning a map
-# modify a copy of janet
+# modify a copy of grammar/janet
 (def pegs/top-level
   (->
-    # janet* from grammar are structs, need something mutable
+    # grammar/janet is a struct, need something mutable
     (table ;(kvs grammar/janet))
     # also record location and type information, instead of just recognizing
     (put :main ~(choice (cmt (sequence
@@ -325,6 +325,7 @@
 
   )
 
+# XXX: not quite right, but good enough?
 (def pegs/comment-block-maybe
   ~(sequence (any :s)
              "("

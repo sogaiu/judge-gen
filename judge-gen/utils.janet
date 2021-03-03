@@ -10,7 +10,7 @@
         res (utils/rand-string len)]
     (truthy? (and (= (length res) (* 2 len))
                   # only uses hex
-                  (all |(peg/find '(range "09" "af" "AF")
+                  (all |(peg/find '(range "09" "af" "AF") # :h
                                   (string/from-bytes $))
                        res))))
   # => true

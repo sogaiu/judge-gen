@@ -1,4 +1,4 @@
-(defn validate/valid-bytes?
+(defn validate/valid-code?
   [form-bytes]
   (let [p (parser/new)
         p-len (parser/consume p form-bytes)]
@@ -11,16 +11,16 @@
 
 (comment
 
-  (validate/valid-bytes? "true")
+  (validate/valid-code? "true")
   # => true
 
-  (validate/valid-bytes? "(")
+  (validate/valid-code? "(")
   # => false
 
-  (validate/valid-bytes? "()")
+  (validate/valid-code? "()")
   # => true
 
-  (validate/valid-bytes? "(]")
+  (validate/valid-code? "(]")
   # => false
 
   )

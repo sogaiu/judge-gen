@@ -69,7 +69,7 @@
 
   ``)
 
-(defn rewrite/has-tests
+(defn rewrite/has-tests?
   [forms]
   (when forms
     (some |(tuple? $)
@@ -77,10 +77,10 @@
 
 (comment
 
-  (rewrite/has-tests @["(+ 1 1)\n  " [:returns "2" 1]])
+  (rewrite/has-tests? @["(+ 1 1)\n  " [:returns "2" 1]])
   # => true
 
-  (rewrite/has-tests @["(comment \"2\")\n  "])
+  (rewrite/has-tests? @["(comment \"2\")\n  "])
   # => nil
 
   )
@@ -95,7 +95,7 @@
                  (pegs/parse-comment-block blk-str)
                  ([err]
                    (error (merge err {:offset offset}))))]
-    (when (rewrite/has-tests parsed)
+    (when (rewrite/has-tests? parsed)
       (var just-saw-ev false)
       (each cmt-or-frm parsed
         (when (not= cmt-or-frm "")
