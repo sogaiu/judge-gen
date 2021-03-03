@@ -32,12 +32,21 @@
 
 # POSSIBILITIES:
 #
+# * make a version of judge-gen that forces a particular subdirectory
+#   name, e.g. `usages`.  this might provide a simpler starting point.
+#
+# * fun logo or blurb?
+#
 # * not having names for some things is turning out to be awkward.
-#   * come up with a name for the directory used as a source of info
-#     to generate tests (contains source)
-#   * come up with a name for the generated directory that contains
-#     a copy of the source files and directories as well as generated
-#     tests, and results + output
+#   specifically for:
+#   * name of the directory used as a source of info to generate tests
+#     (contains source)
+#   * name of the generated directory that contains a copy of the source
+#     files and directories as well as generated tests, and results + output
+#   however, the unnecessary creation of new names increase clutter,
+#   time-to-comprehension, etc.  in this case we might choose to use
+#   the argument names of `jg-runner/make-judges`.  it might make sense
+#   to change those names to make them more suitable for disucssion.
 #
 # * document one or more cases that show the problem of not choosing
 #   a direct subdirectory as a source for generating tests?
@@ -54,8 +63,7 @@
 #   are some ways it is involved in code:
 #   * when the runner executes a test file, it is set
 #   * _verify/dump-results checks it to decide how to outut results
-#   * it is checked in `jg-jpm-test.janet` to decide whether to execute
-#     the runner
+#   * it is checked in `main.janet` to decide whether to execute the runner
 #   is it possible to use an environment variable (or multiple) appropriately
 #   instead of a dynamic variable?
 #
