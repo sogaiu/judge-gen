@@ -62,7 +62,7 @@
       (eprint "Runner stopped")
       nil)))
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   (def proj-root

@@ -32,7 +32,7 @@
   #
   (helper src-root subdirs judge-root))
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   (def proj-root
@@ -113,7 +113,6 @@
 
 (defn judges/make-results-dir-path
   [judge-root]
-  # XXX: what about windows...
   (path/join judge-root
              (string "." (os/time) "-"
                      (utils/rand-string 8) "-"

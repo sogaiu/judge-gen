@@ -197,7 +197,7 @@
   (string rewrite/verify-as-string
           (string/join forms "")))
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   # XXX: expected values are all large here -- not testing

@@ -1,4 +1,4 @@
-# XXX: useful bits from jpm
+# some bits from jpm
 
 ### Copyright 2019 © Calvin Rose
 

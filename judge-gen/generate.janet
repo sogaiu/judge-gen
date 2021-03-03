@@ -53,7 +53,7 @@
     (print buf))
   true)
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   (def file-path "./generate.janet")
