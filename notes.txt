@@ -5,7 +5,8 @@
 # * standalone repository of examples for another project
 # * standalone repository of tests for some project -- idea of not
 #   including tests in one's project, but rather have them be in a dedicated
-#   project for testing
+#   project for testing.
+#   * might be good from a license perspective (tests have a different license)
 
 # LIMITS:
 #
