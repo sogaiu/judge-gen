@@ -1,3 +1,315 @@
+### path.janet
+###
+### A library for path manipulation.
+###
+### Copyright 2019 © Calvin Rose
+
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+#
+# Common
+#
+
+(def- path/ext-peg
+  (peg/compile ~{:back (> -1 (+ (* ($) (set "\\/.")) :back))
+                 :main :back}))
+
+(defn path/ext
+  "Get the file extension for a path."
+  [path]
+  (if-let [m (peg/match path/ext-peg path (length path))]
+    (let [i (m 0)]
+      (if (= (path i) 46)
+        (string/slice path (m 0) -1)))))
+
+(defn- path/redef
+  "Redef a value, keeping all metadata."
+  [from to]
+  (setdyn (symbol to) (dyn (symbol from))))
+
+#
+# Generating Macros
+#
+
+(defmacro- path/decl-sep [pre sep] ~(def ,(symbol pre "/sep") ,sep))
+(defmacro- path/decl-delim [pre d] ~(def ,(symbol pre "/delim") ,d))
+
+(defmacro- path/decl-last-sep
+  [pre sep]
+  ~(def- ,(symbol pre "/last-sep-peg")
+    (peg/compile '{:back (> -1 (+ (* ,sep ($)) :back))
+                   :main (+ :back (constant 0))})))
+
+(defmacro- path/decl-dirname
+  [pre]
+  ~(defn ,(symbol pre "/dirname")
+     "Gets the directory name of a path."
+     [path]
+     (if-let [m (peg/match
+                  ,(symbol pre "/last-sep-peg")
+                  path
+                  (length path))]
+       (let [[p] m]
+         (if (zero? p) "./" (string/slice path 0 p)))
+       path)))
+
+(defmacro- path/decl-basename
+  [pre]
+  ~(defn ,(symbol pre "/basename")
+     "Gets the base file name of a path."
+     [path]
+     (if-let [m (peg/match
+                  ,(symbol pre "/last-sep-peg")
+                  path
+                  (length path))]
+       (let [[p] m]
+         (string/slice path p -1))
+       path)))
+
+(defmacro- path/decl-parts
+  [pre sep]
+  ~(defn ,(symbol pre "/parts")
+     "Split a path into its parts."
+     [path]
+     (string/split ,sep path)))
+
+(defmacro- path/decl-normalize
+  [pre sep sep-pattern lead]
+  (defn capture-lead
+    [& xs]
+    [:lead (xs 0)])
+  (def grammar
+    ~{:span (some (if-not ,sep-pattern 1))
+      :sep (some ,sep-pattern)
+      :main (* (? (* (replace ',lead ,capture-lead) (any ,sep-pattern)))
+               (? ':span)
+               (any (* :sep ':span))
+               (? (* :sep (constant ""))))})
+  (def peg (peg/compile grammar))
+  ~(defn ,(symbol pre "/normalize")
+     "Normalize a path. This removes . and .. in the
+     path, as well as empty path elements."
+     [path]
+     (def accum @[])
+     (def parts (peg/match ,peg path))
+     (var seen 0)
+     (var lead nil)
+     (each x parts
+       (match x
+         [:lead what] (set lead what)
+         "." nil
+         ".." (if (= 0 seen)
+                (array/push accum x)
+                (do (-- seen) (array/pop accum)))
+         (do (++ seen) (array/push accum x))))
+     (def ret (string (or lead "") (string/join accum ,sep)))
+     (if (= "" ret) "." ret)))
+
+(defmacro- path/decl-join
+  [pre sep]
+  ~(defn ,(symbol pre "/join")
+     "Join path elements together."
+     [& els]
+     (,(symbol pre "/normalize") (string/join els ,sep))))
+
+(defmacro- path/decl-abspath
+  [pre]
+  ~(defn ,(symbol pre "/abspath")
+     "Coerce a path to be absolute."
+     [path]
+     (if (,(symbol pre "/abspath?") path)
+       (,(symbol pre "/normalize") path)
+       (,(symbol pre "/join") (or (dyn :path-cwd) (os/cwd)) path))))
+
+#
+# Posix
+#
+
+(defn path/posix/abspath?
+  "Check if a path is absolute."
+  [path]
+  (string/has-prefix? "/" path))
+
+(path/redef "path/ext" "path/posix/ext")
+(path/decl-sep "path/posix" "/")
+(path/decl-delim "path/posix" ":")
+(path/decl-last-sep "path/posix" "/")
+(path/decl-basename "path/posix")
+(path/decl-dirname "path/posix")
+(path/decl-parts "path/posix" "/")
+(path/decl-normalize "path/posix" "/" "/" "/")
+(path/decl-join "path/posix" "/")
+(path/decl-abspath "path/posix")
+
+#
+# Windows
+#
+
+(def- path/abs-pat '(* (? (* (range "AZ" "az") `:`)) `\`))
+(def- path/abs-peg (peg/compile path/abs-pat))
+(defn path/win32/abspath?
+  "Check if a path is absolute."
+  [path]
+  (not (not (peg/match path/abs-peg path))))
+
+(path/redef "path/ext" "path/win32/ext")
+(path/decl-sep "path/win32" "\\")
+(path/decl-delim "path/win32" ";")
+(path/decl-last-sep "path/win32" "\\")
+(path/decl-basename "path/win32")
+(path/decl-dirname "path/win32")
+(path/decl-parts "path/win32" "\\")
+(path/decl-normalize "path/win32" `\` (set `\/`) (* (? (* (range "AZ" "az") `:`)) `\`))
+(path/decl-join "path/win32" "\\")
+(path/decl-abspath "path/win32")
+
+#
+# Satisfy linter
+#
+
+(defn path/sep [pre sep] nil)
+(defn path/delim [pre d] nil)
+(defn path/dirname [pre] nil)
+(defn path/basename [pre] nil)
+(defn path/parts [pre sep] nil)
+(defn path/normalize [pre sep sep-pattern lead] nil)
+(defn path/join [pre sep] nil)
+(defn path/abspath [pre] nil)
+(defn path/abspath? [path] nil)
+
+#
+# Specialize for current OS
+#
+
+(def- path/syms
+  ["ext"
+   "sep"
+   "delim"
+   "basename"
+   "dirname"
+   "abspath?"
+   "abspath"
+   "parts"
+   "normalize"
+   "join"])
+(let [pre (if (= :windows (os/which)) "path/win32" "path/posix")]
+  (each sym path/syms
+    (path/redef (string pre "/" sym) (string "path/" sym))))
+
+(defn display/print-color
+  [msg color]
+  (let [color-num (match color
+                    :black 30
+                    :blue 34
+                    :cyan 36
+                    :green 32
+                    :magenta 35
+                    :red 31
+                    :white 37
+                    :yellow 33)]
+    (prin (string "\e[" color-num "m"
+                  msg
+                  "\e[0m"))))
+
+(defn display/dashes
+  [&opt n]
+  (default n 60)
+  (string/repeat "-" n))
+
+(defn display/print-dashes
+  [&opt n]
+  (print (display/dashes n)))
+# XXX: useful bits from jpm
+
+### Copyright 2019 © Calvin Rose
+
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+(def- jpm/is-win (= (os/which) :windows))
+(def- jpm/is-mac (= (os/which) :macos))
+(def- jpm/sep (if jpm/is-win "\\" "/"))
+
+(defn jpm/rm
+  "Remove a directory and all sub directories."
+  [path]
+  (case (os/lstat path :mode)
+    :directory (do
+      (each subpath (os/dir path)
+        (jpm/rm (string path jpm/sep subpath)))
+      (os/rmdir path))
+    nil nil # do nothing if file does not exist
+    # Default, try to remove
+    (os/rm path)))
+
+(def- jpm/path-splitter
+  "split paths on / and \\."
+  (peg/compile ~(any (* '(any (if-not (set `\/`) 1)) (+ (set `\/`) -1)))))
+
+(defn jpm/shell
+  "Do a shell command"
+  [& args]
+  (if (dyn :verbose)
+    (print ;(interpose " " args)))
+  (os/execute args :px))
+
+(defn jpm/copy
+  "Copy a file or directory recursively from one location to another."
+  [src dest]
+  (print "copying " src " to " dest "...")
+  (if jpm/is-win
+    (let [end (last (peg/match jpm/path-splitter src))
+          isdir (= (os/stat src :mode) :directory)]
+      (jpm/shell "C:\\Windows\\System32\\xcopy.exe"
+                 (string/replace "/" "\\" src)
+                 (string/replace "/" "\\" (if isdir (string dest "\\" end) dest))
+                 "/y" "/s" "/e" "/i"))
+    (jpm/shell "cp" "-rf" src dest)))
+
+(defn jpm/pslurp
+  [cmd]
+  (string/trim (with [f (file/popen cmd)]
+                     (:read f :all))))
+
+(defn jpm/create-dirs
+  "Create all directories needed for a file (mkdir -p)."
+  [dest]
+  (def segs (peg/match jpm/path-splitter dest))
+  (for i 1 (length segs)
+    (def path (string/join (slice segs 0 i) jpm/sep))
+    (unless (empty? path) (os/mkdir path))))
+
 (defn input/slurp-input
   [input]
   (var f nil)
@@ -22,7 +334,7 @@
 #   https://janet-lang.org/docs/syntax.html
 
 # approximation of janet's grammar
-(def grammar/jg
+(def grammar/janet
   ~{:main :root
     #
     :root (any :root0)
@@ -128,277 +440,48 @@
 (comment
 
   (try
-    (peg/match grammar/jg "\"\\u001\"")
+    (peg/match grammar/janet "\"\\u001\"")
     ([e] e))
   # => "bad escape"
 
-  (peg/match grammar/jg "\"\\u0001\"")
+  (peg/match grammar/janet "\"\\u0001\"")
   # => @[]
 
-  (peg/match grammar/jg "(def a 1)")
+  (peg/match grammar/janet "(def a 1)")
   # => @[]
 
   (try
-    (peg/match grammar/jg "[:a :b)")
+    (peg/match grammar/janet "[:a :b)")
     ([e] e))
   # => "match error at line 1, column 7"
 
-  (peg/match grammar/jg "(def a # hi\n 1)")
+  (peg/match grammar/janet "(def a # hi\n 1)")
   # => @[]
 
   (try
-    (peg/match grammar/jg "(def a # hi 1)")
+    (peg/match grammar/janet "(def a # hi 1)")
     ([e] e))
   # => "match error at line 1, column 15"
 
-  (peg/match grammar/jg "[1]")
+  (peg/match grammar/janet "[1]")
   # => @[]
 
-  (peg/match grammar/jg "# hello")
+  (peg/match grammar/janet "# hello")
   # => @[]
 
-  (peg/match grammar/jg "``hello``")
+  (peg/match grammar/janet "``hello``")
   # => @[]
 
-  (peg/match grammar/jg "8")
+  (peg/match grammar/janet "8")
   # => @[]
 
-  (peg/match grammar/jg "[:a :b]")
+  (peg/match grammar/janet "[:a :b]")
   # => @[]
 
-  (peg/match grammar/jg "[:a :b] 1")
+  (peg/match grammar/janet "[:a :b] 1")
   # => @[]
 
  )
-
-# make a version of jg that matches a single form
-(def grammar/jg-one
-  (->
-   # jg is a struct, need something mutable
-   (table ;(kvs grammar/jg))
-   # just recognize one form
-   (put :main :root0)
-   # tried using a table with a peg but had a problem, so use a struct
-   table/to-struct))
-
-(comment
-
-  (try
-    (peg/match grammar/jg-one "\"\\u001\"")
-    ([e] e))
-  # => "bad escape"
-
-  (peg/match grammar/jg-one "\"\\u0001\"")
-  # => @[]
-
-  (peg/match grammar/jg-one "(def a 1)")
-  # => @[]
-
-  (try
-    (peg/match grammar/jg-one "[:a :b)")
-    ([e] e))
-  # => "match error at line 1, column 7"
-
-  (peg/match grammar/jg-one "(def a # hi\n 1)")
-  # => @[]
-
-  (try
-    (peg/match grammar/jg-one "(def a # hi 1)")
-    ([e] e))
-  # => "match error at line 1, column 15"
-
-  (peg/match grammar/jg-one "[1]")
-  # => @[]
-
-  (peg/match grammar/jg-one "# hello")
-  # => @[]
-
-  (peg/match grammar/jg-one "``hello``")
-  # => @[]
-
-  (peg/match grammar/jg-one "8")
-  # => @[]
-
-  (peg/match grammar/jg-one "[:a :b]")
-  # => @[]
-
-  (peg/match grammar/jg-one "[:a :b] 1")
-  # => @[]
-
- )
-
-# make a capturing version of jg
-(def grammar/jg-capture
-  (->
-   # jg is a struct, need something mutable
-   (table ;(kvs grammar/jg))
-   # capture recognized bits
-   (put :main '(capture :root))
-   # tried using a table with a peg but had a problem, so use a struct
-   table/to-struct))
-
-(comment
-
-  (peg/match grammar/jg-capture "nil")
-  # => @["nil"]
-
-  (peg/match grammar/jg-capture "true")
-  # => @["true"]
-
-  (peg/match grammar/jg-capture "false")
-  # => @["false"]
-
-  (peg/match grammar/jg-capture "symbol")
-  # => @["symbol"]
-
-  (peg/match grammar/jg-capture "kebab-case-symbol")
-  # => @["kebab-case-symbol"]
-
-  (peg/match grammar/jg-capture "snake_case_symbol")
-  # => @["snake_case_symbol"]
-
-  (peg/match grammar/jg-capture "my-module/my-function")
-  # => @["my-module/my-function"]
-
-  (peg/match grammar/jg-capture "*****")
-  # => @["*****"]
-
-  (peg/match grammar/jg-capture "!%$^*__--__._+++===~-crazy-symbol")
-  # => @["!%$^*__--__._+++===~-crazy-symbol"]
-
-  (peg/match grammar/jg-capture "*global-var*")
-  # => @["*global-var*"]
-
-  (peg/match grammar/jg-capture "你好")
-  # => @["\xE4\xBD\xA0\xE5\xA5\xBD"]
-
-  (peg/match grammar/jg-capture ":keyword")
-  # => @[":keyword"]
-
-  (peg/match grammar/jg-capture ":range")
-  # => @[":range"]
-
-  (peg/match grammar/jg-capture ":0x0x0x0")
-  # => @[":0x0x0x0"]
-
-  (peg/match grammar/jg-capture ":a-keyword")
-  # => @[":a-keyword"]
-
-  (peg/match grammar/jg-capture "::")
-  # => @["::"]
-
-  (peg/match grammar/jg-capture ":")
-  # => @[":"]
-
-  (peg/match grammar/jg-capture "0")
-  # => @["0"]
-
-  (peg/match grammar/jg-capture "12")
-  # => @["12"]
-
-  (peg/match grammar/jg-capture "-65912")
-  # => @["-65912"]
-
-  (peg/match grammar/jg-capture "1.3e18")
-  # => @["1.3e18"]
-
-  (peg/match grammar/jg-capture "-1.3e18")
-  # => @["-1.3e18"]
-
-  (peg/match grammar/jg-capture "18r123C")
-  # => @["18r123C"]
-
-  (peg/match grammar/jg-capture "11raaa&a")
-  # => @["11raaa&a"]
-
-  (peg/match grammar/jg-capture "1_000_000")
-  # => @["1_000_000"]
-
-  (peg/match grammar/jg-capture "0xbeef")
-  # => @["0xbeef"]
-
-  (try
-    (peg/match grammar/jg-capture "\"\\u001\"")
-    ([e] e))
-  # => "bad escape"
-
-  (peg/match grammar/jg-capture "\"\\u0001\"")
-  # => @["\"\\u0001\""]
-
-  (peg/match grammar/jg-capture "\"\\U000008\"")
-  # => @["\"\\U000008\""]
-
-  (peg/match grammar/jg-capture "(def a 1)")
-  # => @["(def a 1)"]
-
-  (try
-    (peg/match grammar/jg-capture "[:a :b)")
-    ([e] e))
-  # => "match error at line 1, column 7"
-
-  (peg/match grammar/jg-capture "(def a # hi\n 1)")
-  # => @["(def a # hi\n 1)"]
-
-  (try
-    (peg/match grammar/jg-capture "(def a # hi 1)")
-    ([e] e))
-  # => "match error at line 1, column 15"
-
-  (peg/match grammar/jg-capture "[1]")
-  # => @["[1]"]
-
-  (peg/match grammar/jg-capture "# hello")
-  # => @["# hello"]
-
-  (peg/match grammar/jg-capture "``hello``")
-  # => @["``hello``"]
-
-  (peg/match grammar/jg-capture "8")
-  # => @["8"]
-
-  (peg/match grammar/jg-capture "[:a :b]")
-  # => @["[:a :b]"]
-
-  (peg/match grammar/jg-capture "[:a :b] 1")
-  # => @["[:a :b] 1"]
-
-  (def sample-source
-    (string "# \"my test\"\n"
-            "(+ 1 1)\n"
-            "# => 2\n"))
-
-  (peg/match grammar/jg-capture sample-source)
-  # => @["# \"my test\"\n(+ 1 1)\n# => 2\n"]
-
-  )
-
-# make a version of jg that captures a single form
-(def grammar/jg-capture-one
-  (->
-   # jg is a struct, need something mutable
-   (table ;(kvs grammar/jg))
-   # capture just one form
-   (put :main '(capture :root0))
-   # tried using a table with a peg but had a problem, so use a struct
-   table/to-struct))
-
-(comment
-
-  (def sample-source
-    (string "# \"my test\"\n"
-            "(+ 1 1)\n"
-            "# => 2\n"))
-
-  (peg/match grammar/jg-capture-one sample-source)
-  # => @["# \"my test\"\n"]
-
-  (peg/match grammar/jg-capture-one sample-source 11)
-  # => @["\n(+ 1 1)\n"]
-
-  (peg/match grammar/jg-capture-one sample-source 20)
-  # => @["# => 2\n"]
-
-  )
 (defn validate/valid-bytes?
   [form-bytes]
   (let [p (parser/new)
@@ -429,10 +512,10 @@
 # XXX: any way to avoid this?
 (var- pegs/in-comment 0)
 
-(def- pegs/jg-comments
+(def- pegs/comment-analyzer
   (->
-    # jg* from grammar are structs, need something mutable
-    (table ;(kvs grammar/jg))
+    # grammar/janet is a struct, need something mutable
+    (table ;(kvs grammar/janet))
     (put :main '(choice (capture :value)
                         :comment))
     #
@@ -487,7 +570,7 @@
              (any :s)
              "comment"
              (any :s)
-             (any (choice :s ,pegs/jg-comments))
+             (any (choice :s ,pegs/comment-analyzer))
              (any :s)
              ")"))
 
@@ -614,11 +697,11 @@
 )
 
 # recognize next top-level form, returning a map
-# modify a copy of jg
-(def pegs/jg-pos
+# modify a copy of janet
+(def pegs/top-level
   (->
-    # jg* from grammar are structs, need something mutable
-    (table ;(kvs grammar/jg))
+    # janet* from grammar are structs, need something mutable
+    (table ;(kvs grammar/janet))
     # also record location and type information, instead of just recognizing
     (put :main ~(choice (cmt (sequence
                                (line)
@@ -652,7 +735,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos sample-source 0)
+    (peg/match pegs/top-level sample-source 0)
     #
     @[{:type :comment
        :value "# \"my test\"\n"
@@ -661,7 +744,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos sample-source 12)
+    (peg/match pegs/top-level sample-source 12)
     #
     @[{:type :value
        :value "(+ 1 1)\n"
@@ -673,7 +756,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos sample-source 20)
+    (peg/match pegs/top-level sample-source 20)
     #
     @[{:type :comment
        :value "# => 2\n"
@@ -709,7 +792,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample)
+    (peg/match pegs/top-level top-level-comments-sample)
     #
     @[{:type :value
        :value "(def a 1)\n\n"
@@ -719,7 +802,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample 11)
+    (peg/match pegs/top-level top-level-comments-sample 11)
     #
     @[{:type :value
        :value
@@ -730,7 +813,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample 66)
+    (peg/match pegs/top-level top-level-comments-sample 66)
     #
     @[{:type :value
        :value "(def x 0)\n\n"
@@ -740,7 +823,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample 77)
+    (peg/match pegs/top-level top-level-comments-sample 77)
     #
     @[{:type :value
        :value "(comment\n\n  (= a (+ x 1))\n\n)"
@@ -1040,7 +1123,7 @@
   [buf]
   (var segments @[])
   (var from 0)
-  (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
+  (loop [parsed :iterate (peg/match pegs/top-level buf from)]
     (when (dyn :debug)
       (eprintf "parsed: %j" parsed))
     (when (not parsed)
@@ -1139,7 +1222,7 @@
 
   )
 
-(defn jg/handle-one
+(defn generate/handle-one
   [opts]
   (def {:input input
         :output output} opts)
@@ -1192,330 +1275,17 @@
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
-  (def file-path "./jg.janet")
+  (def file-path "./generate.janet")
 
   # output to stdout
-  (jg/handle-one {:input file-path
-                  :output ""})
+  (generate/handle-one {:input file-path
+                        :output ""})
 
   # output to file
-  (jg/handle-one {:input file-path
-                  :output "/tmp/judge-gen-test-output.txt"})
+  (generate/handle-one {:input file-path
+                        :output "/tmp/judge-gen-test-output.txt"})
 
   )
-# XXX: useful bits from jpm
-
-### Copyright 2019 © Calvin Rose
-
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-(def- jpm/is-win (= (os/which) :windows))
-(def- jpm/is-mac (= (os/which) :macos))
-(def- jpm/sep (if jpm/is-win "\\" "/"))
-
-(defn jpm/rm
-  "Remove a directory and all sub directories."
-  [path]
-  (case (os/lstat path :mode)
-    :directory (do
-      (each subpath (os/dir path)
-        (jpm/rm (string path jpm/sep subpath)))
-      (os/rmdir path))
-    nil nil # do nothing if file does not exist
-    # Default, try to remove
-    (os/rm path)))
-
-(def- jpm/path-splitter
-  "split paths on / and \\."
-  (peg/compile ~(any (* '(any (if-not (set `\/`) 1)) (+ (set `\/`) -1)))))
-
-(defn jpm/shell
-  "Do a shell command"
-  [& args]
-  (if (dyn :verbose)
-    (print ;(interpose " " args)))
-  (os/execute args :px))
-
-(defn jpm/copy
-  "Copy a file or directory recursively from one location to another."
-  [src dest]
-  (print "copying " src " to " dest "...")
-  (if jpm/is-win
-    (let [end (last (peg/match jpm/path-splitter src))
-          isdir (= (os/stat src :mode) :directory)]
-      (jpm/shell "C:\\Windows\\System32\\xcopy.exe"
-                 (string/replace "/" "\\" src)
-                 (string/replace "/" "\\" (if isdir (string dest "\\" end) dest))
-                 "/y" "/s" "/e" "/i"))
-    (jpm/shell "cp" "-rf" src dest)))
-
-(defn jpm/pslurp
-  [cmd]
-  (string/trim (with [f (file/popen cmd)]
-                     (:read f :all))))
-
-(defn jpm/create-dirs
-  "Create all directories needed for a file (mkdir -p)."
-  [dest]
-  (def segs (peg/match jpm/path-splitter dest))
-  (for i 1 (length segs)
-    (def path (string/join (slice segs 0 i) jpm/sep))
-    (unless (empty? path) (os/mkdir path))))
-
-### path.janet
-###
-### A library for path manipulation.
-###
-### Copyright 2019 © Calvin Rose
-
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-
-#
-# Common
-#
-
-(def- path/ext-peg
-  (peg/compile ~{:back (> -1 (+ (* ($) (set "\\/.")) :back))
-                 :main :back}))
-
-(defn path/ext
-  "Get the file extension for a path."
-  [path]
-  (if-let [m (peg/match path/ext-peg path (length path))]
-    (let [i (m 0)]
-      (if (= (path i) 46)
-        (string/slice path (m 0) -1)))))
-
-(defn- path/redef
-  "Redef a value, keeping all metadata."
-  [from to]
-  (setdyn (symbol to) (dyn (symbol from))))
-
-#
-# Generating Macros
-#
-
-(defmacro- path/decl-sep [pre sep] ~(def ,(symbol pre "/sep") ,sep))
-(defmacro- path/decl-delim [pre d] ~(def ,(symbol pre "/delim") ,d))
-
-(defmacro- path/decl-last-sep
-  [pre sep]
-  ~(def- ,(symbol pre "/last-sep-peg")
-    (peg/compile '{:back (> -1 (+ (* ,sep ($)) :back))
-                   :main (+ :back (constant 0))})))
-
-(defmacro- path/decl-dirname
-  [pre]
-  ~(defn ,(symbol pre "/dirname")
-     "Gets the directory name of a path."
-     [path]
-     (if-let [m (peg/match
-                  ,(symbol pre "/last-sep-peg")
-                  path
-                  (length path))]
-       (let [[p] m]
-         (if (zero? p) "./" (string/slice path 0 p)))
-       path)))
-
-(defmacro- path/decl-basename
-  [pre]
-  ~(defn ,(symbol pre "/basename")
-     "Gets the base file name of a path."
-     [path]
-     (if-let [m (peg/match
-                  ,(symbol pre "/last-sep-peg")
-                  path
-                  (length path))]
-       (let [[p] m]
-         (string/slice path p -1))
-       path)))
-
-(defmacro- path/decl-parts
-  [pre sep]
-  ~(defn ,(symbol pre "/parts")
-     "Split a path into its parts."
-     [path]
-     (string/split ,sep path)))
-
-(defmacro- path/decl-normalize
-  [pre sep sep-pattern lead]
-  (defn capture-lead
-    [& xs]
-    [:lead (xs 0)])
-  (def grammar
-    ~{:span (some (if-not ,sep-pattern 1))
-      :sep (some ,sep-pattern)
-      :main (* (? (* (replace ',lead ,capture-lead) (any ,sep-pattern)))
-               (? ':span)
-               (any (* :sep ':span))
-               (? (* :sep (constant ""))))})
-  (def peg (peg/compile grammar))
-  ~(defn ,(symbol pre "/normalize")
-     "Normalize a path. This removes . and .. in the
-     path, as well as empty path elements."
-     [path]
-     (def accum @[])
-     (def parts (peg/match ,peg path))
-     (var seen 0)
-     (var lead nil)
-     (each x parts
-       (match x
-         [:lead what] (set lead what)
-         "." nil
-         ".." (if (= 0 seen)
-                (array/push accum x)
-                (do (-- seen) (array/pop accum)))
-         (do (++ seen) (array/push accum x))))
-     (def ret (string (or lead "") (string/join accum ,sep)))
-     (if (= "" ret) "." ret)))
-
-(defmacro- path/decl-join
-  [pre sep]
-  ~(defn ,(symbol pre "/join")
-     "Join path elements together."
-     [& els]
-     (,(symbol pre "/normalize") (string/join els ,sep))))
-
-(defmacro- path/decl-abspath
-  [pre]
-  ~(defn ,(symbol pre "/abspath")
-     "Coerce a path to be absolute."
-     [path]
-     (if (,(symbol pre "/abspath?") path)
-       (,(symbol pre "/normalize") path)
-       (,(symbol pre "/join") (or (dyn :path-cwd) (os/cwd)) path))))
-
-#
-# Posix
-#
-
-(defn path/posix/abspath?
-  "Check if a path is absolute."
-  [path]
-  (string/has-prefix? "/" path))
-
-(path/redef "path/ext" "path/posix/ext")
-(path/decl-sep "path/posix" "/")
-(path/decl-delim "path/posix" ":")
-(path/decl-last-sep "path/posix" "/")
-(path/decl-basename "path/posix")
-(path/decl-dirname "path/posix")
-(path/decl-parts "path/posix" "/")
-(path/decl-normalize "path/posix" "/" "/" "/")
-(path/decl-join "path/posix" "/")
-(path/decl-abspath "path/posix")
-
-#
-# Windows
-#
-
-(def- path/abs-pat '(* (? (* (range "AZ" "az") `:`)) `\`))
-(def- path/abs-peg (peg/compile path/abs-pat))
-(defn path/win32/abspath?
-  "Check if a path is absolute."
-  [path]
-  (not (not (peg/match path/abs-peg path))))
-
-(path/redef "path/ext" "path/win32/ext")
-(path/decl-sep "path/win32" "\\")
-(path/decl-delim "path/win32" ";")
-(path/decl-last-sep "path/win32" "\\")
-(path/decl-basename "path/win32")
-(path/decl-dirname "path/win32")
-(path/decl-parts "path/win32" "\\")
-(path/decl-normalize "path/win32" `\` (set `\/`) (* (? (* (range "AZ" "az") `:`)) `\`))
-(path/decl-join "path/win32" "\\")
-(path/decl-abspath "path/win32")
-
-#
-# Satisfy linter
-#
-
-(defn path/sep [pre sep] nil)
-(defn path/delim [pre d] nil)
-(defn path/dirname [pre] nil)
-(defn path/basename [pre] nil)
-(defn path/parts [pre sep] nil)
-(defn path/normalize [pre sep sep-pattern lead] nil)
-(defn path/join [pre sep] nil)
-(defn path/abspath [pre] nil)
-(defn path/abspath? [path] nil)
-
-#
-# Specialize for current OS
-#
-
-(def- path/syms
-  ["ext"
-   "sep"
-   "delim"
-   "basename"
-   "dirname"
-   "abspath?"
-   "abspath"
-   "parts"
-   "normalize"
-   "join"])
-(let [pre (if (= :windows (os/which)) "path/win32" "path/posix")]
-  (each sym path/syms
-    (path/redef (string pre "/" sym) (string "path/" sym))))
-
-(defn utils/print-color
-  [msg color]
-  (let [color-num (match color
-                    :black 30
-                    :blue 34
-                    :cyan 36
-                    :green 32
-                    :magenta 35
-                    :red 31
-                    :white 37
-                    :yellow 33)]
-    (prin (string "\e[" color-num "m"
-                  msg
-                  "\e[0m"))))
-
-(defn utils/dashes
-  [&opt n]
-  (default n 60)
-  (string/repeat "-" n))
-
-(defn utils/print-dashes
-  [&opt n]
-  (print (utils/dashes n)))
-
 (defn utils/rand-string
   [n]
   (->> (os/cryptorand n)
@@ -1555,98 +1325,7 @@
 
   )
 
-(defn summary/summarize
-  [results]
-  (when (empty? results)
-    (eprint "No test results")
-    (break true))
-  (var total-tests 0)
-  (var total-passed 0)
-  (def failures @{})
-  (eachp [fpath test-results] results
-    (def name (path/basename fpath))
-    (when test-results
-      (var passed 0)
-      (var num-tests (length test-results))
-      (var fails @[])
-      (each test-result test-results
-        (++ total-tests)
-        (def {:passed test-passed} test-result)
-        (if test-passed
-          (do
-            (++ passed)
-            (++ total-passed))
-          (array/push fails test-result)))
-      (when (not (empty? fails))
-        (put failures fpath fails))))
-  (when (pos? (length failures))
-    (print))
-  (eachp [fpath failed-tests] failures
-    (print fpath)
-    (each fail failed-tests
-      (def {:test-value test-value
-            :expected-value expected-value
-            :name test-name
-            :passed test-passed
-            :test-form test-form} fail)
-      (print)
-      (utils/print-color (string "  failed: " test-name) :red)
-      (print)
-      (printf "    form: %M" test-form)
-      (prin "expected")
-      # XXX: this could use some work...
-      (if (< 30 (length (describe expected-value)))
-        (print ":")
-        (prin ": "))
-      (printf "%m" expected-value)
-      (prin "  actual")
-      # XXX: this could use some work...
-      (if (< 30 (length (describe test-value)))
-        (print ":")
-        (prin ": "))
-      (utils/print-color (string/format "%m" test-value) :blue)
-      (print)))
-  (when (zero? (length failures))
-    (print)
-    (print "No tests failed."))
-  (print)
-  (utils/print-dashes)
-  (when (= 0 total-tests)
-    (print "No tests found, so no judgements made.")
-    (break true))
-  (if (not= total-passed total-tests)
-    (utils/print-color total-passed :red)
-    (utils/print-color total-passed :green))
-  (prin " of ")
-  (utils/print-color total-tests :green)
-  (print " passed")
-  (utils/print-dashes)
-  (= total-passed total-tests))
-
-(comment
-
-  (summary/summarize @{})
-  # => true
-
-  (def results
-    '@[{:expected-value "judge-gen"
-        :passed true
-        :name "line-20"
-        :test-form (base-no-ext "test/judge-gen.janet")
-        :type :is
-        :expected-form "judge-gen"
-        :test-value "judge-gen"}])
-
-  (let [buf @""]
-    (with-dyns [:out buf]
-      (summary/summarize @{"1-jg-jpm-test.jimage" results}))
-    (string/has-prefix? "\nNo tests failed." buf))
-  # => true
-
-  )
-
-
-(defn jg-runner/make-judges
+(defn judges/make-judges
   [src-root judge-root]
   (def subdirs @[])
   (defn helper
@@ -1664,7 +1343,7 @@
         (when (string/has-suffix? ".janet" fpath)
           (def judge-file-name
             (string (utils/no-ext path) ".judge"))
-          (unless (jg/handle-one
+          (unless (generate/handle-one
                     {:input fpath
                      :output (path/join judge-root
                                         ;subdirs
@@ -1690,11 +1369,11 @@
 
   (os/mkdir judge-root)
 
-  (jg-runner/make-judges src-root judge-root)
+  (judges/make-judges src-root judge-root)
 
   )
 
-(defn jg-runner/find-judge-files
+(defn judges/find-judge-files
   [dir]
   (def file-paths @[])
   (defn helper
@@ -1712,7 +1391,7 @@
   #
   (helper dir file-paths))
 
-(defn jg-runner/execute-command
+(defn judges/execute-command
   [opts]
   (def {:command command
         :count count
@@ -1754,7 +1433,7 @@
                results-full-path)
       (error nil))))
 
-(defn jg-runner/make-results-dir-path
+(defn judges/make-results-dir-path
   [judge-root]
   # XXX: what about windows...
   (path/join judge-root
@@ -1771,12 +1450,12 @@
                         (some :h)
                         "-"
                         "judge-gen")
-    (jg-runner/make-results-dir-path ""))
+    (judges/make-results-dir-path ""))
   # => @[]
 
   )
 
-(defn jg-runner/ensure-results-full-path
+(defn judges/ensure-results-full-path
   [results-dir fname i]
   (let [fpath (path/join results-dir
                          (string i "-" (utils/no-ext fname) ".jimage"))]
@@ -1787,18 +1466,18 @@
       (error nil))
     fpath))
 
-(defn jg-runner/judge
+(defn judges/judge-all
   [judge-root]
   (def results @{})
   (def file-paths
-    (sort (jg-runner/find-judge-files judge-root)))
+    (sort (judges/find-judge-files judge-root)))
   (var count 0)
-  (def results-dir (jg-runner/make-results-dir-path judge-root))
+  (def results-dir (judges/make-results-dir-path judge-root))
   #
   (each [jf-full-path jf-rel-path] file-paths
     (print "  " jf-rel-path)
     (def results-full-path
-      (jg-runner/ensure-results-full-path results-dir jf-rel-path count))
+      (judges/ensure-results-full-path results-dir jf-rel-path count))
     (when (dyn :debug)
       (eprintf "results path: %s" results-full-path))
     # backticks below for cross platform compatibility
@@ -1813,7 +1492,7 @@
       (eprintf "command: %p" command))
     (def results-for-path
       (try
-        (jg-runner/execute-command
+        (judges/execute-command
           {:command command
            :count count
            :judge-file-rel-path jf-rel-path
@@ -1838,7 +1517,98 @@
     (++ count))
   results)
 
-(defn jg-runner/handle-one
+(defn summary/summarize
+  [results]
+  (when (empty? results)
+    (eprint "No test results")
+    (break true))
+  (var total-tests 0)
+  (var total-passed 0)
+  (def failures @{})
+  (eachp [fpath test-results] results
+    (def name (path/basename fpath))
+    (when test-results
+      (var passed 0)
+      (var num-tests (length test-results))
+      (var fails @[])
+      (each test-result test-results
+        (++ total-tests)
+        (def {:passed test-passed} test-result)
+        (if test-passed
+          (do
+            (++ passed)
+            (++ total-passed))
+          (array/push fails test-result)))
+      (when (not (empty? fails))
+        (put failures fpath fails))))
+  (when (pos? (length failures))
+    (print))
+  (eachp [fpath failed-tests] failures
+    (print fpath)
+    (each fail failed-tests
+      (def {:test-value test-value
+            :expected-value expected-value
+            :name test-name
+            :passed test-passed
+            :test-form test-form} fail)
+      (print)
+      (display/print-color (string "  failed: " test-name) :red)
+      (print)
+      (printf "    form: %M" test-form)
+      (prin "expected")
+      # XXX: this could use some work...
+      (if (< 30 (length (describe expected-value)))
+        (print ":")
+        (prin ": "))
+      (printf "%m" expected-value)
+      (prin "  actual")
+      # XXX: this could use some work...
+      (if (< 30 (length (describe test-value)))
+        (print ":")
+        (prin ": "))
+      (display/print-color (string/format "%m" test-value) :blue)
+      (print)))
+  (when (zero? (length failures))
+    (print)
+    (print "No tests failed."))
+  (print)
+  (display/print-dashes)
+  (when (= 0 total-tests)
+    (print "No tests found, so no judgements made.")
+    (break true))
+  (if (not= total-passed total-tests)
+    (display/print-color total-passed :red)
+    (display/print-color total-passed :green))
+  (prin " of ")
+  (display/print-color total-tests :green)
+  (print " passed")
+  (display/print-dashes)
+  (= total-passed total-tests))
+
+(comment
+
+  (summary/summarize @{})
+  # => true
+
+  (def results
+    '@[{:expected-value "judge-gen"
+        :passed true
+        :name "line-20"
+        :test-form (base-no-ext "test/judge-gen.janet")
+        :type :is
+        :expected-form "judge-gen"
+        :test-value "judge-gen"}])
+
+  (let [buf @""]
+    (with-dyns [:out buf]
+      (summary/summarize @{"1-main.jimage" results}))
+    (string/has-prefix? "\nNo tests failed." buf))
+  # => true
+
+  )
+
+
+(defn runner/handle-one
   [opts]
   (def {:judge-dir-name judge-dir-name
         :proj-root proj-root
@@ -1847,11 +1617,11 @@
     (path/join proj-root judge-dir-name))
   (try
     (do
-      (utils/print-dashes)
+      (display/print-dashes)
       (print)
       (print "judge-gen is starting...")
       (print)
-      (utils/print-dashes)
+      (display/print-dashes)
       # remove old judge directory
       (prin "Cleaning out: " judge-root " ... ")
       (jpm/rm judge-root)
@@ -1870,13 +1640,13 @@
       # create judge files
       (prin "Creating tests files... ")
       (flush)
-      (jg-runner/make-judges src-root judge-root)
+      (judges/make-judges src-root judge-root)
       (print "done")
       # judge
       (print "Judging...")
       (def results
-        (jg-runner/judge judge-root))
-      (utils/print-dashes)
+        (judges/judge-all judge-root))
+      (display/print-dashes)
       # summarize results
       (def all-passed
         (summary/summarize results))
@@ -1885,7 +1655,7 @@
       #      may be can show following only when run from `jpm test`
       (print "judge-gen is done, later output may be from `jpm test`")
       (print)
-      (utils/print-dashes)
+      (display/print-dashes)
       all-passed)
     #
     ([err]
@@ -1905,9 +1675,9 @@
   (def src-root
     (path/join proj-root "judge-gen"))
 
-  (jg-runner/handle-one {:judge-dir-name ".judge_judge-gen"
-                         :proj-root proj-root
-                         :src-root src-root})
+  (runner/handle-one {:judge-dir-name ".judge_judge-gen"
+                      :proj-root proj-root
+                      :src-root src-root})
 
   )
 
@@ -1973,7 +1743,7 @@
 # XXX: hack to prevent from running when testing
 (when (nil? (dyn :judge-gen/test-out))
   (let [all-passed
-        (jg-runner/handle-one
+        (runner/handle-one
           {:judge-dir-name (deduce-judge-dir-name)
            :proj-root proj-root
            :src-root (deduce-src-root)})]
