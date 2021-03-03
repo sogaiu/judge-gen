@@ -1700,7 +1700,7 @@
 
 (defn suffix-for-judge-dir-name
   [runner-path]
-  (assert (string/has-prefix? "test/" runner-path)
+  (assert (string/has-prefix? (path/join "test" path/sep) runner-path)
           (string "path must start with `test/`: " runner-path))
   (let [path-no-ext (utils/no-ext runner-path)]
     (assert (and path-no-ext
