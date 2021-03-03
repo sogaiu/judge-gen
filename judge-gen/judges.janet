@@ -1,10 +1,9 @@
-(import ./jg :prefix "")
+(import ./generate :prefix "")
 (import ./jpm :prefix "")
 (import ./path :prefix "")
-(import ./summary :prefix "")
 (import ./utils :prefix "")
 
-(defn jg-runner/make-judges
+(defn judges/make-judges
   [src-root judge-root]
   (def subdirs @[])
   (defn helper
@@ -22,7 +21,7 @@
         (when (string/has-suffix? ".janet" fpath)
           (def judge-file-name
             (string (utils/no-ext path) ".judge"))
-          (unless (jg/handle-one
+          (unless (generate/handle-one
                     {:input fpath
                      :output (path/join judge-root
                                         ;subdirs
@@ -48,11 +47,11 @@
 
   (os/mkdir judge-root)
 
-  (jg-runner/make-judges src-root judge-root)
+  (judges/make-judges src-root judge-root)
 
   )
 
-(defn jg-runner/find-judge-files
+(defn judges/find-judge-files
   [dir]
   (def file-paths @[])
   (defn helper
@@ -70,7 +69,7 @@
   #
   (helper dir file-paths))
 
-(defn jg-runner/execute-command
+(defn judges/execute-command
   [opts]
   (def {:command command
         :count count
@@ -112,7 +111,7 @@
                results-full-path)
       (error nil))))
 
-(defn jg-runner/make-results-dir-path
+(defn judges/make-results-dir-path
   [judge-root]
   # XXX: what about windows...
   (path/join judge-root
@@ -129,12 +128,12 @@
                         (some :h)
                         "-"
                         "judge-gen")
-    (jg-runner/make-results-dir-path ""))
+    (judges/make-results-dir-path ""))
   # => @[]
 
   )
 
-(defn jg-runner/ensure-results-full-path
+(defn judges/ensure-results-full-path
   [results-dir fname i]
   (let [fpath (path/join results-dir
                          (string i "-" (utils/no-ext fname) ".jimage"))]
@@ -145,18 +144,18 @@
       (error nil))
     fpath))
 
-(defn jg-runner/judge
+(defn judges/judge-all
   [judge-root]
   (def results @{})
   (def file-paths
-    (sort (jg-runner/find-judge-files judge-root)))
+    (sort (judges/find-judge-files judge-root)))
   (var count 0)
-  (def results-dir (jg-runner/make-results-dir-path judge-root))
+  (def results-dir (judges/make-results-dir-path judge-root))
   #
   (each [jf-full-path jf-rel-path] file-paths
     (print "  " jf-rel-path)
     (def results-full-path
-      (jg-runner/ensure-results-full-path results-dir jf-rel-path count))
+      (judges/ensure-results-full-path results-dir jf-rel-path count))
     (when (dyn :debug)
       (eprintf "results path: %s" results-full-path))
     # backticks below for cross platform compatibility
@@ -171,7 +170,7 @@
       (eprintf "command: %p" command))
     (def results-for-path
       (try
-        (jg-runner/execute-command
+        (judges/execute-command
           {:command command
            :count count
            :judge-file-rel-path jf-rel-path
@@ -195,76 +194,3 @@
          jf-full-path results-for-path)
     (++ count))
   results)
-
-(defn jg-runner/handle-one
-  [opts]
-  (def {:judge-dir-name judge-dir-name
-        :proj-root proj-root
-        :src-root src-root} opts)
-  (def judge-root
-    (path/join proj-root judge-dir-name))
-  (try
-    (do
-      (utils/print-dashes)
-      (print)
-      (print "judge-gen is starting...")
-      (print)
-      (utils/print-dashes)
-      # remove old judge directory
-      (prin "Cleaning out: " judge-root " ... ")
-      (jpm/rm judge-root)
-      # make a fresh judge directory
-      (os/mkdir judge-root)
-      (print "done")
-      # copy source files
-      (prin "Copying source files... ")
-      # shhhhh
-      (with-dyns [:out @""]
-        # each item copied separately for platform consistency
-        (each item (os/dir src-root)
-          (def full-path (path/join src-root item))
-          (jpm/copy full-path judge-root)))
-      (print "done")
-      # create judge files
-      (prin "Creating tests files... ")
-      (flush)
-      (jg-runner/make-judges src-root judge-root)
-      (print "done")
-      # judge
-      (print "Judging...")
-      (def results
-        (jg-runner/judge judge-root))
-      (utils/print-dashes)
-      # summarize results
-      (def all-passed
-        (summary/summarize results))
-      (print)
-      # XXX: if detecting that being run via `jpm test` is possible,
-      #      may be can show following only when run from `jpm test`
-      (print "judge-gen is done, later output may be from `jpm test`")
-      (print)
-      (utils/print-dashes)
-      all-passed)
-    #
-    ([err]
-      (when err
-        (eprint "Unexpected error:\n")
-        (eprintf "\n%p" err))
-      (eprint "Runner stopped")
-      nil)))
-
-# XXX: since there are no tests in this comment block, nothing will execute
-(comment
-
-  (def proj-root
-    (path/join (os/getenv "HOME")
-               "src" "judge-gen"))
-
-  (def src-root
-    (path/join proj-root "judge-gen"))
-
-  (jg-runner/handle-one {:judge-dir-name ".judge_judge-gen"
-                         :proj-root proj-root
-                         :src-root src-root})
-
-  )

@@ -4,7 +4,7 @@
   [buf]
   (var segments @[])
   (var from 0)
-  (loop [parsed :iterate (peg/match pegs/jg-pos buf from)]
+  (loop [parsed :iterate (peg/match pegs/top-level buf from)]
     (when (dyn :debug)
       (eprintf "parsed: %j" parsed))
     (when (not parsed)

@@ -1,5 +1,5 @@
 (import ./path :prefix "")
-(import ./utils :prefix "")
+(import ./display :prefix "")
 
 (defn summary/summarize
   [results]
@@ -36,7 +36,7 @@
             :passed test-passed
             :test-form test-form} fail)
       (print)
-      (utils/print-color (string "  failed: " test-name) :red)
+      (display/print-color (string "  failed: " test-name) :red)
       (print)
       (printf "    form: %M" test-form)
       (prin "expected")
@@ -50,23 +50,23 @@
       (if (< 30 (length (describe test-value)))
         (print ":")
         (prin ": "))
-      (utils/print-color (string/format "%m" test-value) :blue)
+      (display/print-color (string/format "%m" test-value) :blue)
       (print)))
   (when (zero? (length failures))
     (print)
     (print "No tests failed."))
   (print)
-  (utils/print-dashes)
+  (display/print-dashes)
   (when (= 0 total-tests)
     (print "No tests found, so no judgements made.")
     (break true))
   (if (not= total-passed total-tests)
-    (utils/print-color total-passed :red)
-    (utils/print-color total-passed :green))
+    (display/print-color total-passed :red)
+    (display/print-color total-passed :green))
   (prin " of ")
-  (utils/print-color total-tests :green)
+  (display/print-color total-tests :green)
   (print " passed")
-  (utils/print-dashes)
+  (display/print-dashes)
   (= total-passed total-tests))
 
 (comment
@@ -85,7 +85,7 @@
 
   (let [buf @""]
     (with-dyns [:out buf]
-      (summary/summarize @{"1-jg-jpm-test.jimage" results}))
+      (summary/summarize @{"1-main.jimage" results}))
     (string/has-prefix? "\nNo tests failed." buf))
   # => true
 

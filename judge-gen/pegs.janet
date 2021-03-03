@@ -4,10 +4,10 @@
 # XXX: any way to avoid this?
 (var- pegs/in-comment 0)
 
-(def- pegs/jg-comments
+(def- pegs/comment-analyzer
   (->
-    # jg* from grammar are structs, need something mutable
-    (table ;(kvs grammar/jg))
+    # grammar/janet is a struct, need something mutable
+    (table ;(kvs grammar/janet))
     (put :main '(choice (capture :value)
                         :comment))
     #
@@ -62,7 +62,7 @@
              (any :s)
              "comment"
              (any :s)
-             (any (choice :s ,pegs/jg-comments))
+             (any (choice :s ,pegs/comment-analyzer))
              (any :s)
              ")"))
 
@@ -189,11 +189,11 @@
 )
 
 # recognize next top-level form, returning a map
-# modify a copy of jg
-(def pegs/jg-pos
+# modify a copy of janet
+(def pegs/top-level
   (->
-    # jg* from grammar are structs, need something mutable
-    (table ;(kvs grammar/jg))
+    # janet* from grammar are structs, need something mutable
+    (table ;(kvs grammar/janet))
     # also record location and type information, instead of just recognizing
     (put :main ~(choice (cmt (sequence
                                (line)
@@ -227,7 +227,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos sample-source 0)
+    (peg/match pegs/top-level sample-source 0)
     #
     @[{:type :comment
        :value "# \"my test\"\n"
@@ -236,7 +236,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos sample-source 12)
+    (peg/match pegs/top-level sample-source 12)
     #
     @[{:type :value
        :value "(+ 1 1)\n"
@@ -248,7 +248,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos sample-source 20)
+    (peg/match pegs/top-level sample-source 20)
     #
     @[{:type :comment
        :value "# => 2\n"
@@ -284,7 +284,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample)
+    (peg/match pegs/top-level top-level-comments-sample)
     #
     @[{:type :value
        :value "(def a 1)\n\n"
@@ -294,7 +294,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample 11)
+    (peg/match pegs/top-level top-level-comments-sample 11)
     #
     @[{:type :value
        :value
@@ -305,7 +305,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample 66)
+    (peg/match pegs/top-level top-level-comments-sample 66)
     #
     @[{:type :value
        :value "(def x 0)\n\n"
@@ -315,7 +315,7 @@
 
   (deep=
     #
-    (peg/match pegs/jg-pos top-level-comments-sample 77)
+    (peg/match pegs/top-level top-level-comments-sample 77)
     #
     @[{:type :value
        :value "(comment\n\n  (= a (+ x 1))\n\n)"

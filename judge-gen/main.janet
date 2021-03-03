@@ -1,5 +1,5 @@
-(import ./jg-runner :prefix "")
 (import ./path :prefix "")
+(import ./runner :prefix "")
 (import ./utils :prefix "")
 
 # from the perspective of `jpm test`
@@ -64,7 +64,7 @@
 # XXX: hack to prevent from running when testing
 (when (nil? (dyn :judge-gen/test-out))
   (let [all-passed
-        (jg-runner/handle-one
+        (runner/handle-one
           {:judge-dir-name (deduce-judge-dir-name)
            :proj-root proj-root
            :src-root (deduce-src-root)})]

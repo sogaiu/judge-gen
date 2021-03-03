@@ -3,7 +3,7 @@
 (import ./segments :prefix "")
 (import ./validate :prefix "")
 
-(defn jg/handle-one
+(defn generate/handle-one
   [opts]
   (def {:input input
         :output output} opts)
@@ -56,14 +56,14 @@
 # XXX: since there are no tests in this comment block, nothing will execute
 (comment
 
-  (def file-path "./jg.janet")
+  (def file-path "./generate.janet")
 
   # output to stdout
-  (jg/handle-one {:input file-path
-                  :output ""})
+  (generate/handle-one {:input file-path
+                        :output ""})
 
   # output to file
-  (jg/handle-one {:input file-path
-                  :output "/tmp/judge-gen-test-output.txt"})
+  (generate/handle-one {:input file-path
+                        :output "/tmp/judge-gen-test-output.txt"})
 
   )

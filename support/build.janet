@@ -23,7 +23,7 @@
 
 # expressed relatitve to src-root
 (def start-path
-  "./jg-jpm-test.janet")
+  "./main.janet")
 
 # expressed relative to src-root
 (def out-path
