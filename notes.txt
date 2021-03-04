@@ -34,11 +34,6 @@
 
 # POSSIBILITIES:
 #
-# * make a version of judge-gen that forces a particular subdirectory
-#   name, e.g. `usages`.  this might provide a simpler starting point.
-#
-# * add auto-create of judge-root if doesn't exist?
-#
 # * fun logo or blurb?
 #
 # * not having names for some things is turning out to be awkward.
