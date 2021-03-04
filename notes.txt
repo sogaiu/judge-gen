@@ -7,6 +7,7 @@
 #   including tests in one's project, but rather have them be in a dedicated
 #   project for testing.
 #   * might be good from a license perspective (tests have a different license)
+# * Saikyun's tutorials idea
 
 # LIMITS:
 #
@@ -35,6 +36,8 @@
 #
 # * make a version of judge-gen that forces a particular subdirectory
 #   name, e.g. `usages`.  this might provide a simpler starting point.
+#
+# * add auto-create of judge-root if doesn't exist?
 #
 # * fun logo or blurb?
 #
