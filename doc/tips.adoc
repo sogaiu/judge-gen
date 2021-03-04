@@ -1,6 +1,22 @@
 = Usage / Test Writing Tips
 
-* Use `'()` or `[]` instead of `()` in some places to express return
+* As mentionined in the README, the basic form is:
++
+[source,janet]
+----
+(comment
+
+  (- 1 1)
+  # => 0
+
+)
+----
++
+Within a comment block, express a test as a pair of 1) a form and 2) an
+appropriate comment.  Thus, `(- 1 1)` is a form to be tested and `# => 0`
+expresses that `0` is the expected value.
+
+* Use `'()` or `[]` instead of `()` in some places when expressing expected
   values, e.g.
 +
 [source,janet]
@@ -21,8 +37,8 @@ not:
 # => (:hi 1)
 ----
 
-* More than one expression + expected value info pair can be placed in
-  a comment block.  For example, in the following:
+* More than one expression + expected value comment pair (comment block test)
+  can be placed in a comment block.  For example, for the following:
 +
 [source,janet]
 ----
@@ -39,8 +55,8 @@ not:
 +
 two tests will be created and executed.
 
-* It's also fine to put other forms in the comment block that don't
-  have expected value info appearing after them, all such forms will
+* It's also fine to put other forms in the comment block that don't have
+  expected value comments appearing after them, all such forms will
   be included in tests.  For example, in the following:
 +
 [source,janet]
