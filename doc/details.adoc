@@ -60,7 +60,7 @@ in `.judge_examples` that contains test results and output.  The name
 of this subdirectory is highly likely to be different each time.  An
 example is `.1614677691-ef1494cce926da6b-judge-gen`.
 
-* Test results have a name like `<n>-<filename>.judge` where `<n>` is
+* Test results have a name like `<n>-<filename>.jimage` where `<n>` is
   a number and `<filename>` is obtained from a source file's name.  An
   example is `0-grammar.jimage`.
 
