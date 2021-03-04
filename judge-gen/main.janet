@@ -57,10 +57,18 @@
 
 # XXX: hack to prevent from running when testing
 (when (nil? (dyn :judge-gen/test-out))
-  (let [all-passed
-        (runner/handle-one
-          {:judge-dir-name (deduce-judge-dir-name)
-           :proj-root proj-root
-           :src-root (deduce-src-root)})]
-    (when (not all-passed)
-      (os/exit 1))))
+  (let [src-root (deduce-src-root)
+        judge-dir-name (deduce-judge-dir-name)]
+    (def stat (os/stat src-root))
+    (unless stat
+      (eprint "src-root must exist: " src-root)
+      (os/exit 1))
+    (unless (= :directory (stat :mode))
+      (eprint "src-root must be a directory: " src-root)
+      (os/exit 1))
+    (let [all-passed (runner/handle-one
+                       {:judge-dir-name judge-dir-name
+                        :proj-root proj-root
+                        :src-root src-root})]
+      (when (not all-passed)
+        (os/exit 1)))))
