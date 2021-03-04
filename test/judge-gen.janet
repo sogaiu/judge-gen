@@ -244,7 +244,7 @@
 (defn display/print-dashes
   [&opt n]
   (print (display/dashes n)))
-# XXX: useful bits from jpm
+# some bits from jpm
 
 ### Copyright 2019 © Calvin Rose
 
@@ -1073,7 +1073,7 @@
   (string rewrite/verify-as-string
           (string/join forms "")))
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   # XXX: expected values are all large here -- not testing
@@ -1282,7 +1282,7 @@
     (print buf))
   true)
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   (def file-path "./generate.janet")
@@ -1364,7 +1364,7 @@
   #
   (helper src-root subdirs judge-root))
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   (def proj-root
@@ -1445,7 +1445,6 @@
 
 (defn judges/make-results-dir-path
   [judge-root]
-  # XXX: what about windows...
   (path/join judge-root
              (string "." (os/time) "-"
                      (utils/rand-string 8) "-"
@@ -1675,7 +1674,7 @@
       (eprint "Runner stopped")
       nil)))
 
-# XXX: since there are no tests in this comment block, nothing will execute
+# since there are no tests in this comment block, nothing will execute
 (comment
 
   (def proj-root
@@ -1737,10 +1736,18 @@
 
 # XXX: hack to prevent from running when testing
 (when (nil? (dyn :judge-gen/test-out))
-  (let [all-passed
-        (runner/handle-one
-          {:judge-dir-name (deduce-judge-dir-name)
-           :proj-root proj-root
-           :src-root (deduce-src-root)})]
-    (when (not all-passed)
-      (os/exit 1))))
+  (let [src-root (deduce-src-root)
+        judge-dir-name (deduce-judge-dir-name)]
+    (def stat (os/stat src-root))
+    (unless stat
+      (eprint "src-root must exist: " src-root)
+      (os/exit 1))
+    (unless (= :directory (stat :mode))
+      (eprint "src-root must be a directory: " src-root)
+      (os/exit 1))
+    (let [all-passed (runner/handle-one
+                       {:judge-dir-name judge-dir-name
+                        :proj-root proj-root
+                        :src-root src-root})]
+      (when (not all-passed)
+        (os/exit 1)))))
