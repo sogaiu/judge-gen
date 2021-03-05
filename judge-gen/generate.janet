@@ -1,4 +1,5 @@
 (import ./input :prefix "")
+(import ./name :prefix "")
 (import ./rewrite :prefix "")
 (import ./segments :prefix "")
 (import ./validate :prefix "")
@@ -64,6 +65,8 @@
 
   # output to file
   (generate/handle-one {:input file-path
-                        :output "/tmp/judge-gen-test-output.txt"})
+                        :output (string "/tmp/"
+                                        name/prog-name
+                                        "-test-output.txt")})
 
   )
