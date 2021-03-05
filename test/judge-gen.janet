@@ -339,6 +339,11 @@
     (set buf @"")
     (file/read f :all buf))
   buf)
+(def name/prog-name
+  "judge-gen")
+
+(def name/dot-dir-name
+  ".judge_judge-gen")
 # adapted from:
 #   https://janet-lang.org/docs/syntax.html
 
@@ -1293,7 +1298,9 @@
 
   # output to file
   (generate/handle-one {:input file-path
-                        :output "/tmp/judge-gen-test-output.txt"})
+                        :output (string "/tmp/"
+                                        name/prog-name
+                                        "-test-output.txt")})
 
   )
 (defn utils/rand-string
@@ -1329,9 +1336,6 @@
 
   (utils/no-ext "/etc/man_db.conf")
   # => "/etc/man_db"
-
-  (utils/no-ext "test/judge-gen.janet")
-  # => "test/judge-gen"
 
   )
 
@@ -1369,13 +1373,13 @@
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "judge-gen"))
+               "src" name/prog-name))
 
   (def judge-root
-    (path/join proj-root ".judge_judge-gen"))
+    (path/join proj-root name/dot-dir-name))
 
   (def src-root
-    (path/join proj-root "judge-gen"))
+    (path/join proj-root name/prog-name))
 
   (os/mkdir judge-root)
 
@@ -1600,17 +1604,38 @@
   # => true
 
   (def results
-    '@[{:expected-value "judge-gen"
+    '@[{:expected-value true
         :passed true
-        :name "line-20"
-        :test-form (base-no-ext "test/judge-gen.janet")
+        :name "line-6"
+        :test-form (validate/valid-code? "true")
         :type :is
-        :expected-form "judge-gen"
-        :test-value "judge-gen"}])
+        :expected-form true
+        :test-value true}
+       {:expected-value false
+        :passed true
+        :name "line-9"
+        :test-form (validate/valid-code? "(")
+        :type :is
+        :expected-form false
+        :test-value false}
+       {:expected-value true
+        :passed true
+        :name "line-12"
+        :test-form (validate/valid-code? "()")
+        :type :is
+        :expected-form true
+        :test-value true}
+       {:expected-value false
+        :passed true
+        :name "line-15"
+        :test-form (validate/valid-code? "(]")
+        :type :is
+        :expected-form false
+        :test-value false}])
 
   (let [buf @""]
     (with-dyns [:out buf]
-      (summary/report @{"1-main.jimage" results}))
+      (summary/report @{"validate.jimage" results}))
     (string/has-prefix? "\nNo tests failed." buf))
   # => true
 
@@ -1628,7 +1653,7 @@
     (do
       (display/print-dashes)
       (print)
-      (print "judge-gen is starting...")
+      (print (string name/prog-name " is starting..."))
       (print)
       (display/print-dashes)
       # remove old judge directory
@@ -1662,7 +1687,8 @@
       (print)
       # XXX: if detecting that being run via `jpm test` is possible,
       #      may be can show following only when run from `jpm test`
-      (print "judge-gen is done, later output may be from `jpm test`")
+      (print (string name/prog-name
+                     " is done, later output may be from `jpm test`"))
       (print)
       (display/print-dashes)
       all-passed)
@@ -1679,12 +1705,12 @@
 
   (def proj-root
     (path/join (os/getenv "HOME")
-               "src" "judge-gen"))
+               "src" name/prog-name))
 
   (def src-root
-    (path/join proj-root "judge-gen"))
+    (path/join proj-root name/prog-name))
 
-  (runner/handle-one {:judge-dir-name ".judge_judge-gen"
+  (runner/handle-one {:judge-dir-name name/dot-dir-name
                       :proj-root proj-root
                       :src-root src-root})
 
