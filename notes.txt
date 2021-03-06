@@ -34,10 +34,19 @@
 
 # POSSIBILITIES:
 #
+# * add license
+#
 # * fun logo or blurb?
 #
-# * not having names for some things is turning out to be awkward.
-#   specifically for:
+# * document rationale for not executing content of comment blocks
+#   that have no tests in them.  possibly the most important reason has
+#   to do with comment blocks that were expressed before the expected
+#   value comment idea was given the meaning that judge-gen gives it.
+#   unintentional side effects might occur by executing the content of
+#   such comment blocks.
+#
+# * not having names for some things is turning out to be awkward when
+#   communicating about certain aspects of judge-gen.  specifically for:
 #   * name of the directory used as a source of info to generate tests
 #     (contains source)
 #   * name of the generated directory that contains a copy of the source
@@ -46,8 +55,10 @@
 #   time-to-comprehension, etc.  in this case we might choose to use
 #   the argument names of `judges/make-judges`.  it might make sense
 #   to change those names to make them more suitable for disucssion.
-#   atm they are `src-root` and `judge-root` (full-path versions).
-#   the name portion of `judge-root` is referred to as `judge-dir-name`.
+#   atm they are `src-root` and `judge-root`.  the name portion of
+#   `judge-root` (directory name without other path portions) is referred
+#   to as `judge-dir-name`.  possibly `test-src-root` is better than
+#   `src-root`.
 #
 # * document one or more cases that show the problem of not choosing
 #   a direct subdirectory as a source for generating tests?
