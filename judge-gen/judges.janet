@@ -184,10 +184,8 @@
                      :err-path err-path} err]
                 (eprintf "Command failed:\n  %p" command)
                 (eprint "Potentially relevant paths:")
-                (eprintf "  %s" results-full-path)
-                (eprintf "  %s" out-path)
-                (eprintf "  %s" err-path)
-                (eprintf "  %s" jf-full-path))
+                (eprintf "  %s" jf-full-path)
+                (eprintf "  %s" err-path))
               (eprintf "Unknown error:\n %p" err)))
           (error nil))))
     (put results
