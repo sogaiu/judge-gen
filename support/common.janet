@@ -1,3 +1,2 @@
-# relative to the project root
-(def out-path
+(def out-name
   "judge-gen.janet")

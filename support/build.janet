@@ -16,6 +16,7 @@
 #       these limitations exist to make the "compilation" process easier.
 
 (import ./common)
+(import ./path :prefix "")
 
 # expressed relative to project root
 (def src-root
@@ -24,10 +25,6 @@
 # expressed relatitve to src-root
 (def start-path
   "./main.janet")
-
-# expressed relative to src-root
-(def out-path
-  (string "../" common/out-path))
 
 # XXX: a hack -- could reuse parts of a better peg
 (def import-grammar
@@ -89,9 +86,15 @@
 
 (try
   (do
+    # build
+    (prin "Building... ")
     (os/cd src-root)
-    #
-    (build start-path out-path))
+    # result ends up in test directory
+    (def out-path
+      (path/join ".."
+                 (path/join "test" common/out-name)))
+    (build start-path out-path)
+    (print "done"))
   ([err]
     (eprint "building failed")
     (error err)))
