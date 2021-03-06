@@ -1519,10 +1519,8 @@
                      :err-path err-path} err]
                 (eprintf "Command failed:\n  %p" command)
                 (eprint "Potentially relevant paths:")
-                (eprintf "  %s" results-full-path)
-                (eprintf "  %s" out-path)
-                (eprintf "  %s" err-path)
-                (eprintf "  %s" jf-full-path))
+                (eprintf "  %s" jf-full-path)
+                (eprintf "  %s" err-path))
               (eprintf "Unknown error:\n %p" err)))
           (error nil))))
     (put results
@@ -1557,7 +1555,8 @@
   (when (pos? (length failures))
     (print))
   (eachp [fpath failed-tests] failures
-    (print fpath)
+    (print "  test file: " fpath)
+    (print "source file: " (string (utils/no-ext fpath) ".janet"))
     (each fail failed-tests
       (def {:test-value test-value
             :expected-value expected-value
