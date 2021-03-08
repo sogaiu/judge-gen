@@ -10,6 +10,7 @@
   (var total-tests 0)
   (var total-passed 0)
   (def failures @{})
+  # analyze results
   (eachp [fpath test-results] results
     (def name (path/basename fpath))
     (when test-results
@@ -26,37 +27,48 @@
           (array/push fails test-result)))
       (when (not (empty? fails))
         (put failures fpath fails))))
-  (when (pos? (length failures))
-    (print))
-  (eachp [fpath failed-tests] failures
-    (print "  test file: " fpath)
-    (print "source file: " (string (utils/no-ext fpath) ".janet"))
+  # report any failures
+  (var i 0)
+  (each fpath (sort (keys failures))
+    (def failed-tests (get failures fpath))
     (each fail failed-tests
       (def {:test-value test-value
             :expected-value expected-value
             :name test-name
             :passed test-passed
             :test-form test-form} fail)
+      (++ i)
       (print)
-      (display/print-color (string "  failed: " test-name) :red)
+      (prin "--(")
+      (display/print-color i :cyan)
+      (print ")--")
       (print)
-      (printf "    form: %M" test-form)
-      (prin "expected")
-      # XXX: this could use some work...
-      (if (< 30 (length (describe expected-value)))
-        (print ":")
-        (prin ": "))
-      (printf "%m" expected-value)
-      (prin "  actual")
-      # XXX: this could use some work...
-      (if (< 30 (length (describe test-value)))
-        (print ":")
-        (prin ": "))
-      (display/print-color (string/format "%m" test-value) :blue)
-      (print)))
+      (display/print-color "source file:" :yellow)
+      (print)
+      (display/print-color (string (utils/no-ext fpath) ".janet") :red)
+      (print)
+      (print)
+      #
+      (display/print-color "failed:" :yellow)
+      (print)
+      (display/print-color test-name :red)
+      (print)
+      #
+      (print)
+      (display/print-color "form" :yellow)
+      (display/print-form test-form)
+      #
+      (print)
+      (display/print-color "expected" :yellow)
+      (display/print-form expected-value)
+      #
+      (print)
+      (display/print-color "actual" :yellow)
+      (display/print-form test-value :blue)))
   (when (zero? (length failures))
     (print)
     (print "No tests failed."))
+  # summarize totals
   (print)
   (display/print-dashes)
   (when (= 0 total-tests)
