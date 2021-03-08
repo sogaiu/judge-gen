@@ -21,3 +21,15 @@
 (defn display/print-dashes
   [&opt n]
   (print (display/dashes n)))
+
+(defn display/print-form
+  [form &opt color]
+  (def buf @"")
+  (with-dyns [:out buf]
+    (printf "%m" form))
+  (def msg (string/trimr buf))
+  (print ":")
+  (if color
+    (display/print-color msg color)
+    (prin msg))
+  (print))
