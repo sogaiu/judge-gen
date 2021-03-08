@@ -234,14 +234,14 @@
        :s-line 1
        :end 12}]) # => true
 
-  (deep=
-    #
-    (peg/match pegs/top-level sample-source 12)
-    #
+  (def result
     @[{:type :value
        :value "(+ 1 1)\n"
        :s-line 2
-       :end 20}]) # => true
+       :end 20}])
+
+  (peg/match pegs/top-level sample-source 12)
+  # => result
 
   (string/slice sample-source 12 20)
   # => "(+ 1 1)\n"
