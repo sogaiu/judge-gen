@@ -20,9 +20,10 @@
 (defn utils/no-ext
   [file-path]
   (when file-path
-    (when-let [rev (string/reverse file-path)
-               dot (string/find "." rev)]
-      (string/reverse (string/slice rev (inc dot))))))
+    (if-let [rev (string/reverse file-path)
+             dot (string/find "." rev)]
+      (string/reverse (string/slice rev (inc dot)))
+      file-path)))
 
 (comment
 
