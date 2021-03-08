@@ -1,5 +1,6 @@
 (defn display/print-color
   [msg color]
+  # XXX: what if color doesn't match...
   (let [color-num (match color
                     :black 30
                     :blue 34
