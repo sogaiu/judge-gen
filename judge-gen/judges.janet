@@ -7,31 +7,36 @@
 (defn judges/make-judges
   [src-root judge-root]
   (def subdirs @[])
+  (def out-in-tbl @{})
   (defn helper
     [src-root subdirs judge-root]
     (each path (os/dir src-root)
-      (def fpath (path/join src-root path))
-      (case (os/stat fpath :mode)
+      (def in-path (path/join src-root path))
+      (case (os/stat in-path :mode)
         :directory
         (do
-          (helper fpath (array/push subdirs path)
+          (helper in-path (array/push subdirs path)
                   judge-root)
           (array/pop subdirs))
         #
         :file
-        (when (string/has-suffix? ".janet" fpath)
+        (when (string/has-suffix? ".janet" in-path)
           (def judge-file-name
             (string (utils/no-ext path) ".judge"))
-          (unless (generate/handle-one
-                    {:input fpath
-                     :output (path/join judge-root
-                                        ;subdirs
-                                        judge-file-name)})
-            (eprintf "Test generation failed for: %s" fpath)
-            (eprintf "Please confirm validity of source file: %s" fpath)
-            (error nil))))))
+          (let [out-path (path/join judge-root
+                                    ;subdirs
+                                    judge-file-name)]
+            (unless (generate/handle-one {:input in-path
+                                          :output out-path})
+              (eprintf "Test generation failed for: %s" in-path)
+              (eprintf "Please confirm validity of source file: %s" in-path)
+              (error nil))
+            (put out-in-tbl
+                 (path/abspath out-path)
+                 (path/abspath in-path)))))))
   #
-  (helper src-root subdirs judge-root))
+  (helper src-root subdirs judge-root)
+  out-in-tbl)
 
 # since there are no tests in this comment block, nothing will execute
 (comment
@@ -145,7 +150,7 @@
     fpath))
 
 (defn judges/judge-all
-  [judge-root]
+  [judge-root test-src-tbl]
   (def results @{})
   (def file-paths
     (sort (judges/find-judge-files judge-root)))
@@ -188,7 +193,11 @@
                 (eprintf "  %s" err-path))
               (eprintf "Unknown error:\n %p" err)))
           (error nil))))
+    (def src-full-path
+      (in test-src-tbl jf-full-path))
+    (assert src-full-path
+            (string "Failed to determine source for test: " jf-full-path))
     (put results
-         jf-full-path results-for-path)
+         src-full-path results-for-path)
     (++ count))
   results)

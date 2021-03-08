@@ -38,12 +38,13 @@
       # create judge files
       (prin "Creating tests files... ")
       (flush)
-      (judges/make-judges src-root judge-root)
+      (def ts-tbl
+        (judges/make-judges src-root judge-root))
       (print "done")
       # judge
-      (print "Judging...")
+      (print "Running tests...")
       (def results
-        (judges/judge-all judge-root))
+        (judges/judge-all judge-root ts-tbl))
       (display/print-dashes)
       # summarize results
       (def all-passed
