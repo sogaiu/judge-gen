@@ -17,13 +17,13 @@
     :readermac (set "',;|~")
     #
     :raw-value (choice
-                :constant :number
-                :symbol :keyword
                 :string :buffer
                 :long-string :long-buffer
                 :parray :barray
                 :ptuple :btuple
-                :struct :table)
+                :struct :table
+                :constant :number
+                :symbol :keyword)
     #
     :comment (sequence (any :s)
                        "#"

@@ -2,7 +2,20 @@
 (import ./validate :prefix "")
 
 # XXX: any way to avoid this?
-(var- pegs/in-comment 0)
+(var- pegs/topish-level 0)
+
+(defn- pegs/track-top-level-peg
+  [l-delim r-delim]
+  ~(sequence (drop (cmt (capture ,l-delim)
+                                 ,|(do
+                                     (++ pegs/topish-level)
+                                     $)))
+             :root
+             (choice (drop (cmt (capture ,r-delim)
+                                ,|(do
+                                    (-- pegs/topish-level)
+                                    $)))
+                     (error ""))))
 
 (def- pegs/comment-analyzer
   (->
@@ -10,23 +23,13 @@
     (table ;(kvs grammar/janet))
     (put :main '(choice (capture :value)
                         :comment))
-    #
-    (put :comment-block ~(sequence
-                           "("
-                           (any :s)
-                           (drop (cmt (capture "comment")
-                                      ,|(do
-                                          (++ pegs/in-comment)
-                                          $)))
-                           :root
-                           (drop (cmt (capture ")")
-                                      ,|(do
-                                          (-- pegs/in-comment)
-                                          $)))))
-    (put :ptuple ~(choice :comment-block
-                          (sequence "("
-                                    :root
-                                    (choice ")" (error "")))))
+    # tracking of "top-level"-ness (within a `comment`)
+    (put :ptuple
+         (pegs/track-top-level-peg "(" ")"))
+    (put :btuple
+         (pegs/track-top-level-peg "[" "]"))
+    (put :struct
+         (pegs/track-top-level-peg "{" "}"))
     # classify certain comments
     (put :comment
          ~(sequence
@@ -38,7 +41,7 @@
                      (capture (sequence
                                 (any (if-not (choice "\n" -1) 1))
                                 (any "\n"))))
-                   ,|(if (zero? pegs/in-comment)
+                   ,|(if (zero? pegs/topish-level)
                        (let [ev-form (string/trim $1)
                              line $0]
                          (assert (validate/valid-code? ev-form)
@@ -52,8 +55,11 @@
                               "#"
                               (any (if-not (+ "\n" -1) 1))
                               (any "\n")))
-                   ,|(identity $))
-              (any :s))))
+                   ,|(if (zero? pegs/topish-level)
+                       (identity $)
+                       # XXX: is this right?
+                       "")))
+            (any :s)))
     # tried using a table with a peg but had a problem, so use a struct
     table/to-struct))
 
@@ -135,12 +141,28 @@
     ``)
     # => result
 
+  # thanks Saikyun
+  (peg/match
+    pegs/inner-forms
+    ``
+    (comment
+
+      @{:bye 10 #hello
+       }
+
+      (+ 1 1)
+      # => 2
+
+    )
+    ``)
+  # => '@["" "@{:bye 10 #hello\n   }\n\n  " "(+ 1 1)\n  " (:returns "2" 7)]
+
   )
 
 (defn pegs/parse-comment-block
   [cmt-blk-str]
-  # mutating outer pegs/in-comment
-  (set pegs/in-comment 0)
+  # mutating outer pegs/topish-level
+  (set pegs/topish-level 0)
   (peg/match pegs/inner-forms cmt-blk-str))
 
 (comment
@@ -185,6 +207,23 @@
 
   (pegs/parse-comment-block comment-in-comment-str)
   # => @["" "(comment\n\n     (+ 1 1)\n     # => 2\n\n   )\n"]
+
+  # thanks Saikyun
+  (def comment-in-struct-str
+    ``
+    (comment
+
+      @{:bye 10 #hello
+       }
+
+      (+ 1 1)
+      # => 2
+
+    )
+    ``)
+
+  (pegs/parse-comment-block comment-in-struct-str)
+  # => '@["" "@{:bye 10 #hello\n   }\n\n  " "(+ 1 1)\n  " (:returns "2" 7)]
 
 )
 
