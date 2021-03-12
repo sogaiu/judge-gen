@@ -88,6 +88,7 @@
 #     * forcett
 #     * janet-bits
 #     * janet-peg
+#     * janet-usages
 #     * janet-xmlish
 #     * janet-zip
 #     * judge-gen
