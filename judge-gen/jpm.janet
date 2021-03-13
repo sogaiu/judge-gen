@@ -73,3 +73,15 @@
     (def path (string/join (slice segs 0 i) jpm/sep))
     (unless (empty? path) (os/mkdir path))))
 
+(defn jpm/copy-continue
+  "Copy a file or directory recursively from one location to another."
+  [src dest]
+  (print "copying " src " to " dest "...")
+  (if jpm/is-win
+    (let [end (last (peg/match jpm/path-splitter src))
+          isdir (= (os/stat src :mode) :directory)]
+      (jpm/shell "C:\\Windows\\System32\\xcopy.exe"
+                 (string/replace "/" "\\" src)
+                 (string/replace "/" "\\" (if isdir (string dest "\\" end) dest))
+                 "/y" "/s" "/e" "/i" "/c"))
+    (jpm/shell "cp" "-rf" src dest)))

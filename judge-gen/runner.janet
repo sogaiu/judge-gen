@@ -33,7 +33,7 @@
         # each item copied separately for platform consistency
         (each item (os/dir src-root)
           (def full-path (path/join src-root item))
-          (jpm/copy full-path judge-root)))
+          (jpm/copy-continue full-path judge-root)))
       (print "done")
       # create judge files
       (prin "Creating tests files... ")
