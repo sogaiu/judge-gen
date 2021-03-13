@@ -34,6 +34,11 @@
 
 # POSSIBILITIES:
 #
+# * symlinks in directory with source for tests get copied too, but
+#   if they point somewhere non-existant that can be a problem -- at
+#   least this happened with janet-tree-sitter.  work around is to add
+#   jpm/copy-continue which continues copying instead of aborting.
+#
 # * add license
 #
 # * fun logo or blurb?
