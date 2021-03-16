@@ -7,9 +7,9 @@
 (defn- pegs/track-top-level-peg
   [l-delim r-delim]
   ~(sequence (drop (cmt (capture ,l-delim)
-                                 ,|(do
-                                     (++ pegs/topish-level)
-                                     $)))
+                        ,|(do
+                            (++ pegs/topish-level)
+                            $)))
              :root
              (choice (drop (cmt (capture ,r-delim)
                                 ,|(do
@@ -139,7 +139,7 @@
 
     )
     ``)
-    # => result
+  # => result
 
   # thanks Saikyun
   (peg/match
@@ -225,7 +225,7 @@
   (pegs/parse-comment-block comment-in-struct-str)
   # => '@["" "@{:bye 10 #hello\n   }\n\n  " "(+ 1 1)\n  " (:returns "2" 7)]
 
-)
+  )
 
 # recognize next top-level form, returning a map
 # modify a copy of grammar/janet

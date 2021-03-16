@@ -133,7 +133,7 @@
                         (some :h)
                         "-"
                         "judge-gen")
-    (judges/make-results-dir-path ""))
+             (judges/make-results-dir-path ""))
   # => @[]
 
   )

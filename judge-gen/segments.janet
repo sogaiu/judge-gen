@@ -21,38 +21,37 @@
 
   (def code-buf
     @``
-    (def a 1)
+     (def a 1)
 
-    (comment
+     (comment
 
-      (+ a 1)
-      # => 2
+       (+ a 1)
+       # => 2
 
-      (def b 3)
+       (def b 3)
 
-      (- b a)
-      # => 2
+       (- b a)
+       # => 2
 
-    )
-    ``)
+     )
+     ``)
 
   (deep=
     (segments/parse code-buf)
     #
-    @[{:value "    (def a 1)\n\n    "
+    @[{:value "(def a 1)\n\n"
        :s-line 1
        :type :value
-       :end 19}
-      {:value (string "(comment\n\n      "
-                      "(+ a 1)\n      "
-                      "# => 2\n\n      "
-                      "(def b 3)\n\n      "
-                      "(- b a)\n      "
-                      "# => 2\n\n    "
-                      ")\n    ")
+       :end 11}
+      {:value (string "(comment\n\n  "
+                      "(+ a 1)\n  "
+                      "# => 2\n\n  "
+                      "(def b 3)\n\n  "
+                      "(- b a)\n  "
+                      "# => 2\n\n)")
        :s-line 3
        :type :value
-       :end 112}]
+       :end 75}]
     ) # => true
 
   )
