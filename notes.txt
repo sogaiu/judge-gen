@@ -18,6 +18,12 @@
 # * doesn't clean up temporary files and directories automatically, though
 #   running a subsequent set of tests usually erases old results and
 #   generated tests.
+#
+# * abstract types that don't have marshal / unmarshal support may
+#   cause difficulties if those types are return values of tests
+#
+# * segfaulting janet modules don't typically lead to any output.
+#   not sure if this is anything judge-gen can detect.  investigate.
 
 # PERIODIC:
 #
@@ -34,10 +40,30 @@
 
 # POSSIBILITIES:
 #
+# * review whether copy/continue is still necessary and remove if possible.
+#
+# * consider how to customize output for various situations
+#   * likely leads to necessity of some kind of configuration
+#     * either do via environment variables
+#     * or via files in a configuration directory
+#
+# * make a troubleshooting / gotchas section in the docs
+#   * marshal / unmarshal point
+#   * segfaulting and no output
+#   * tips for interpreting judge-gen output
+#     * for test runner aborting where two paths shown:
+#       * look at stderr file (second path) content first
+#       * probably can execute the .judge file (first path) to
+#         observe behavior manually
+#
 # * symlinks in directory with source for tests get copied too, but
 #   if they point somewhere non-existant that can be a problem -- at
 #   least this happened with janet-tree-sitter.  work around is to add
 #   jpm/copy-continue which continues copying instead of aborting.
+#   * is it worth making a comment upstream about support in jpm?
+#
+# * could various source transformations be performed more appropriately?
+#   * for example via zippers or some other transformation-related code?
 #
 # * add license
 #
@@ -93,6 +119,7 @@
 #     * forcett
 #     * janet-bits
 #     * janet-peg
+#     * janet-tree-sitter
 #     * janet-usages
 #     * janet-xmlish
 #     * janet-zip
@@ -104,6 +131,11 @@
 #   `test` to a single judge-gen.janet file elsewhere (e.g. in `support`).
 #   seems like this makes it possible to use a single underlying runner
 #   via multiple locations (i.e. use multiple symlinks to it).
+#   * on windows this can lead to complications, but apparently there
+#     are ways to get this working.  one way on a recent enough installation
+#     of windows 10 is:
+#     * enable developer mode
+#     * when cloning, use -c core.symlinks=true as part of the command
 #
 # * consider other ways to end up with a single file which `jpm test`
 #   will execute:
