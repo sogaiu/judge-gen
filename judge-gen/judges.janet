@@ -187,10 +187,24 @@
               # XXX: if more errors need to be handled, check err-type
               (let [{:out-path out-path
                      :err-path err-path} err]
+                (eprint)
                 (eprintf "Command failed:\n  %p" command)
+                (eprint)
                 (eprint "Potentially relevant paths:")
                 (eprintf "  %s" jf-full-path)
-                (eprintf "  %s" err-path))
+                #
+                (def err-file-size (os/stat err-path :size))
+                (when (pos? err-file-size)
+                  (eprintf "  %s" err-path))
+                #
+                (eprint)
+                (when (pos? err-file-size)
+                  (eprint "Start of test stderr output")
+                  (eprint)
+                  (eprint (string (slurp err-path)))
+                  #(eprint)
+                  (eprint "End of test stderr output")
+                  (eprint)))
               (eprintf "Unknown error:\n %p" err)))
           (error nil))))
     (def src-full-path
