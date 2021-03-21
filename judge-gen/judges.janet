@@ -94,8 +94,10 @@
     (try
       (with [ef (file/open err-path :w)]
         (with [of (file/open out-path :w)]
-          (os/execute command :px {:err ef
-                                   :out of})
+          (let [ecode (os/execute command :px {:err ef
+                                               :out of})]
+            (when (not (zero? ecode))
+              (eprintf "non-zero exit code: %d" ecode)))
           (file/flush ef)
           (file/flush of)))
       ([_]
