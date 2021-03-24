@@ -88,3 +88,53 @@ two tests will be created and executed.
 +
 since there are no expected values indicated, `(print "hi")` will
 NOT be executed.
+
+* In expected value comments, only expressions that yield values that can
+  be used with `marshal` will work.  (The reason for this limitation is
+  because `marshal` / `unmarshal` are used to save and restore test results
+  which are aggregated to produce an overall summary.)
++
+Thus the following will not work:
++
+[source,janet]
+----
+(comment
+
+  printf
+  # => printf
+
+)
+----
++
+as `marshal` cannot handle `printf`:
++
+----
+repl:1:> (marshal printf)
+error: no registry value and cannot marshal <cfunction printf>
+  in marshal
+  in _thunk [repl] (tailcall) on line 2, column 1
+----
++
+Though not equivalent, one can do this sort of thing instead:
++
+[source,janet]
+----
+(comment
+
+  (describe printf)
+  # => "<cfunction printf>"
+
+)
+----
++
+or may be this is sufficient in some cases:
++
+[source,janet]
+----
+(comment
+
+  (type printf)
+  # => :cfunction
+
+)
+----
