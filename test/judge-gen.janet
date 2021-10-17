@@ -319,11 +319,6 @@
                  "/y" "/s" "/e" "/i"))
     (jpm/shell "cp" "-rf" src dest)))
 
-(defn jpm/pslurp
-  [cmd]
-  (string/trim (with [f (file/popen cmd)]
-                     (:read f :all))))
-
 (defn jpm/create-dirs
   "Create all directories needed for a file (mkdir -p)."
   [dest]
